@@ -1632,7 +1632,7 @@ static void source_update_requested_latency_cb(pa_source *s) {
     update_sw_params(u);
 }
 
-static void source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, bool passthrough) {
+static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     struct userdata *u = s->userdata;
     int i;
     bool format_supported = false;
@@ -1690,6 +1690,7 @@ static void source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, bool passt
     pa_smoother_2_set_sample_spec(u->smoother, pa_rtclock_now(), &effective_spec);
 #endif
 
+    return 0;
 }
 
 static void thread_func(void *userdata) {
