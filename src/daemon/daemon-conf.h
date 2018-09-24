@@ -68,6 +68,7 @@ typedef struct pa_daemon_conf {
         disable_shm,
         disable_memfd,
         avoid_resampling,
+        avoid_processing,
         disable_remixing,
         remixing_use_all_sink_channels,
         remixing_produce_lfe,
