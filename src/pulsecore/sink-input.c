@@ -1422,6 +1422,11 @@ void pa_sink_input_set_volume(pa_sink_input *i, const pa_cvolume *volume, bool s
     pa_assert(volume->channels == 1 || pa_cvolume_compatible(volume, &i->sample_spec));
     pa_assert(i->volume_writable);
 
+    if (pa_sink_input_is_passthrough(i) && !pa_cvolume_is_norm(volume)) {
+        pa_log_info("Not changing volume for passthrough sink input");
+        return;
+    }
+
     if (!absolute && pa_sink_flat_volume_enabled(i->sink)) {
         v = i->sink->reference_volume;
         pa_cvolume_remap(&v, &i->sink->channel_map, &i->channel_map);

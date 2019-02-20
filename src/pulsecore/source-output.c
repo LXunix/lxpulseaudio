@@ -1006,6 +1006,11 @@ void pa_source_output_set_volume(pa_source_output *o, const pa_cvolume *volume, 
     pa_assert(volume->channels == 1 || pa_cvolume_compatible(volume, &o->sample_spec));
     pa_assert(o->volume_writable);
 
+    if (pa_source_output_is_passthrough(o) && !pa_cvolume_is_norm(volume)) {
+        pa_log_info("Not changing volume for passthrough source output");
+        return;
+    }
+
     if (!absolute && pa_source_flat_volume_enabled(o->source)) {
         v = o->source->reference_volume;
         pa_cvolume_remap(&v, &o->source->channel_map, &o->channel_map);
