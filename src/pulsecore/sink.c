@@ -3608,6 +3608,12 @@ unsigned pa_device_init_priority(pa_proplist *p) {
             priority += 500;
         else if (pa_streq(s, "portable"))
             priority += 450;
+        else if (pa_streq(s, "computer"))
+            /* computers get a lower-than-base priority */
+            priority += 0;
+        else
+            /* default base priority */
+            priority += 100;
     }
 
     if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_BUS))) {
