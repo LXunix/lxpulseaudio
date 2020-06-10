@@ -202,7 +202,7 @@ struct pa_alsa_ucm_device {
     /* One device may be part of multiple ports, since each device has
      * a dedicated port, and in addition to that we sometimes generate ports
      * that represent combinations of devices. */
-    pa_dynarray *ucm_ports; /* struct ucm_port */
+    pa_dynarray *ucm_ports; /* pa_alsa_ucm_port_data */
 
     pa_alsa_jack *jack;
     pa_dynarray *hw_mute_jacks; /* pa_alsa_jack */
