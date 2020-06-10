@@ -285,6 +285,8 @@ struct pa_alsa_ucm_port_data {
     int eld_device; /* PCM device number */
 };
 
+void pa_alsa_ucm_port_enable_devices(pa_alsa_ucm_port_data *data, bool enable);
+
 struct pa_alsa_ucm_volume {
     char *mixer_elem;	/* mixer element identifier */
     char *master_elem;	/* master mixer element identifier */

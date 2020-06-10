@@ -2245,6 +2245,29 @@ static void ucm_port_update_available(pa_alsa_ucm_port_data *port) {
     pa_device_port_set_available(port->core_port, available);
 }
 
+void pa_alsa_ucm_port_enable_devices(pa_alsa_ucm_port_data *data, bool enable) {
+    pa_alsa_ucm_device *dev;
+    uint32_t idx;
+
+    pa_assert(data);
+
+    /* first disable then enable */
+    PA_DYNARRAY_FOREACH(dev, data->devices, idx) {
+        int r;
+
+        if (enable) {
+            pa_log_debug("Enabling UCM device %s.", dev->name);
+            if ((r = snd_use_case_set(data->ucm->ucm_mgr, "_enadev", dev->name) < 0))
+                pa_log("Failed to enable UCM device %s: %s", dev->name, pa_cstrerror(r));
+        } else {
+            pa_log_debug("Disabling UCM device %s.", dev->name);
+            if ((r = snd_use_case_set(data->ucm->ucm_mgr, "_disdev", dev->name) < 0))
+                pa_log("Failed to disable UCM device %s: %s", dev->name, pa_cstrerror(r));
+        }
+    }
+}
+
+
 #else /* HAVE_ALSA_UCM */
 
 /* Dummy functions for systems without UCM support */
@@ -2299,6 +2322,9 @@ void pa_alsa_ucm_roled_stream_begin(pa_alsa_ucm_config *ucm, const char *role, p
 }
 
 void pa_alsa_ucm_roled_stream_end(pa_alsa_ucm_config *ucm, const char *role, pa_direction_t dir) {
+}
+
+void pa_alsa_ucm_port_enable_devices(pa_alsa_ucm_port_data *data, bool enable) {
 }
 
 #endif

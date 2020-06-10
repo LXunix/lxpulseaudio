@@ -954,6 +954,12 @@ static void suspend(struct userdata *u) {
     /* Close PCM device */
     close_pcm(u);
 
+    /* Disabling the UCM devices may save some power. */
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(u->source->active_port);
+        pa_alsa_ucm_port_enable_devices(data, false);
+    }
+
     pa_log_info("Device suspended...");
 }
 
@@ -1043,6 +1049,13 @@ static int unsuspend(struct userdata *u, bool recovering) {
     pa_assert(!u->pcm_handle);
 
     pa_log_info("Trying resume...");
+
+    /* We disable all UCM devices when suspending, so let's enable them
+     * again. */
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(u->source->active_port);
+        pa_alsa_ucm_port_enable_devices(data, true);
+    }
 
     if ((err = snd_pcm_open(&u->pcm_handle, u->device_name, SND_PCM_STREAM_CAPTURE,
                             SND_PCM_NONBLOCK|
