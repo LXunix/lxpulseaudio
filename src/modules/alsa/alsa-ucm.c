@@ -187,16 +187,13 @@ static void ucm_add_devices_to_idxset(
     pa_alsa_ucm_device *d;
 
     PA_LLIST_FOREACH(d, devices) {
-        const char *name;
         int i;
 
         if (d == me)
             continue;
 
-        name = pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_NAME);
-
         for (i = 0; i < n; i++)
-            if (pa_streq(dev_names[i], name))
+            if (pa_streq(dev_names[i], d->name))
                 pa_idxset_put(idxset, d, NULL);
     }
 }
@@ -559,7 +556,8 @@ static int ucm_get_devices(pa_alsa_ucm_verb *verb, snd_use_case_mgr_t *uc_mgr) {
         pa_alsa_ucm_device *d = pa_xnew0(pa_alsa_ucm_device, 1);
 
         d->proplist = pa_proplist_new();
-        pa_proplist_sets(d->proplist, PA_ALSA_PROP_UCM_NAME, pa_strnull(dev_list[i]));
+        d->name = pa_xstrdup(dev_list[i]);
+        pa_proplist_sets(d->proplist, PA_ALSA_PROP_UCM_NAME, d->name);
         pa_proplist_sets(d->proplist, PA_ALSA_PROP_UCM_DESCRIPTION, pa_strna(dev_list[i + 1]));
         d->ucm_ports = pa_dynarray_new(NULL);
         d->hw_mute_jacks = pa_dynarray_new(NULL);
@@ -628,16 +626,14 @@ static void add_media_role(const char *name, pa_alsa_ucm_device *list, const cha
     pa_alsa_ucm_device *d;
 
     PA_LLIST_FOREACH(d, list) {
-        const char *dev_name = pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_NAME);
-
-        if (pa_streq(dev_name, name)) {
+        if (pa_streq(d->name, name)) {
             const char *sink = pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_SINK);
             const char *source = pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_SOURCE);
 
             if (is_sink && sink)
-                add_role_to_device(d, dev_name, role_name, role);
+                add_role_to_device(d, d->name, role_name, role);
             else if (!is_sink && source)
-                add_role_to_device(d, dev_name, role_name, role);
+                add_role_to_device(d, d->name, role_name, role);
             break;
         }
     }
@@ -701,9 +697,7 @@ static void append_lost_relationship(pa_alsa_ucm_device *dev) {
                 d->conflicting_devices = pa_idxset_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
 
             if (pa_idxset_put(d->conflicting_devices, dev, NULL) == 0)
-                pa_log_warn("Add lost conflicting device %s to %s",
-                        pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME),
-                        pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_NAME));
+                pa_log_warn("Add lost conflicting device %s to %s", dev->name, d->name);
         }
     }
 
@@ -713,9 +707,7 @@ static void append_lost_relationship(pa_alsa_ucm_device *dev) {
                 d->supported_devices = pa_idxset_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
 
             if (pa_idxset_put(d->supported_devices, dev, NULL) == 0)
-                pa_log_warn("Add lost supported device %s to %s",
-                        pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME),
-                        pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_NAME));
+                pa_log_warn("Add lost supported device %s to %s", dev->name, d->name);
         }
     }
 }
@@ -823,10 +815,8 @@ int pa_alsa_ucm_get_verb(snd_use_case_mgr_t *uc_mgr, const char *verb_name, cons
         pa_log("No UCM modifiers for verb %s", verb_name);
 
     PA_LLIST_FOREACH(d, verb->devices) {
-        const char *dev_name = pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_NAME);
-
         /* Devices properties */
-        ucm_get_device_property(d, uc_mgr, verb, dev_name);
+        ucm_get_device_property(d, uc_mgr, verb, d->name);
     }
     /* make conflicting or supported device mutual */
     PA_LLIST_FOREACH(d, verb->devices)
@@ -851,7 +841,7 @@ static int pa_alsa_ucm_device_cmp(const void *a, const void *b) {
     const pa_alsa_ucm_device *d1 = *(pa_alsa_ucm_device **)a;
     const pa_alsa_ucm_device *d2 = *(pa_alsa_ucm_device **)b;
 
-    return strcmp(pa_proplist_gets(d1->proplist, PA_ALSA_PROP_UCM_NAME), pa_proplist_gets(d2->proplist, PA_ALSA_PROP_UCM_NAME));
+    return strcmp(d1->name, d2->name);
 }
 
 static void set_eld_devices(pa_hashmap *hash)
@@ -949,7 +939,6 @@ static void ucm_add_port_combination(
     unsigned priority;
     double prio2;
     char *name, *desc;
-    const char *dev_name;
     const char *direction;
     const char *profile;
     pa_alsa_ucm_device *sorted[num], *dev;
@@ -965,11 +954,10 @@ static void ucm_add_port_combination(
     qsort(&sorted[0], num, sizeof(pa_alsa_ucm_device *), pa_alsa_ucm_device_cmp);
 
     dev = sorted[0];
-    dev_name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
 
-    name = pa_sprintf_malloc("%s%s", is_sink ? PA_UCM_PRE_TAG_OUTPUT : PA_UCM_PRE_TAG_INPUT, dev_name);
+    name = pa_sprintf_malloc("%s%s", is_sink ? PA_UCM_PRE_TAG_OUTPUT : PA_UCM_PRE_TAG_INPUT, dev->name);
     desc = num == 1 ? pa_xstrdup(pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_DESCRIPTION))
-            : pa_sprintf_malloc("Combination port for %s", dev_name);
+            : pa_sprintf_malloc("Combination port for %s", dev->name);
 
     priority = is_sink ? dev->playback_priority : dev->capture_priority;
     prio2 = (priority == 0 ? 0 : 1.0/priority);
@@ -978,13 +966,12 @@ static void ucm_add_port_combination(
         char *tmp;
 
         dev = sorted[i];
-        dev_name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
 
-        tmp = pa_sprintf_malloc("%s+%s", name, dev_name);
+        tmp = pa_sprintf_malloc("%s+%s", name, dev->name);
         pa_xfree(name);
         name = tmp;
 
-        tmp = pa_sprintf_malloc("%s,%s", desc, dev_name);
+        tmp = pa_sprintf_malloc("%s,%s", desc, dev->name);
         pa_xfree(desc);
         desc = tmp;
 
@@ -1103,8 +1090,7 @@ static int ucm_check_conformance(
 
     pa_assert(dev);
 
-    pa_log_debug("Check device %s conformance with %d other devices",
-            pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME), dev_num);
+    pa_log_debug("Check device %s conformance with %d other devices", dev->name, dev_num);
     if (dev_num == 0) {
         pa_log_debug("First device in combination, number 1");
         return 1;
@@ -1339,14 +1325,12 @@ int pa_alsa_ucm_set_port(pa_alsa_ucm_mapping_context *context, pa_device_port *p
 
     /* first disable then enable */
     PA_IDXSET_FOREACH(dev, context->ucm_devices, idx) {
-        const char *dev_name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
-
-        if (ucm_port_contains(port->name, dev_name, is_sink))
-            enable_devs[enable_num++] = dev_name;
+        if (ucm_port_contains(port->name, dev->name, is_sink))
+            enable_devs[enable_num++] = dev->name;
         else {
-            pa_log_debug("Disable ucm device %s", dev_name);
-            if (snd_use_case_set(ucm->ucm_mgr, "_disdev", dev_name) > 0) {
-                pa_log("Failed to disable ucm device %s", dev_name);
+            pa_log_debug("Disable ucm device %s", dev->name);
+            if (snd_use_case_set(ucm->ucm_mgr, "_disdev", dev->name) > 0) {
+                pa_log("Failed to disable ucm device %s", dev->name);
                 ret = -1;
                 break;
             }
@@ -1598,15 +1582,12 @@ static int ucm_create_mapping(
 
 static pa_alsa_jack* ucm_get_jack(pa_alsa_ucm_config *ucm, pa_alsa_ucm_device *device) {
     pa_alsa_jack *j;
-    const char *device_name;
     const char *jack_control;
     const char *mixer_device_name;
     char *name;
 
     pa_assert(ucm);
     pa_assert(device);
-
-    device_name = pa_proplist_gets(device->proplist, PA_ALSA_PROP_UCM_NAME);
 
     jack_control = pa_proplist_gets(device->proplist, PA_ALSA_PROP_UCM_JACK_CONTROL);
     if (jack_control) {
@@ -1620,14 +1601,14 @@ static pa_alsa_jack* ucm_get_jack(pa_alsa_ucm_config *ucm, pa_alsa_ucm_device *d
         jack_control = snd_ctl_elem_id_get_name(ctl);
         index = snd_ctl_elem_id_get_index(ctl);
         if (index > 0) {
-            pa_log("[%s] Invalid JackControl index value: \"%s\",%d", device_name, jack_control, index);
+            pa_log("[%s] Invalid JackControl index value: \"%s\",%d", device->name, jack_control, index);
             return NULL;
         }
 #else
 #warning "Upgrade to alsa-lib 1.2.1!"
 #endif
         if (!pa_endswith(jack_control, " Jack")) {
-            pa_log("[%s] Invalid JackControl value: \"%s\"", device_name, jack_control);
+            pa_log("[%s] Invalid JackControl value: \"%s\"", device->name, jack_control);
             return NULL;
         }
 
@@ -1647,7 +1628,7 @@ static pa_alsa_jack* ucm_get_jack(pa_alsa_ucm_config *ucm, pa_alsa_ucm_device *d
     if (!mixer_device_name)
         mixer_device_name = get_jack_mixer_device(device, false);
     if (!mixer_device_name) {
-        pa_log("[%s] No mixer device name for JackControl \"%s\"", device_name, jack_control);
+        pa_log("[%s] No mixer device name for JackControl \"%s\"", device->name, jack_control);
         return NULL;
     }
     j = pa_alsa_jack_new(NULL, mixer_device_name, name);
@@ -1716,12 +1697,10 @@ static int ucm_create_profile(
         pa_alsa_jack *jack;
         const char *jack_hw_mute;
 
-        name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
-
         sink = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_SINK);
         source = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_SOURCE);
 
-        ucm_create_mapping(ucm, ps, p, dev, verb_name, name, sink, source);
+        ucm_create_mapping(ucm, ps, p, dev, verb_name, dev->name, sink, source);
 
         jack = ucm_get_jack(ucm, dev);
         if (jack)
@@ -1731,7 +1710,7 @@ static int ucm_create_profile(
          * be associated with the jack object that we just created. */
         jack_hw_mute = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_JACK_HW_MUTE);
         if (jack_hw_mute && !jack) {
-            pa_log("[%s] JackHWMute set, but JackControl is missing", name);
+            pa_log("[%s] JackHWMute set, but JackControl is missing", dev->name);
             jack_hw_mute = NULL;
         }
         if (jack_hw_mute) {
@@ -1756,7 +1735,7 @@ static int ucm_create_profile(
                 }
 
                 if (!device_found)
-                    pa_log("[%s] JackHWMute references an unknown device: %s", name, hw_mute_device_name);
+                    pa_log("[%s] JackHWMute references an unknown device: %s", dev->name, hw_mute_device_name);
 
                 pa_xfree(hw_mute_device_name);
             }
@@ -2016,6 +1995,7 @@ static void free_verb(pa_alsa_ucm_verb *verb) {
             pa_idxset_free(di->supported_devices, NULL);
 
         pa_xfree(di->eld_mixer_device_name);
+        pa_xfree(di->name);
 
         pa_xfree(di);
     }
@@ -2041,10 +2021,7 @@ static pa_alsa_ucm_device *verb_find_device(pa_alsa_ucm_verb *verb, const char *
     pa_assert(device_name);
 
     PA_LLIST_FOREACH(device, verb->devices) {
-        const char *name;
-
-        name = pa_proplist_gets(device->proplist, PA_ALSA_PROP_UCM_NAME);
-        if (pa_streq(name, device_name))
+        if (pa_streq(device->name, device_name))
             return device;
     }
 

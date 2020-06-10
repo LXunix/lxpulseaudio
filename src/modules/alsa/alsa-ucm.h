@@ -179,6 +179,8 @@ struct pa_alsa_ucm_device {
 
     pa_proplist *proplist;
 
+    char *name;
+
     unsigned playback_priority;
     unsigned capture_priority;
 
