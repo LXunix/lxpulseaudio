@@ -2155,10 +2155,8 @@ static int setup_mixer(struct userdata *u, bool ignore_dB) {
      * configuration doesn't specify volume or mute controls, u->mixer_handle
      * will be NULL, but the UCM device enable sequence will still need to be
      * executed. */
-    if (u->sink->active_port && u->ucm_context) {
-        if (pa_alsa_ucm_set_port(u->ucm_context, u->sink->active_port, true) < 0)
-            return -1;
-    }
+    if (u->sink->active_port && u->ucm_context)
+        pa_alsa_ucm_port_enable_devices(PA_DEVICE_PORT_DATA(u->sink->active_port), true);
 
     if (!u->mixer_handle)
         return 0;
