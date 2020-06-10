@@ -253,7 +253,7 @@ struct pa_sink {
 
     /* Called whenever the port shall be changed. Called from the main
      * thread. */
-    int (*set_port)(pa_sink *s, pa_device_port *port); /* may be NULL */
+    void (*set_port)(pa_sink *s, pa_device_port *port); /* may be NULL */
 
     /* Called to get the list of formats supported by the sink, sorted
      * in descending order of preference. */

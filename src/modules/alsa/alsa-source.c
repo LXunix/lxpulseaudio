@@ -1529,7 +1529,7 @@ static void mixer_volume_init(struct userdata *u) {
     }
 }
 
-static int source_set_port_ucm_cb(pa_source *s, pa_device_port *p) {
+static void source_set_port_ucm_cb(pa_source *s, pa_device_port *p) {
     struct userdata *u = s->userdata;
     pa_alsa_ucm_port_data *data;
 
@@ -1546,10 +1546,10 @@ static int source_set_port_ucm_cb(pa_source *s, pa_device_port *p) {
     else
         sync_mixer(u, p);
 
-    return pa_alsa_ucm_set_port(s->active_port, p);
+    pa_alsa_ucm_set_port(s->active_port, p);
 }
 
-static int source_set_port_cb(pa_source *s, pa_device_port *p) {
+static void source_set_port_cb(pa_source *s, pa_device_port *p) {
     struct userdata *u = s->userdata;
     pa_alsa_port_data *data;
 
@@ -1566,8 +1566,6 @@ static int source_set_port_cb(pa_source *s, pa_device_port *p) {
         pa_asyncmsgq_send(u->source->asyncmsgq, PA_MSGOBJECT(u->source), SOURCE_MESSAGE_SYNC_MIXER, p, 0, NULL);
     else
         sync_mixer(u, p);
-
-    return 0;
 }
 
 static void source_update_requested_latency_cb(pa_source *s) {

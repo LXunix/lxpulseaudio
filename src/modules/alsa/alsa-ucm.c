@@ -1286,14 +1286,12 @@ int pa_alsa_ucm_set_profile(pa_alsa_ucm_config *ucm, pa_card *card, const char *
     return ret;
 }
 
-int pa_alsa_ucm_set_port(pa_device_port *old_port, pa_device_port *new_port) {
+void pa_alsa_ucm_set_port(pa_device_port *old_port, pa_device_port *new_port) {
     pa_assert(old_port);
     pa_assert(new_port);
 
     pa_alsa_ucm_port_enable_devices(PA_DEVICE_PORT_DATA(old_port), false);
     pa_alsa_ucm_port_enable_devices(PA_DEVICE_PORT_DATA(new_port), true);
-
-    return 0;
 }
 
 static void ucm_add_mapping(pa_alsa_profile *p, pa_alsa_mapping *m) {

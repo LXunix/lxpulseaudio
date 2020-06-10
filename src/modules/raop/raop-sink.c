@@ -622,8 +622,7 @@ finish:
     pa_log_debug("Thread shutting down");
 }
 
-static int sink_set_port_cb(pa_sink *s, pa_device_port *p) {
-    return 0;
+static void sink_set_port_cb(pa_sink *s, pa_device_port *p) {
 }
 
 static pa_device_port *raop_create_port(struct userdata *u, const char *server) {

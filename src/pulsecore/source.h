@@ -217,7 +217,7 @@ struct pa_source {
 
     /* Called whenever the port shall be changed. Called from the main
      * thread. */
-    int (*set_port)(pa_source *s, pa_device_port *port); /*ditto */
+    void (*set_port)(pa_source *s, pa_device_port *port); /*ditto */
 
     /* Called to get the list of formats supported by the source, sorted
      * in descending order of preference. */

@@ -3420,8 +3420,7 @@ int pa_sink_set_port(pa_sink *s, const char *name, bool save) {
         return 0;
     }
 
-    if (s->set_port(s, port) < 0)
-        return -PA_ERR_NOENTITY;
+    s->set_port(s, port);
 
     pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SINK|PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
 

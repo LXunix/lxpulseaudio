@@ -1658,7 +1658,7 @@ static void mixer_volume_init(struct userdata *u) {
     }
 }
 
-static int sink_set_port_ucm_cb(pa_sink *s, pa_device_port *p) {
+static void sink_set_port_ucm_cb(pa_sink *s, pa_device_port *p) {
     struct userdata *u = s->userdata;
     pa_alsa_ucm_port_data *data;
 
@@ -1675,10 +1675,10 @@ static int sink_set_port_ucm_cb(pa_sink *s, pa_device_port *p) {
     else
         sync_mixer(u, p);
 
-    return pa_alsa_ucm_set_port(s->active_port, p);
+    pa_alsa_ucm_set_port(s->active_port, p);
 }
 
-static int sink_set_port_cb(pa_sink *s, pa_device_port *p) {
+static void sink_set_port_cb(pa_sink *s, pa_device_port *p) {
     struct userdata *u = s->userdata;
     pa_alsa_port_data *data;
 
@@ -1700,8 +1700,6 @@ static int sink_set_port_cb(pa_sink *s, pa_device_port *p) {
         pa_sink_suspend(s, true, PA_SUSPEND_UNAVAILABLE);
     else
         pa_sink_suspend(s, false, PA_SUSPEND_UNAVAILABLE);
-
-    return 0;
 }
 
 static void sink_update_requested_latency_cb(pa_sink *s) {
