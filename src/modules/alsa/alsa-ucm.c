@@ -1057,27 +1057,6 @@ static void ucm_add_port_combination(
     }
 }
 
-static int ucm_port_contains(const char *port_name, const char *dev_name, bool is_sink) {
-    int ret = 0;
-    const char *r;
-    const char *state = NULL;
-    size_t len;
-
-    if (!port_name || !dev_name)
-        return false;
-
-    port_name += is_sink ? strlen(PA_UCM_PRE_TAG_OUTPUT) : strlen(PA_UCM_PRE_TAG_INPUT);
-
-    while ((r = pa_split_in_place(port_name, "+", &len, &state))) {
-        if (strlen(dev_name) == len && !strncmp(r, dev_name, len)) {
-            ret = 1;
-            break;
-        }
-    }
-
-    return ret;
-}
-
 static int ucm_check_conformance(
         pa_alsa_ucm_mapping_context *context,
         pa_alsa_ucm_device **pdevices,
@@ -1307,48 +1286,14 @@ int pa_alsa_ucm_set_profile(pa_alsa_ucm_config *ucm, pa_card *card, const char *
     return ret;
 }
 
-int pa_alsa_ucm_set_port(pa_alsa_ucm_mapping_context *context, pa_device_port *port, bool is_sink) {
-    int i;
-    int ret = 0;
-    pa_alsa_ucm_config *ucm;
-    const char **enable_devs;
-    int enable_num = 0;
-    uint32_t idx;
-    pa_alsa_ucm_device *dev;
+int pa_alsa_ucm_set_port(pa_device_port *old_port, pa_device_port *new_port) {
+    pa_assert(old_port);
+    pa_assert(new_port);
 
-    pa_assert(context && context->ucm);
+    pa_alsa_ucm_port_enable_devices(PA_DEVICE_PORT_DATA(old_port), false);
+    pa_alsa_ucm_port_enable_devices(PA_DEVICE_PORT_DATA(new_port), true);
 
-    ucm = context->ucm;
-    pa_assert(ucm->ucm_mgr);
-
-    enable_devs = pa_xnew(const char *, pa_idxset_size(context->ucm_devices));
-
-    /* first disable then enable */
-    PA_IDXSET_FOREACH(dev, context->ucm_devices, idx) {
-        if (ucm_port_contains(port->name, dev->name, is_sink))
-            enable_devs[enable_num++] = dev->name;
-        else {
-            pa_log_debug("Disable ucm device %s", dev->name);
-            if (snd_use_case_set(ucm->ucm_mgr, "_disdev", dev->name) > 0) {
-                pa_log("Failed to disable ucm device %s", dev->name);
-                ret = -1;
-                break;
-            }
-        }
-    }
-
-    for (i = 0; i < enable_num; i++) {
-        pa_log_debug("Enable ucm device %s", enable_devs[i]);
-        if (snd_use_case_set(ucm->ucm_mgr, "_enadev", enable_devs[i]) < 0) {
-            pa_log("Failed to enable ucm device %s", enable_devs[i]);
-            ret = -1;
-            break;
-        }
-    }
-
-    pa_xfree(enable_devs);
-
-    return ret;
+    return 0;
 }
 
 static void ucm_add_mapping(pa_alsa_profile *p, pa_alsa_mapping *m) {

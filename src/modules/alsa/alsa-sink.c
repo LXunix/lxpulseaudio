@@ -1675,7 +1675,7 @@ static int sink_set_port_ucm_cb(pa_sink *s, pa_device_port *p) {
     else
         sync_mixer(u, p);
 
-    return pa_alsa_ucm_set_port(u->ucm_context, p, true);
+    return pa_alsa_ucm_set_port(s->active_port, p);
 }
 
 static int sink_set_port_cb(pa_sink *s, pa_device_port *p) {

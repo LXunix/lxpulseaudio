@@ -1546,7 +1546,7 @@ static int source_set_port_ucm_cb(pa_source *s, pa_device_port *p) {
     else
         sync_mixer(u, p);
 
-    return pa_alsa_ucm_set_port(u->ucm_context, p, false);
+    return pa_alsa_ucm_set_port(s->active_port, p);
 }
 
 static int source_set_port_cb(pa_source *s, pa_device_port *p) {
