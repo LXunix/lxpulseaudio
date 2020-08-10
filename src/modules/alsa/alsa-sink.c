@@ -2600,7 +2600,6 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
 
     if (u->ucm_context) {
         pa_device_port *port;
-        void *state;
         unsigned h_prio = 0;
         PA_HASHMAP_FOREACH(port, u->sink->ports, state) {
             if (!h_prio || port->priority > h_prio)
