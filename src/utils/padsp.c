@@ -1445,11 +1445,11 @@ static int sndstat_open(int flags, int *_errno) {
 
     debug(DEBUG_LEVEL_NORMAL, __FILE__": sndstat_open()\n");
 
-    if (flags != O_RDONLY
 #ifdef O_LARGEFILE
-        && flags != (O_RDONLY|O_LARGEFILE)
+    if (flags != (O_RDONLY|O_LARGEFILE)) {
+#else
+    if (flags != O_RDONLY) {
 #endif
-       ) {
         *_errno = EACCES;
         debug(DEBUG_LEVEL_NORMAL, __FILE__": bad access!\n");
         goto fail;
