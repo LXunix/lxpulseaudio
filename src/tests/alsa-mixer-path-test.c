@@ -19,10 +19,11 @@
 
 /* This function was copied from alsa-mixer.c */
 static const char *get_default_paths_dir(void) {
+    char *env = getenv("PA_ALSA_PATHS_DIR");
     if (pa_run_from_build_tree())
         return PA_SRCDIR "/modules/alsa/mixer/paths/";
     else
-        return PA_ALSA_PATHS_DIR;
+        return (env ? env : PA_ALSA_PATHS_DIR);
 }
 
 static pa_strlist *load_makefile() {
