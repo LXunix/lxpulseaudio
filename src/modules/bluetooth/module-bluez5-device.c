@@ -924,9 +924,38 @@ static int source_set_state_in_io_thread_cb(pa_source *s, pa_source_state_t new_
     return 0;
 }
 
+/* Use software volume to compensate for lack in hardware granularity,
+ * provide stereo balance, and >100% amplification */
+static bool set_software_volume_compensation(const pa_cvolume *real_volume,
+                                             const pa_volume_t hardware_volume,
+                                             pa_cvolume *soft_volume) {
+    char hw_volume_str[PA_VOLUME_SNPRINT_VERBOSE_MAX];
+    char volume_str[PA_CVOLUME_SNPRINT_VERBOSE_MAX];
+    bool different = false;
+
+    pa_assert(real_volume->channels == soft_volume->channels);
+
+    for (int i = 0; i < soft_volume->channels; ++i) {
+        /* Calculate in unsigned space since hardware volume can never exceed real_volume */
+        pa_volume_t delta = PA_VOLUME_NORM + real_volume->values[i] - hardware_volume;
+        soft_volume->values[i] = delta;
+        different |= delta != PA_VOLUME_NORM;
+    }
+
+    if (different) {
+        pa_log_debug("Remote all-channel hardware volume %s does not match requested %s",
+                pa_volume_snprint_verbose(hw_volume_str, sizeof(hw_volume_str), hardware_volume, false),
+                pa_cvolume_snprint_verbose(volume_str, sizeof(volume_str), real_volume, NULL, false));
+        pa_log_debug("Compensating with %s",
+                pa_cvolume_snprint_verbose(volume_str, sizeof(volume_str), soft_volume, NULL, false));
+    }
+
+    return different;
+}
+
 /* Run from main thread */
 static void source_set_volume_cb(pa_source *s) {
-    pa_volume_t volume;
+    pa_volume_t volume, hardware_volume;
     struct userdata *u;
 
     pa_assert(s);
@@ -940,10 +969,14 @@ static void source_set_volume_cb(pa_source *s) {
     pa_assert(u->transport);
     pa_assert(u->transport->set_source_volume);
 
-    /* In the AG role, send a command to change microphone gain on the HS/HF */
-    volume = u->transport->set_source_volume(u->transport, pa_cvolume_max(&s->real_volume));
+    volume = pa_cvolume_max(&s->real_volume);
 
-    pa_cvolume_set(&s->real_volume, u->decoder_sample_spec.channels, volume);
+    /* In the AG role, send a command to change microphone gain on the HS/HF */
+    // TODO: Round up for the below compensation to work properly.
+    hardware_volume = u->transport->set_source_volume(u->transport, volume);
+    // TODO: This does not take into account any rounding that might also happen on the headphones
+    // For that we need to know which _incoming_ `Volume` change belongs to a requested volume.
+    set_software_volume_compensation(&s->real_volume, hardware_volume, &s->soft_volume);
 }
 
 /* Run from main thread */
@@ -1163,7 +1196,7 @@ static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state,
 
 /* Run from main thread */
 static void sink_set_volume_cb(pa_sink *s) {
-    pa_volume_t volume;
+    pa_volume_t volume, hardware_volume;
     struct userdata *u;
 
     pa_assert(s);
@@ -1177,10 +1210,11 @@ static void sink_set_volume_cb(pa_sink *s) {
     pa_assert(u->transport);
     pa_assert(u->transport->set_sink_volume);
 
-    /* In the AG role, send a command to change speaker gain on the HS/HF */
-    volume = u->transport->set_sink_volume(u->transport, pa_cvolume_max(&s->real_volume));
+    volume = pa_cvolume_max(&s->real_volume);
 
-    pa_cvolume_set(&s->real_volume, u->encoder_sample_spec.channels, volume);
+    /* In the AG role, send a command to change speaker gain on the HS/HF */
+    hardware_volume = u->transport->set_sink_volume(u->transport, volume);
+    set_software_volume_compensation(&s->real_volume, hardware_volume, &s->soft_volume);
 }
 
 /* Run from main thread */
