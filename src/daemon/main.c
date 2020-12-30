@@ -1094,6 +1094,9 @@ int main(int argc, char *argv[]) {
     if (!conf->no_cpu_limit)
         pa_assert_se(pa_cpu_limit_init(pa_mainloop_get_api(mainloop)) == 0);
 
+    if (conf->log_async)
+        pa_log_start_async();
+
     buf = pa_strbuf_new();
 
 #ifdef HAVE_DBUS
@@ -1183,6 +1186,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 finish:
+    pa_log_stop_async();
+
 #ifdef HAVE_DBUS
     if (server_bus)
         pa_dbus_connection_unref(server_bus);
