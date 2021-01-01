@@ -174,7 +174,7 @@ endif
 
 if fftw_dep.found()
   all_modules += [
-    [ 'module-virtual-surround-sink', 'module-virtual-surround-sink.c', [], [], [fftw_dep, libm_dep] ],
+    [ 'module-virtual-surround-sink', 'module-virtual-surround-sink.c', [], [], [fftw_dep, libm_dep], libvirtual_sink ],
   ]
 endif
 
