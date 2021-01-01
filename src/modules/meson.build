@@ -2,6 +2,17 @@ if host_machine.system() != 'windows'
   subdir('rtp')
 endif
 
+libvirtual_sink = shared_library('virtual_sink',
+   'virtual-sink-common.c',
+   'virtual-sink-common.h',
+    c_args : [pa_c_args, server_c_args],
+    include_directories : [configinc, topinc],
+    dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep],
+    install_rpath : privlibdir,
+    install : true,
+    install_dir : modlibexecdir
+)
+
 # module name, sources, [headers, extra flags, extra deps, extra libs]
 all_modules = [
   [ 'module-allow-passthrough', 'module-allow-passthrough.c' ],
@@ -55,7 +66,7 @@ all_modules = [
   [ 'module-tunnel-sink-new', ['module-tunnel-sink-new.c', 'restart-module.c'] ],
   [ 'module-tunnel-source', ['module-tunnel.c', 'restart-module.c'], [], [], [x11_dep] ],
   [ 'module-tunnel-source-new', ['module-tunnel-source-new.c', 'restart-module.c'] ],
-  [ 'module-virtual-sink', 'module-virtual-sink.c' ],
+  [ 'module-virtual-sink', 'module-virtual-sink.c', [], [], [], libvirtual_sink ],
   [ 'module-virtual-source', 'module-virtual-source.c' ],
   [ 'module-volume-restore', 'module-volume-restore.c' ],
 ]
