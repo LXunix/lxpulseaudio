@@ -2480,7 +2480,7 @@ static void device_set_available(pa_alsa_ucm_device *device, pa_available_t avai
     device->available = available;
 
     PA_DYNARRAY_FOREACH(port, device->ucm_ports, idx)
-        pa_device_port_set_available(port->core_port, port->device->available);
+        pa_device_port_set_available(port->core_port, port->device->available, false);
 }
 
 void pa_alsa_ucm_device_update_available(pa_alsa_ucm_device *device) {
@@ -2519,7 +2519,7 @@ static void ucm_port_data_init(pa_alsa_ucm_port_data *port, pa_alsa_ucm_config *
     port->paths = pa_hashmap_new_full(pa_idxset_string_hash_func, pa_idxset_string_compare_func, pa_xfree,
                                       (pa_free_cb_t) pa_alsa_path_free);
 
-    pa_device_port_set_available(port->core_port, port->device->available);
+    pa_device_port_set_available(port->core_port, port->device->available, false);
 }
 
 static void ucm_port_data_free(pa_device_port *port) {
