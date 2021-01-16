@@ -185,9 +185,6 @@ static void log_thread_func(void *userdata) {
 
     for (;;) {
 
-        if (log_thread_do_exit)
-            goto finish;
-
         struct log_item *l;
 
         if ((l = pa_asyncq_pop(async_queue, false))) {
@@ -195,12 +192,19 @@ static void log_thread_func(void *userdata) {
             if (pa_flist_push(PA_STATIC_FLIST_GET(log_items), l) < 0) {
                 pa_xfree(l);
             }
-        } else {
-            /* wait */
-            pa_mutex_lock(log_mutex);
-            pa_cond_wait(log_cond, log_mutex);
-            pa_mutex_unlock(log_mutex);
+            if (!log_thread_do_exit)
+                continue;
         }
+
+        /* if thread exit is not requested, wait for more items */
+
+        pa_mutex_lock(log_mutex);
+        if (!log_thread_do_exit)
+            pa_cond_wait(log_cond, log_mutex);
+        pa_mutex_unlock(log_mutex);
+
+        if (log_thread_do_exit)
+            break;
     }
 
 finish:
