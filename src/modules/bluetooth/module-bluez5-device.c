@@ -2455,13 +2455,14 @@ off:
 }
 
 static char *list_codecs(struct userdata *u) {
-    const pa_a2dp_codec_capabilities *a2dp_capabilities;
+    const pa_a2dp_codec_capabilities *a2dp_capability;
     const pa_a2dp_codec_id *key;
     pa_hashmap *a2dp_endpoints;
+    pa_hashmap *a2dp_capabilities;
     pa_json_encoder *encoder;
     unsigned int i;
     bool is_a2dp_sink;
-    void *state;
+    void *state, *state2;
 
     is_a2dp_sink = u->profile == PA_BLUETOOTH_PROFILE_A2DP_SINK;
 
@@ -2478,13 +2479,17 @@ static char *list_codecs(struct userdata *u) {
             a2dp_codec = pa_bluetooth_a2dp_codec_iter(i);
 
             if (memcmp(key, &a2dp_codec->id, sizeof(pa_a2dp_codec_id)) == 0) {
-                if (a2dp_codec->can_be_supported(is_a2dp_sink)) {
-                    pa_json_encoder_begin_element_object(encoder);
+                PA_HASHMAP_FOREACH(a2dp_capability, a2dp_capabilities, state2) {
+                    if (a2dp_codec->can_accept_capabilities(a2dp_capability->buffer, a2dp_capability->size, /* For encoding */ is_a2dp_sink)) {
+                        pa_json_encoder_begin_element_object(encoder);
 
-                    pa_json_encoder_add_member_string(encoder, "name", a2dp_codec->name);
-                    pa_json_encoder_add_member_string(encoder, "description", a2dp_codec->description);
+                        pa_json_encoder_add_member_string(encoder, "name", a2dp_codec->name);
+                        pa_json_encoder_add_member_string(encoder, "description", a2dp_codec->description);
 
-                    pa_json_encoder_end_object(encoder);
+                        pa_json_encoder_end_object(encoder);
+
+                        break;
+                    }
                 }
             }
         }
