@@ -34,6 +34,9 @@ const pa_a2dp_codec *pa_bluetooth_get_a2dp_codec(const char *name);
 /* Check if the given codec can be supported in A2DP_SINK or A2DP_SOURCE */
 bool pa_bluetooth_a2dp_codec_is_available(const pa_a2dp_codec_id *id, bool is_a2dp_sink);
 
+/* Check if the given codec and capability pair can be supported in A2DP_SINK or A2DP_SOURCE */
+const pa_a2dp_codec *pa_bluetooth_a2dp_codec_find_with_capabilities(const pa_a2dp_codec_id *id, const uint8_t *capabilities, int capabilities_size, bool for_encoding);
+
 /* Initialise GStreamer */
 void pa_bluetooth_a2dp_codec_gst_init(void);
 

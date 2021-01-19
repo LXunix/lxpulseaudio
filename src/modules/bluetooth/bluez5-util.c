@@ -1357,12 +1357,16 @@ static void parse_remote_endpoint_properties(pa_bluetooth_discovery *y, const ch
         a2dp_codec_id->vendor_codec_id = 0;
     }
 
-    if (!pa_bluetooth_a2dp_codec_is_available(a2dp_codec_id, pa_streq(uuid, PA_BLUETOOTH_UUID_A2DP_SINK))) {
+    const pa_a2dp_codec *codec = pa_bluetooth_a2dp_codec_find_with_capabilities(a2dp_codec_id, capabilities, capabilities_size, pa_streq(uuid, PA_BLUETOOTH_UUID_A2DP_SINK));
+
+    if (!codec) {
+        // TODO: We should pretty-print `a2dp_codec_id` here!
         pa_xfree(a2dp_codec_id);
         return;
     }
 
     a2dp_codec_capabilities = pa_xmalloc0(sizeof(*a2dp_codec_capabilities) + capabilities_size);
+    a2dp_codec_capabilities->first_codec = codec;
     a2dp_codec_capabilities->size = capabilities_size;
     memcpy(a2dp_codec_capabilities->buffer, capabilities, capabilities_size);
 

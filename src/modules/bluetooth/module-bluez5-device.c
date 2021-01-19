@@ -2460,7 +2460,6 @@ static char *list_codecs(struct userdata *u) {
     pa_hashmap *a2dp_endpoints;
     pa_hashmap *a2dp_capabilities;
     pa_json_encoder *encoder;
-    unsigned int i;
     bool is_a2dp_sink;
     void *state, *state2;
 
@@ -2473,25 +2472,15 @@ static char *list_codecs(struct userdata *u) {
     pa_json_encoder_begin_element_array(encoder);
 
     PA_HASHMAP_FOREACH_KV(key, a2dp_capabilities, a2dp_endpoints, state) {
-        for (i = 0; i < pa_bluetooth_a2dp_codec_count(); i++) {
-            const pa_a2dp_codec *a2dp_codec;
+        PA_HASHMAP_FOREACH(a2dp_capability, a2dp_capabilities, state2) {
+            const pa_a2dp_codec *a2dp_codec = a2dp_capability->first_codec;
 
-            a2dp_codec = pa_bluetooth_a2dp_codec_iter(i);
+            pa_json_encoder_begin_element_object(encoder);
 
-            if (memcmp(key, &a2dp_codec->id, sizeof(pa_a2dp_codec_id)) == 0) {
-                PA_HASHMAP_FOREACH(a2dp_capability, a2dp_capabilities, state2) {
-                    if (a2dp_codec->can_accept_capabilities(a2dp_capability->buffer, a2dp_capability->size, /* For encoding */ is_a2dp_sink)) {
-                        pa_json_encoder_begin_element_object(encoder);
+            pa_json_encoder_add_member_string(encoder, "name", a2dp_codec->name);
+            pa_json_encoder_add_member_string(encoder, "description", a2dp_codec->description);
 
-                        pa_json_encoder_add_member_string(encoder, "name", a2dp_codec->name);
-                        pa_json_encoder_add_member_string(encoder, "description", a2dp_codec->description);
-
-                        pa_json_encoder_end_object(encoder);
-
-                        break;
-                    }
-                }
-            }
+            pa_json_encoder_end_object(encoder);
         }
     }
 

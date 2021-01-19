@@ -25,7 +25,10 @@
 #define MAX_A2DP_CAPS_SIZE 254
 #define DEFAULT_OUTPUT_RATE_REFRESH_INTERVAL_MS 500
 
+typedef struct pa_a2dp_codec pa_a2dp_codec;
+
 typedef struct pa_a2dp_codec_capabilities {
+    const pa_a2dp_codec *first_codec; /* First codec to use */
     uint8_t size;
     uint8_t buffer[]; /* max size is 254 bytes */
 } pa_a2dp_codec_capabilities;

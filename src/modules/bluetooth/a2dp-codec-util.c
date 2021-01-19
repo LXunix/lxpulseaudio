@@ -109,3 +109,20 @@ bool pa_bluetooth_a2dp_codec_is_available(const pa_a2dp_codec_id *id, bool is_a2
 
     return false;
 }
+
+const pa_a2dp_codec *pa_bluetooth_a2dp_codec_find_with_capabilities(const pa_a2dp_codec_id *id, const uint8_t *capabilities, int capabilities_size, bool for_encoding) {
+    for (unsigned i = 0; i < pa_bluetooth_a2dp_codec_count(); ++i) {
+        const pa_a2dp_codec *a2dp_codec = pa_bluetooth_a2dp_codec_iter(i);
+
+        if (!memcmp(id, &a2dp_codec->id, sizeof(pa_a2dp_codec_id)) == 0)
+            continue;
+
+        if (!a2dp_codec->can_be_supported(for_encoding))
+            continue;
+
+        if (a2dp_codec->can_accept_capabilities(capabilities, capabilities_size, for_encoding))
+            return a2dp_codec;
+    }
+
+    return NULL;
+}
