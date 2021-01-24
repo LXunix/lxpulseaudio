@@ -134,7 +134,7 @@ static bool can_accept_capabilities_faststream(const uint8_t *capabilities_buffe
     return true;
 }
 
-static const char *choose_remote_endpoint(const pa_hashmap *capabilities_hashmap, const pa_sample_spec *default_sample_spec, bool for_encoding) {
+static const char *choose_remote_endpoint(const pa_hashmap *capabilities_hashmap, const pa_sample_spec *spec, bool for_encoding) {
     const pa_a2dp_codec_capabilities *a2dp_capabilities;
     const char *key;
     void *state;
@@ -495,7 +495,7 @@ static uint8_t default_bitpool(uint8_t freq, uint8_t mode) {
     pa_assert_not_reached();
 }
 
-static uint8_t fill_preferred_configuration(const pa_sample_spec *default_sample_spec, const uint8_t *capabilities_buffer, uint8_t capabilities_size, uint8_t config_buffer[MAX_A2DP_CAPS_SIZE]) {
+static uint8_t fill_preferred_configuration(const pa_sample_spec *spec, const uint8_t *capabilities_buffer, uint8_t capabilities_size, uint8_t config_buffer[MAX_A2DP_CAPS_SIZE]) {
     a2dp_sbc_t *config = (a2dp_sbc_t *) config_buffer;
     const a2dp_sbc_t *capabilities = (const a2dp_sbc_t *) capabilities_buffer;
     int i;
@@ -519,7 +519,7 @@ static uint8_t fill_preferred_configuration(const pa_sample_spec *default_sample
 
     /* Find the lowest freq that is at least as high as the requested sampling rate */
     for (i = 0; (unsigned) i < PA_ELEMENTSOF(freq_table); i++)
-        if (freq_table[i].rate >= default_sample_spec->rate && (capabilities->frequency & freq_table[i].cap)) {
+        if (freq_table[i].rate >= spec->rate && (capabilities->frequency & freq_table[i].cap)) {
             config->frequency = freq_table[i].cap;
             break;
         }
@@ -540,7 +540,7 @@ static uint8_t fill_preferred_configuration(const pa_sample_spec *default_sample
 
     pa_assert((unsigned) i < PA_ELEMENTSOF(freq_table));
 
-    if (default_sample_spec->channels <= 1) {
+    if (spec->channels <= 1) {
         if (capabilities->channel_mode & SBC_CHANNEL_MODE_MONO)
             config->channel_mode = SBC_CHANNEL_MODE_MONO;
         else if (capabilities->channel_mode & SBC_CHANNEL_MODE_JOINT_STEREO)
