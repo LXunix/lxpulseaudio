@@ -57,6 +57,78 @@ typedef void(*pa_source_cb_t)(pa_source *s);
 
 typedef int (*pa_source_get_mute_cb_t)(pa_source *s, bool *mute);
 
+/* Virtual source structure */
+typedef struct pa_vsource {
+    pa_msgobject parent;                      /* Message object */
+    pa_core *core;                            /* Pointer to core */
+    pa_source *source;                        /* A pointer to the virtual source */
+    pa_source_output *output_from_master;     /* source output from the master source */
+    pa_memblockq *memblockq;                  /* Memblockq of the virtual source, may be NULL */
+
+    bool auto_desc;                           /* Automatically adapt description on move */
+    bool source_moving;                       /* Set when master source changes to preserve volume */
+    const char *desc_head;                    /* Leading part of description string used for the
+                                               * source and source input when auto_desc is true */
+    const char *source_type;                  /* Name for the type of source, used as suffix for
+                                               * the source name if the name is derived from the
+                                               * master source. */
+    bool autoloaded;                          /* True if the source was not loaded manually */
+    size_t max_chunk_size;                    /* Maximum chunk size in bytes that the filter will
+                                               * accept, set to pa_mempool_block_size_max() by default */
+    size_t fixed_block_size;                  /* Block size in frames for fixed block size filters,
+                                               * 0 if block size is controlled by pulseaudio. */
+    size_t fixed_input_block_size;            /* Input block size in frames. If not 0, input data for
+                                               * process_chunk() will always have the same size.
+                                               * If not enough new data is available, the remaining
+                                               * samples will be filled with history. */
+    size_t overlap_frames;                    /* Some filters require old input samples in addtion to
+                                               * the current data. The variable contains the number of
+                                               * previous frames that will be passed to process_chunk().
+                                               * The actual number of history frames may be variable if
+                                               * the filter defines the get_current_overlap() function.
+                                               * In this case, overlap_frames contains the maximum
+                                               * number of history frames. */
+    pa_usec_t max_latency;                    /* Maximum latency allowed for the source, 0 if unused */
+
+    /* Callback to process a chunk of data by the filter. Called from I/O thread
+     * context. May be NULL */
+    void (*process_chunk)(uint8_t *src, uint8_t *dst, unsigned in_count, unsigned out_count, void *userdata);
+
+    /* Callback to retrieve additional latency caused by the filter. Called from
+     * I/O thread context. May be NULL */
+    pa_usec_t (*get_extra_latency)(pa_source *s);
+
+    /* If defined, this function is called from the source-output push() callback
+     * to retrieve the current number of history frames to include in the next
+     * chunk. Called from I/O thread. */
+    size_t (*get_current_overlap)(pa_source_output *o);
+
+    /* If set and dest is valid, this function is called in the moving() callback
+     * to change the description of source and source-output. Called from main context.
+     * May be NULL */
+    void (*set_description)(pa_source_output *o, pa_source *dest);
+
+    /* If set, this function will be called after update_filter_parameters() to
+     * inform the filter of the block sizes that will be used. These may differ
+     * from the sizes set in update_filter_parameters() if the function tries to
+     * set an invalid combination of block sizes. Called from I/O thread. */
+    void (*update_block_sizes)(size_t fixed_block_size, size_t fixed_input_block_size, size_t overlap_frames, void *userdata);
+
+    /* If set, this function is called in I/O thread context when an update of the
+     * filter parameters is requested. May be NULL. The function must replace
+     * the currently used parameter structure by the new structure in parameters
+     * and return a pointer to the old structure so that it can be freed in the
+     * main thread using free_filter_parameters(). If the old structure can be
+     * re-used, the function may return NULL. update_filter_parameters() may
+     * also modify the block sizes. */
+    void *(*update_filter_parameters)(void *parameters, void *userdata);
+
+    /* Frees a parameter structure. May only be NULL, if update_filter_parameters()
+     * is also NULL or if update_filter_parameters() always returns NULL. Called
+     * from main thread. */
+    void (*free_filter_parameters)(void *parameters);
+} pa_vsource;
+
 struct pa_source {
     pa_msgobject parent;
 
@@ -90,6 +162,7 @@ struct pa_source {
     unsigned n_corked;
     pa_sink *monitor_of;                     /* may be NULL */
     pa_source_output *output_from_master;    /* non-NULL only for filter sources */
+    pa_vsource *vsource;    /* non-NULL only for filter sources */
 
     pa_volume_t base_volume; /* shall be constant */
     unsigned n_volume_steps; /* shall be constant */

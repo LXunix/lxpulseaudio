@@ -529,6 +529,7 @@ void pa_core_update_default_sink(pa_core *core) {
  * a  > b  ->  return  1 */
 static int compare_sources(pa_source *a, pa_source *b, bool ignore_configured_virtual_default) {
     pa_core *core;
+    bool a_is_vsource, b_is_vsource;
 
     core = a->core;
 
@@ -572,10 +573,25 @@ static int compare_sources(pa_source *a, pa_source *b, bool ignore_configured_vi
     if (a->priority > b->priority)
         return 1;
 
-    /* Let sources like pipe source or null source win against filter sources */
-    if (a->output_from_master && !b->output_from_master)
+    /* Let sources like pipe source or null source win against filter sources
+       During consolidation, we have to detect the presence of the vsource or
+       output_to_master variable. When the virtual sources have been migrated,
+       this will simplify.  */
+    a_is_vsource = false;
+    if (a->vsource)
+        a_is_vsource = true;
+    else if (a->output_from_master)
+        a_is_vsource = true;
+
+    b_is_vsource = false;
+    if (b->vsource)
+        b_is_vsource = true;
+    else if (b->output_from_master)
+        b_is_vsource = true;
+
+    if (a_is_vsource && !b_is_vsource)
         return -1;
-    if (!a->output_from_master && b->output_from_master)
+    if (!a_is_vsource && b_is_vsource)
         return 1;
 
     /* If the sources are monitors, we can compare the monitored sinks. */
