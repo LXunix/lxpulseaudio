@@ -13,6 +13,17 @@ libvirtual_sink = shared_library('virtual_sink',
     install_dir : modlibexecdir
 )
 
+libvirtual_source = shared_library('virtual_source',
+   'virtual-source-common.c',
+   'virtual-source-common.h',
+    c_args : [pa_c_args, server_c_args],
+    include_directories : [configinc, topinc],
+    dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep],
+    install_rpath : privlibdir,
+    install : true,
+    install_dir : modlibexecdir
+)
+
 # module name, sources, [headers, extra flags, extra deps, extra libs]
 all_modules = [
   [ 'module-allow-passthrough', 'module-allow-passthrough.c' ],
@@ -67,7 +78,7 @@ all_modules = [
   [ 'module-tunnel-source', ['module-tunnel.c', 'restart-module.c'], [], [], [x11_dep] ],
   [ 'module-tunnel-source-new', ['module-tunnel-source-new.c', 'restart-module.c'] ],
   [ 'module-virtual-sink', 'module-virtual-sink.c', [], [], [], libvirtual_sink ],
-  [ 'module-virtual-source', 'module-virtual-source.c' ],
+  [ 'module-virtual-source', 'module-virtual-source.c', [], [], [], libvirtual_source ],
   [ 'module-volume-restore', 'module-volume-restore.c' ],
 ]
 
