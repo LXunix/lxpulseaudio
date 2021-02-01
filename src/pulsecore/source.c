@@ -273,7 +273,7 @@ pa_source* pa_source_new(
     s->outputs = pa_idxset_new(NULL, NULL);
     s->n_corked = 0;
     s->monitor_of = NULL;
-    s->output_from_master = NULL;
+    s->vsource = NULL;
 
     s->reference_volume = s->real_volume = data->volume;
     pa_cvolume_reset(&s->soft_volume, s->sample_spec.channels);
@@ -1234,19 +1234,11 @@ bool pa_source_flat_volume_enabled(pa_source *s) {
 pa_source *pa_source_get_master(pa_source *s) {
     pa_source_assert_ref(s);
 
-    /* During consolidation, we have to support s->output_from_master and
-     * s->vsource->output_from_master. The first will disappear after all
-     * virtual sources use the new code. */
     while (s && (s->flags & PA_SOURCE_SHARE_VOLUME_WITH_MASTER)) {
-        if (PA_UNLIKELY(s->vsource && !s->vsource->output_from_master))
+        if (PA_UNLIKELY(!s->vsource || (s->vsource && !s->vsource->output_from_master)))
             return NULL;
-        if (PA_UNLIKELY(!s->vsource && !s->output_from_master))
-             return NULL;
 
-        if (s->output_from_master)
-            s = s->output_from_master->source;
-        else
-            s = s->vsource->output_from_master->source;
+        s = s->vsource->output_from_master->source;
     }
 
     return s;
@@ -1256,7 +1248,7 @@ pa_source *pa_source_get_master(pa_source *s) {
 bool pa_source_is_filter(pa_source *s) {
     pa_source_assert_ref(s);
 
-    return ((s->output_from_master != NULL || s->vsource->output_from_master != NULL));
+    return (s->vsource->output_from_master != NULL);
 }
 
 /* Called from main context */

@@ -34,6 +34,7 @@
 #include "echo-cancel.h"
 
 #include <modules/virtual-sink-common.h>
+#include <modules/virtual-source-common.h>
 
 #include <pulse/xmalloc.h>
 #include <pulse/timeval.h>
@@ -222,6 +223,7 @@ struct userdata {
     pa_rtpoll_item *rtpoll_item_read, *rtpoll_item_write;
 
     pa_source *source;
+    pa_vsource *vsource;
     bool source_auto_desc;
     pa_source_output *source_output;
     pa_memblockq *source_memblockq; /* echo canceller needs fixed sized chunks */
@@ -1731,6 +1733,10 @@ int pa__init(pa_module*m) {
 
     pa_source_set_asyncmsgq(u->source, source_master->asyncmsgq);
 
+    /* Create vsource structure. Only needed for output_from_master field, otherwise
+     * unused because the virtual source here is too different from other filters */
+    u->vsource = pa_virtual_source_vsource_new(u->source);
+
     /* Create sink */
     pa_sink_new_data_init(&sink_data);
     sink_data.driver = __FILE__;
@@ -1817,7 +1823,7 @@ int pa__init(pa_module*m) {
     u->source_output->moving = source_output_moving_cb;
     u->source_output->userdata = u;
 
-    u->source->output_from_master = u->source_output;
+    u->vsource->output_from_master = u->source_output;
 
     /* Create sink input */
     pa_sink_input_new_data_init(&sink_input_data);
@@ -1986,6 +1992,9 @@ void pa__done(pa_module*m) {
 
     if (u->vsink)
         pa_xfree(u->vsink);
+
+    if (u->vsource)
+        pa_xfree(u->vsource);
 
     if (u->source)
         pa_source_unref(u->source);

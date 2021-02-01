@@ -1307,19 +1307,10 @@ bool pa_source_output_may_move(pa_source_output *o) {
 bool pa_source_output_is_filter_loop(pa_source_output *target, pa_source *s) {
     unsigned PA_UNUSED i = 0;
 
-    /* During consolidation, we have to support s->output_from_master and
-     * s->vsource->output_from_master. The first will disappear after all
-     * virtual sources use the new code. */
-    while (s && (s->output_from_master || (s->vsource && s->vsource->output_from_master))) {
-        if (s->vsource) {
-            if (s->vsource->output_from_master == target)
-                return true;
-            s = s->vsource->output_from_master->source;
-        } else {
-            if (s->output_from_master == target)
-                return true;
-            s = s->output_from_master->source;
-        }
+    while (s && (s->vsource && s->vsource->output_from_master)) {
+        if (s->vsource->output_from_master == target)
+            return true;
+        s = s->vsource->output_from_master->source;
         pa_assert(i++ < 100);
     }
     return false;
@@ -1331,11 +1322,8 @@ static bool is_filter_source_moving(pa_source_output *o) {
     if (!source)
         return false;
 
-    while (source->output_from_master || (source->vsource && source->vsource->output_from_master)) {
-        if (source->vsource)
-            source = source->vsource->output_from_master->source;
-        else
-            source = source->output_from_master->source;
+    while (source->vsource && source->vsource->output_from_master) {
+        source = source->vsource->output_from_master->source;
 
         if (!source)
             return true;

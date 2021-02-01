@@ -273,7 +273,7 @@ module_echo_cancel_sources = [
 module_echo_cancel_orc_sources = []
 module_echo_cancel_flags = []
 module_echo_cancel_deps = [libatomic_ops_dep]
-module_echo_cancel_libs = [libvirtual_sink]
+module_echo_cancel_libs = [libvirtual_sink, libvirtual_source]
 
 if get_option('adrian-aec')
   module_echo_cancel_sources += [

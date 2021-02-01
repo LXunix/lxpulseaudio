@@ -272,10 +272,7 @@ static bool find_paired_master(struct userdata *u, struct filter *filter, pa_obj
                         }
                         /* Make sure we're not routing to another instance of
                          * the same filter. */
-                        if (so->source->vsource)
-                            filter->source_master = so->source->vsource->output_from_master->source;
-                        else
-                            filter->source_master = so->source->output_from_master->source;
+                        filter->source_master = so->source->vsource->output_from_master->source;
                     } else {
                         filter->source_master = so->source;
                     }
@@ -477,18 +474,12 @@ static void find_filters_for_module(struct userdata *u, pa_module *m, const char
             pa_assert(pa_source_is_filter(source));
 
             if (!fltr) {
-                if (source->vsource)
-                    fltr = filter_new(name, parameters, NULL, source->vsource->output_from_master->source);
-                else
-                    fltr = filter_new(name, parameters, NULL, source->output_from_master->source);
+                fltr = filter_new(name, parameters, NULL, source->vsource->output_from_master->source);
                 fltr->module_index = m->index;
                 fltr->source = source;
             } else {
                 fltr->source = source;
-                if (source->vsource)
-                    fltr->source_master = source->vsource->output_from_master->source;
-                else
-                    fltr->source_master = source->output_from_master->source;
+                fltr->source_master = source->vsource->output_from_master->source;
             }
 
             break;
