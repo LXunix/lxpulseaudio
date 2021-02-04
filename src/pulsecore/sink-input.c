@@ -1782,7 +1782,7 @@ bool pa_sink_input_may_move(pa_sink_input *i) {
     return true;
 }
 
-static bool find_filter_sink_input(pa_sink_input *target, pa_sink *s) {
+bool pa_sink_input_is_filter_loop(pa_sink_input *target, pa_sink *s) {
     unsigned PA_UNUSED i = 0;
 
     while (s && (s->vsink && s->vsink->input_to_master)) {
@@ -1827,7 +1827,7 @@ bool pa_sink_input_may_move_to(pa_sink_input *i, pa_sink *dest) {
         return false;
 
     /* Make sure we're not creating a filter sink cycle */
-    if (find_filter_sink_input(i, dest)) {
+    if (pa_sink_input_is_filter_loop(i, dest)) {
         pa_log_debug("Can't connect input to %s, as that would create a cycle.", dest->name);
         return false;
     }
@@ -2240,10 +2240,28 @@ void pa_sink_input_fail_move(pa_sink_input *i) {
     if (pa_hook_fire(&i->core->hooks[PA_CORE_HOOK_SINK_INPUT_MOVE_FAIL], i) == PA_HOOK_STOP)
         return;
 
-    /* Can we move the sink input to the default sink? */
-    if (i->core->rescue_streams && pa_sink_input_may_move_to(i, i->core->default_sink)) {
-        if (pa_sink_input_finish_move(i, i->core->default_sink, false) >= 0)
-            return;
+    /* Try to rescue stream if configured */
+    if (i->core->rescue_streams) {
+
+        /* Can we move the sink input to the default sink? */
+        if (pa_sink_input_may_move_to(i, i->core->default_sink)) {
+            if (pa_sink_input_finish_move(i, i->core->default_sink, false) >= 0)
+                return;
+        }
+
+        /* If this is a filter stream and the default sink is set to a filter sink within
+         * the same filter chain, we would create a loop and therefore have to find another
+         * sink to move to. */
+        if (i->origin_sink && pa_sink_input_is_filter_loop(i, i->core->default_sink)) {
+            pa_sink *best;
+
+            best = pa_core_find_best_sink(i->core, true);
+
+            if (best && pa_sink_input_may_move_to(i, best)) {
+                if (pa_sink_input_finish_move(i, best, false) >= 0)
+                return;
+            }
+        }
     }
 
     if (i->moving)

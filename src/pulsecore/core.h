@@ -271,6 +271,9 @@ void pa_core_set_policy_default_source(pa_core *core, const char *source);
 void pa_core_update_default_sink(pa_core *core);
 void pa_core_update_default_source(pa_core *core);
 
+pa_sink *pa_core_find_best_sink(pa_core *core, bool ignore_configured_virtual_default);
+pa_source *pa_core_find_best_source(pa_core *core, bool ignore_configured_virtual_default);
+
 void pa_core_set_exit_idle_time(pa_core *core, int time);
 
 /* Check whether no one is connected to this core */

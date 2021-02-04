@@ -3033,9 +3033,32 @@ void pa_source_move_streams_to_default_source(pa_core *core, pa_source *old_sour
         if (!o->source)
             continue;
 
-        /* Don't move source-outputs which connect sources to filter sources */
-        if (o->destination_source)
+        /* If this is a filter stream and the default source is set to a filter source within
+         * the same filter chain, we would create a loop and therefore have to find another
+         * source to move to. */
+        if (o->destination_source && pa_source_output_is_filter_loop(o, core->default_source)) {
+            pa_source *best;
+
+            /* If the default source changed to our filter chain, lets make the current
+             * master the preferred source. */
+            if (default_source_changed) {
+                pa_xfree(o->preferred_source);
+                o->preferred_source = pa_xstrdup(o->source->name);
+
+                continue;
+            }
+
+            best = pa_core_find_best_source(core, true);
+
+            if (!best || !pa_source_output_may_move_to(o, best))
+                continue;
+
+            pa_log_info("Moving source output %u \"%s\" to the default source would create a filter loop, moving to %s instead.",
+                        o->index, pa_strnull(pa_proplist_gets(o->proplist, PA_PROP_APPLICATION_NAME)), best->name);
+
+            pa_source_output_move_to(o, best, false);
             continue;
+        }
 
         /* If default_source_changed is false, the old source became unavailable, so all streams must be moved. */
         if (pa_safe_streq(old_source->name, o->preferred_source) && default_source_changed)

@@ -4064,9 +4064,32 @@ void pa_sink_move_streams_to_default_sink(pa_core *core, pa_sink *old_sink, bool
         if (!i->sink)
             continue;
 
-        /* Don't move sink-inputs which connect filter sinks to their target sinks */
-        if (i->origin_sink)
+        /* If this is a filter stream and the default sink is set to a filter sink within
+         * the same filter chain, we would create a loop and therefore have to find another
+         * sink to move to. */
+        if (i->origin_sink && pa_sink_input_is_filter_loop(i, core->default_sink)) {
+            pa_sink *best;
+
+            /* If the default sink changed to our filter chain, lets make the current
+             * master the preferred sink. */
+            if (default_sink_changed) {
+                pa_xfree(i->preferred_sink);
+                i->preferred_sink = pa_xstrdup(i->sink->name);
+
+                continue;
+            }
+
+            best = pa_core_find_best_sink(core, true);
+
+            if (!best || !pa_sink_input_may_move_to(i, best))
+                continue;
+
+            pa_log_info("Moving sink input %u \"%s\" to the default sink would create a filter loop, moving to %s instead.",
+                        i->index, pa_strnull(pa_proplist_gets(i->proplist, PA_PROP_APPLICATION_NAME)), best->name);
+
+            pa_sink_input_move_to(i, best, false);
             continue;
+        }
 
         /* If default_sink_changed is false, the old sink became unavailable, so all streams must be moved. */
         if (pa_safe_streq(old_sink->name, i->preferred_sink) && default_sink_changed)
