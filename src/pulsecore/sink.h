@@ -173,6 +173,7 @@ struct pa_sink {
     unsigned n_corked;
     pa_source *monitor_source;
     pa_vsink *vsink;                        /* non-NULL only for filter sinks */
+    pa_vsource *uplink_of;                  /* non-NULL only for uplink sinks */
 
     pa_volume_t base_volume; /* shall be constant */
     unsigned n_volume_steps; /* shall be constant */

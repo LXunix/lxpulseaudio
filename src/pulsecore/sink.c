@@ -287,6 +287,7 @@ pa_sink* pa_sink_new(
     s->inputs = pa_idxset_new(NULL, NULL);
     s->n_corked = 0;
     s->vsink = NULL;
+    s->uplink_of = NULL;
 
     s->reference_volume = s->real_volume = data->volume;
     pa_cvolume_reset(&s->soft_volume, s->sample_spec.channels);
@@ -2552,7 +2553,7 @@ unsigned pa_sink_check_suspend(pa_sink *s, pa_sink_input *ignore_input, pa_sourc
     }
 
     if (s->monitor_source)
-        ret += pa_source_check_suspend(s->monitor_source, ignore_output);
+        ret += pa_source_check_suspend(s->monitor_source, ignore_input, ignore_output);
 
     return ret;
 }
@@ -3257,6 +3258,9 @@ void pa_sink_invalidate_requested_latency(pa_sink *s, bool dynamic) {
         return;
 
     if (PA_SINK_IS_LINKED(s->thread_info.state)) {
+
+        if (s->uplink_of && s->uplink_of->source)
+            pa_source_invalidate_requested_latency(s->uplink_of->source, dynamic);
 
         if (s->update_requested_latency)
             s->update_requested_latency(s);

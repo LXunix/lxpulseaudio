@@ -124,10 +124,10 @@ struct output {
     pa_memblockq *memblockq;
 
     /* For communication of the stream latencies to the main thread */
-    pa_usec_t total_latency;
+    int64_t total_latency;
     struct {
         pa_usec_t timestamp;
-        pa_usec_t sink_latency;
+        int64_t sink_latency;
         size_t output_memblockq_size;
         uint64_t receive_counter;
     } latency_snapshot;
@@ -249,8 +249,8 @@ static uint32_t rate_controller(
 static void adjust_rates(struct userdata *u) {
     struct output *o;
     struct sink_snapshot rdata;
-    pa_usec_t avg_total_latency = 0;
-    pa_usec_t target_latency = 0;
+    int64_t avg_total_latency = 0;
+    int64_t target_latency = 0;
     pa_usec_t max_sink_latency = 0;
     pa_usec_t min_total_latency = (pa_usec_t)-1;
     uint32_t base_rate;
@@ -280,7 +280,7 @@ static void adjust_rates(struct userdata *u) {
         return;
 
     PA_IDXSET_FOREACH(o, u->outputs, idx) {
-        pa_usec_t snapshot_latency;
+        int64_t snapshot_latency;
         int64_t time_difference;
 
         if (!o->sink_input || !PA_SINK_IS_OPENED(o->sink->state))
@@ -319,7 +319,7 @@ static void adjust_rates(struct userdata *u) {
         /* Debug output */
         pa_log_debug("[%s] Snapshot sink latency = %0.2fms, total snapshot latency = %0.2fms", o->sink->name, (double) o->latency_snapshot.sink_latency / PA_USEC_PER_MSEC, (double) snapshot_latency / PA_USEC_PER_MSEC);
 
-        if (o->total_latency > 10*PA_USEC_PER_SEC)
+        if (o->total_latency > (int64_t)(10*PA_USEC_PER_SEC))
             pa_log_warn("[%s] Total latency of output is very high (%0.2fms), most likely the audio timing in one of your drivers is broken.", o->sink->name, (double) o->total_latency / PA_USEC_PER_MSEC);
 
         n++;

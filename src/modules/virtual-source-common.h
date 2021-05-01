@@ -69,3 +69,6 @@ pa_vsource* pa_virtual_source_vsource_new(pa_source *s);
 
 /* Update filter parameters */
 void pa_virtual_source_request_parameter_update(pa_vsource *vs, void *parameters);
+
+/* Post data, mix in uplink sink */
+void pa_virtual_source_post(pa_source *s, const pa_memchunk *chunk);

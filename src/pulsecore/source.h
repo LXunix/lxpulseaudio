@@ -89,6 +89,7 @@ typedef struct pa_vsource {
                                                * In this case, overlap_frames contains the maximum
                                                * number of history frames. */
     pa_usec_t max_latency;                    /* Maximum latency allowed for the source, 0 if unused */
+    pa_sink *uplink_sink;                     /* Uplink sink if present, otherwise NULL */
 
     /* Callback to process a chunk of data by the filter. Called from I/O thread
      * context. May be NULL */
@@ -499,7 +500,7 @@ unsigned pa_source_used_by(pa_source *s); /* Number of connected streams that ar
 
 /* Returns how many streams are active that don't allow suspensions. If
  * "ignore" is non-NULL, that stream is not included in the count. */
-unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore);
+unsigned pa_source_check_suspend(pa_source *s, pa_sink_input *ignore_input, pa_source_output *ignore_output);
 
 const char *pa_source_state_to_string(pa_source_state_t state);
 

@@ -22,8 +22,10 @@
 #include <modules/virtual-source-common.h>
 
 #include <pulsecore/core-util.h>
+#include <pulsecore/mix.h>
 
 #include <pulse/timeval.h>
+#include <pulse/rtclock.h>
 
 PA_DEFINE_PRIVATE_CLASS(pa_vsource, pa_msgobject);
 #define PA_VSOURCE(o) (pa_vsource_cast(o))
@@ -40,6 +42,11 @@ enum {
 enum {
     VSOURCE_MESSAGE_FREE_PARAMETERS,
     VSOURCE_MESSAGE_OUTPUT_ATTACHED
+};
+
+struct uplink_data {
+    pa_vsource *vsource;
+    pa_memblockq *memblockq;
 };
 
 /* Helper functions */
@@ -121,6 +128,8 @@ static void set_latency_range_within_thread(pa_vsource *vsource) {
     }
 
     pa_source_set_latency_range_within_thread(s, min_latency, max_latency);
+    if (vsource->uplink_sink)
+        pa_sink_set_latency_range_within_thread(vsource->uplink_sink, min_latency, max_latency);
 }
 
 /* Called from I/O thread context */
@@ -134,6 +143,134 @@ static void set_memblockq_rewind(pa_vsource *vsource) {
         rewind_size = PA_MAX(vsource->fixed_input_block_size, vsource->overlap_frames) * in_fs;
         pa_memblockq_set_maxrewind(vsource->memblockq, rewind_size);
     }
+}
+
+/* Uplink sink callbacks */
+
+/* Called from I/O thread context */
+static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk) {
+    pa_sink *s;
+    struct uplink_data *uplink;
+
+    s = PA_SINK(o);
+    uplink = s->userdata;
+    pa_assert(uplink);
+
+    switch (code) {
+
+        case PA_SINK_MESSAGE_GET_LATENCY:
+
+            /* While the sink is not opened or if we have not received any data yet,
+             * simply return 0 as latency */
+            if (!PA_SINK_IS_OPENED(s->thread_info.state)) {
+                *((int64_t*) data) = 0;
+                return 0;
+            }
+
+            *((int64_t*) data) = pa_bytes_to_usec(pa_memblockq_get_length(uplink->memblockq), &s->sample_spec);
+            *((int64_t*) data) -= pa_source_get_latency_within_thread(uplink->vsource->source, true);
+
+            return 0;
+    }
+
+    return pa_sink_process_msg(o, code, data, offset, chunk);
+}
+
+/* Called from main context */
+static int sink_set_state_in_main_thread(pa_sink *s, pa_sink_state_t state, pa_suspend_cause_t suspend_cause) {
+    pa_vsource *vsource;
+    struct uplink_data *uplink;
+
+    pa_sink_assert_ref(s);
+    uplink = s->userdata;
+    pa_assert(uplink);
+    vsource = uplink->vsource;
+    pa_assert(vsource);
+
+    if (!PA_SINK_IS_LINKED(state)) {
+        return 0;
+    }
+
+    /* need to wake-up source if it was suspended */
+    if (!PA_SINK_IS_OPENED(s->state) && PA_SINK_IS_OPENED(state) && !PA_SOURCE_IS_OPENED(vsource->source->state) && PA_SOURCE_IS_LINKED(vsource->source->state)) {
+        pa_log_debug("Resuming source %s, because its uplink sink became active.", vsource->source->name);
+        pa_source_suspend(vsource->source, false, PA_SUSPEND_IDLE);
+    }
+
+    return 0;
+}
+
+/* Called from the IO thread. */
+static int sink_set_state_in_io_thread(pa_sink *s, pa_sink_state_t new_state, pa_suspend_cause_t new_suspend_cause) {
+    struct uplink_data *uplink;
+
+    pa_sink_assert_ref(s);
+    uplink = s->userdata;
+    pa_assert(uplink);
+
+    if (!PA_SINK_IS_OPENED(new_state) && PA_SINK_IS_OPENED(s->thread_info.state)) {
+        pa_memblockq_flush_write(uplink->memblockq, true);
+        pa_sink_set_max_request_within_thread(s, 0);
+        pa_sink_set_max_rewind_within_thread(s, 0);
+    }
+
+    return 0;
+}
+
+/* Called from I/O thread context */
+static void sink_update_requested_latency(pa_sink *s) {
+    struct uplink_data *uplink;
+    pa_usec_t latency;
+    size_t rewind_size;
+
+    pa_sink_assert_ref(s);
+    uplink = s->userdata;
+    pa_assert(uplink);
+
+    if (!PA_SINK_IS_LINKED(s->thread_info.state))
+        return;
+
+    latency = pa_sink_get_requested_latency_within_thread(s);
+    if (latency == (pa_usec_t) -1)
+        latency = s->thread_info.max_latency;
+    rewind_size = pa_usec_to_bytes(latency, &s->sample_spec);
+    pa_memblockq_set_maxrewind(uplink->memblockq, rewind_size);
+
+    pa_sink_set_max_request_within_thread(s, rewind_size);
+    pa_sink_set_max_rewind_within_thread(s, rewind_size);
+}
+
+static void sink_process_rewind(pa_sink *s) {
+    struct uplink_data *uplink;
+    size_t rewind_nbytes, in_buffer;
+
+    uplink = s->userdata;
+    pa_assert(uplink);
+
+    rewind_nbytes = s->thread_info.rewind_nbytes;
+
+    if (!PA_SINK_IS_OPENED(s->thread_info.state) || rewind_nbytes <= 0)
+        goto finish;
+
+    pa_log_debug("Requested to rewind %lu bytes.", (unsigned long) rewind_nbytes);
+
+    in_buffer = pa_memblockq_get_length(uplink->memblockq);
+    if (in_buffer == 0) {
+        pa_log_debug("Memblockq empty, cannot rewind");
+        goto finish;
+    }
+
+    if (rewind_nbytes > in_buffer)
+        rewind_nbytes = in_buffer;
+
+    pa_memblockq_seek(uplink->memblockq, -rewind_nbytes, PA_SEEK_RELATIVE, true);
+    pa_sink_process_rewind(s, rewind_nbytes);
+
+    pa_log_debug("Rewound %lu bytes.", (unsigned long) rewind_nbytes);
+    return;
+
+finish:
+    pa_sink_process_rewind(s, 0);
 }
 
 /* Source callbacks */
@@ -230,14 +367,33 @@ int pa_virtual_source_process_msg(pa_msgobject *obj, int code, void *data, int64
 /* Called from main context */
 int pa_virtual_source_set_state_in_main_thread(pa_source *s, pa_source_state_t state, pa_suspend_cause_t suspend_cause) {
     pa_source_output *o;
+    pa_vsource *vsource;
+    bool suspend_cause_changed;
 
     pa_source_assert_ref(s);
     o = get_output_from_source(s);
     pa_assert(o);
+    vsource = s->vsource;
+    pa_assert(vsource);
 
     if (!PA_SOURCE_IS_LINKED(state) ||
         !PA_SOURCE_OUTPUT_IS_LINKED(o->state))
         return 0;
+
+    suspend_cause_changed = (suspend_cause != s->suspend_cause);
+    if (vsource->uplink_sink && PA_SINK_IS_LINKED(vsource->uplink_sink->state) && suspend_cause_changed) {
+        /* If the source is suspended for other reasons than being idle, the uplink sink
+         * should be suspended using the same reasons */
+        if (suspend_cause != PA_SUSPEND_IDLE && state == PA_SOURCE_SUSPENDED) {
+            suspend_cause = suspend_cause & ~PA_SUSPEND_IDLE;
+            pa_sink_suspend(vsource->uplink_sink, true, suspend_cause);
+        } else if (PA_SOURCE_IS_OPENED(state) && s->suspend_cause != PA_SUSPEND_IDLE) {
+        /* If the source is resuming, the old suspend cause of the source should
+         * be removed from the sink unless the old suspend cause was idle. */
+            suspend_cause = s->suspend_cause & ~PA_SUSPEND_IDLE;
+            pa_sink_suspend(vsource->uplink_sink, false, suspend_cause);
+        }
+    }
 
     pa_source_output_cork(o, state == PA_SOURCE_SUSPENDED);
     return 0;
@@ -335,6 +491,86 @@ void pa_virtual_source_set_mute(pa_source *s) {
     pa_source_output_set_mute(o, s->muted, s->save_muted);
 }
 
+/* Post data, mix in uplink sink */
+void pa_virtual_source_post(pa_source *s, const pa_memchunk *chunk) {
+    pa_vsource *vsource;
+
+    vsource = s->vsource;
+    pa_assert(vsource);
+
+    /* if uplink sink exists, pull data from there; simplify by using
+       same length as chunk provided by source */
+    if (vsource->uplink_sink && PA_SINK_IS_OPENED(vsource->uplink_sink->thread_info.state)) {
+        pa_memchunk tchunk;
+        pa_mix_info streams[2];
+        int ch;
+        uint8_t *dst;
+        pa_memchunk dst_chunk;
+        size_t nbytes;
+        struct uplink_data *uplink;
+
+        uplink = vsource->uplink_sink->userdata;
+        pa_assert(uplink);
+
+        /* Hmm, process any rewind request that might be queued up */
+        if (PA_UNLIKELY(vsource->uplink_sink->thread_info.rewind_requested))
+            sink_process_rewind(vsource->uplink_sink);
+
+        nbytes = chunk->length;
+
+        /* get data from the sink */
+        while (pa_memblockq_get_length(uplink->memblockq) < nbytes) {
+            pa_memchunk nchunk;
+            size_t missing;
+
+            missing = nbytes - pa_memblockq_get_length(uplink->memblockq);
+            pa_sink_render(vsource->uplink_sink, missing, &nchunk);
+            pa_memblockq_push(uplink->memblockq, &nchunk);
+            pa_memblock_unref(nchunk.memblock);
+        }
+        pa_memblockq_peek_fixed_size(uplink->memblockq, nbytes, &tchunk);
+        pa_assert(tchunk.length == nbytes);
+
+        /* move the read pointer for sink memblockq */
+        pa_memblockq_drop(uplink->memblockq, tchunk.length);
+
+        /* Prepare output chunk */
+        dst_chunk.index = 0;
+        dst_chunk.length = nbytes;
+        dst_chunk.memblock = pa_memblock_new(vsource->core->mempool, dst_chunk.length);
+        dst = pa_memblock_acquire_chunk(&dst_chunk);
+
+        /* set-up mixing structure
+           volume was taken care of in sink and source already */
+        streams[0].chunk = *chunk;
+        for(ch=0; ch < s->sample_spec.channels; ch++)
+            streams[0].volume.values[ch] = PA_VOLUME_NORM;
+        streams[0].volume.channels = s->sample_spec.channels;
+
+        streams[1].chunk = tchunk;
+        for(ch=0; ch < s->sample_spec.channels;ch++)
+            streams[1].volume.values[ch] = PA_VOLUME_NORM;
+        streams[1].volume.channels = s->sample_spec.channels;
+
+        /* do mixing */
+        pa_mix(streams,                /* 2 streams to be mixed */
+               2,
+               dst,                    /* put result in dst */
+               nbytes,                 /* same length as input */
+               (const pa_sample_spec *)&s->sample_spec, /* same sample spec for input and output */
+               NULL,                   /* no volume information */
+               false);                 /* no mute */
+
+        pa_memblock_release(dst_chunk.memblock);
+
+        pa_source_post(s, &dst_chunk);
+
+        pa_memblock_unref(tchunk.memblock);
+        pa_memblock_unref(dst_chunk.memblock);
+    } else
+        pa_source_post(s, chunk);
+}
+
 /* Source output callbacks */
 
 /* Called from output thread context */
@@ -355,7 +591,7 @@ void pa_virtual_source_output_push(pa_source_output *o, const pa_memchunk *chunk
         return;
 
     if (!vsource->process_chunk || !vsource->memblockq) {
-        pa_source_post(s, chunk);
+        pa_virtual_source_post(s, chunk);
         return;
     }
 
@@ -427,7 +663,7 @@ void pa_virtual_source_output_push(pa_source_output *o, const pa_memchunk *chunk
         pa_memblock_unref(schunk.memblock);
 
         /* Post data */
-        pa_source_post(s, &tchunk);
+        pa_virtual_source_post(s, &tchunk);
 
         pa_memblock_unref(tchunk.memblock);
         length = pa_memblockq_get_length(vsource->memblockq);
@@ -461,8 +697,16 @@ void pa_virtual_source_output_process_rewind(pa_source_output *o, size_t nbytes)
      * pass the rewind on to the source */
     if (vsource->memblockq)
         pa_memblockq_seek(vsource->memblockq, - nbytes, PA_SEEK_RELATIVE, true);
-    else
+    else {
         pa_source_process_rewind(s, nbytes * out_fs / in_fs);
+        if (vsource->uplink_sink && PA_SINK_IS_OPENED(vsource->uplink_sink->thread_info.state)) {
+            struct uplink_data *uplink;
+
+            uplink = vsource->uplink_sink->userdata;
+            pa_assert(uplink);
+            pa_memblockq_rewind(uplink->memblockq, nbytes * out_fs / in_fs);
+        }
+    }
 }
 
 /* Called from source I/O thread context. */
@@ -543,6 +787,8 @@ void pa_virtual_source_output_attach(pa_source_output *o) {
     master_fs = pa_frame_size(&o->source->sample_spec);
 
     pa_source_set_rtpoll(s, o->source->thread_info.rtpoll);
+    if (vsource->uplink_sink)
+        pa_sink_set_rtpoll(vsource->uplink_sink, o->source->thread_info.rtpoll);
 
     set_latency_range_within_thread(vsource);
 
@@ -574,16 +820,21 @@ void pa_virtual_source_output_attach(pa_source_output *o) {
 /* Called from output thread context */
 void pa_virtual_source_output_detach(pa_source_output *o) {
     pa_source *s;
+    pa_vsource *vsource;
 
     pa_source_output_assert_ref(o);
     pa_source_output_assert_io_context(o);
     s = o->destination_source;
     pa_assert(s);
+    vsource = s->vsource;
+    pa_assert(vsource);
 
     if (PA_SOURCE_IS_LINKED(s->thread_info.state))
         pa_source_detach_within_thread(s);
 
     pa_source_set_rtpoll(s, NULL);
+    if (vsource->uplink_sink)
+        pa_sink_set_rtpoll(vsource->uplink_sink, NULL);
 }
 
 /* Called from main thread */
@@ -614,6 +865,23 @@ void pa_virtual_source_output_kill(pa_source_output *o) {
     if (vsource->memblockq)
         pa_memblockq_free(vsource->memblockq);
 
+    /* Destroy uplink sink if present */
+    if (vsource->uplink_sink) {
+        struct uplink_data *uplink;
+
+        uplink = vsource->uplink_sink->userdata;
+        pa_sink_unlink(vsource->uplink_sink);
+        pa_sink_unref(vsource->uplink_sink);
+
+        if (uplink) {
+            if (uplink->memblockq)
+                pa_memblockq_free(uplink->memblockq);
+
+            pa_xfree(uplink);
+        }
+        vsource->uplink_sink = NULL;
+    }
+
     /* Virtual sources must set the module */
     m = s->module;
     pa_assert(m);
@@ -640,7 +908,21 @@ bool pa_virtual_source_output_may_move_to(pa_source_output *o, pa_source *dest) 
     if (vsource->autoloaded)
         return false;
 
-    return s != dest;
+    if (s == dest)
+        return false;
+
+    if (vsource->uplink_sink) {
+        pa_source *chain_master;
+
+        chain_master = dest;
+        while (chain_master->vsource && chain_master->vsource->output_from_master)
+            chain_master = chain_master->vsource->output_from_master->source;
+
+        if (chain_master == vsource->uplink_sink->monitor_source)
+            return false;
+    }
+
+    return true;
 }
 
 /* Called from main thread */
@@ -649,6 +931,7 @@ void pa_virtual_source_output_moving(pa_source_output *o, pa_source *dest) {
     pa_vsource *vsource;
     uint32_t idx;
     pa_source_output *output;
+    pa_sink_input *input;
 
     pa_source_output_assert_ref(o);
     pa_assert_ctl_context();
@@ -662,8 +945,22 @@ void pa_virtual_source_output_moving(pa_source_output *o, pa_source *dest) {
         pa_source_update_flags(s, PA_SOURCE_LATENCY|PA_SOURCE_DYNAMIC_LATENCY, dest->flags);
         pa_proplist_sets(s->proplist, PA_PROP_DEVICE_MASTER_DEVICE, dest->name);
         vsource->source_moving = true;
-    } else
+        if (vsource->uplink_sink) {
+            pa_sink_flags_t flags = 0;
+
+            if (dest->flags & PA_SOURCE_LATENCY)
+                flags |= PA_SINK_LATENCY;
+            if (dest->flags & PA_SOURCE_DYNAMIC_LATENCY)
+                flags |= PA_SINK_DYNAMIC_LATENCY;
+            pa_sink_set_asyncmsgq(vsource->uplink_sink, dest->asyncmsgq);
+            pa_sink_update_flags(vsource->uplink_sink, PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY, flags);
+            pa_proplist_sets(vsource->uplink_sink->proplist, PA_PROP_DEVICE_MASTER_DEVICE, dest->name);
+        }
+    } else {
         pa_source_set_asyncmsgq(s, NULL);
+        if (vsource->uplink_sink)
+            pa_sink_set_asyncmsgq(vsource->uplink_sink, NULL);
+    }
 
     if (dest && vsource->set_description)
         vsource->set_description(o, dest);
@@ -689,10 +986,31 @@ void pa_virtual_source_output_moving(pa_source_output *o, pa_source *dest) {
             pa_proplist_setf(o->proplist, PA_PROP_MEDIA_NAME, "%s Stream from %s", vsource->desc_head, pa_proplist_gets(s->proplist, PA_PROP_DEVICE_DESCRIPTION));
     }
 
+    if (vsource->uplink_sink && dest) {
+        const char *z;
+        pa_proplist *pl;
+
+        pl = pa_proplist_new();
+        z = pa_proplist_gets(dest->proplist, PA_PROP_DEVICE_DESCRIPTION);
+        pa_proplist_setf(pl, PA_PROP_DEVICE_DESCRIPTION, "Uplink sink %s on %s",
+                         pa_proplist_gets(vsource->uplink_sink->proplist, "device.uplink_sink.name"), z ? z : dest->name);
+
+        pa_sink_update_proplist(vsource->uplink_sink, PA_UPDATE_REPLACE, pl);
+        pa_proplist_free(pl);
+    }
+
     /* Propagate asyncmsq change to attached virtual sources */
     PA_IDXSET_FOREACH(output, s->outputs, idx) {
         if (output->destination_source && output->moving)
             output->moving(output, s);
+    }
+
+    /* Propagate asyncmsq change to virtual sinks attached to the uplink sink */
+    if (vsource->uplink_sink) {
+        PA_IDXSET_FOREACH(input, vsource->uplink_sink->inputs, idx) {
+            if (input->origin_sink && input->moving)
+                input->moving(input, vsource->uplink_sink);
+        }
     }
 
 }
@@ -834,6 +1152,10 @@ int pa_virtual_source_activate(pa_vsource *vs) {
         return -1;
     }
 
+    /* Activate uplink sink */
+    if (vs->uplink_sink)
+        pa_sink_put(vs->uplink_sink);
+
     /* Set source output latency at startup to max_latency if specified. */
     if (vs->max_latency)
         pa_source_output_set_requested_latency(vs->output_from_master, vs->max_latency);
@@ -884,6 +1206,22 @@ void pa_virtual_source_destroy(pa_vsource *vs) {
         vs->source = NULL;
     }
 
+    /* Destroy uplink sink if present */
+    if (vs->uplink_sink) {
+        struct uplink_data *uplink;
+
+        uplink = vs->uplink_sink->userdata;
+        pa_sink_unlink(vs->uplink_sink);
+        pa_sink_unref(vs->uplink_sink);
+
+        if (uplink) {
+            if (uplink->memblockq)
+                pa_memblockq_free(uplink->memblockq);
+
+            pa_xfree(uplink);
+        }
+    }
+
     /* We have to use pa_msgobject_unref() here because there may still be pending
      * VSOURCE_MESSAGE_OUTPUT_ATTACHED messages. */
     pa_msgobject_unref(PA_MSGOBJECT(vs));
@@ -922,6 +1260,7 @@ pa_vsource* pa_virtual_source_vsource_new(pa_source *s) {
     vsource->update_filter_parameters = NULL;
     vsource->update_block_sizes = NULL;
     vsource->free_filter_parameters = NULL;
+    vsource->uplink_sink = NULL;
 
     return vsource;
 }
@@ -942,6 +1281,8 @@ pa_vsource *pa_virtual_source_create(pa_source *master, const char *source_type,
     pa_vsource *vsource;
     pa_source *s;
     pa_source_output *o;
+    const char *uplink_sink;
+    pa_sink_new_data sink_data;
 
     /* Make sure all necessary values are set. Only userdata and source description
      * are allowed to be NULL. */
@@ -1093,6 +1434,70 @@ pa_vsource *pa_virtual_source_create(pa_source *master, const char *source_type,
         vsource->memblockq = pa_memblockq_new(tmp, 0, MEMBLOCKQ_MAXLENGTH, 0, source_output_ss, 1, 1, 0, &silence);
         pa_memblock_unref(silence.memblock);
         pa_xfree(tmp);
+        if (!vsource->memblockq) {
+            pa_log("Failed to create memblockq");
+            pa_virtual_source_destroy(vsource);
+            return NULL;
+        }
+    }
+
+    /* Set up uplink sink */
+    uplink_sink = pa_modargs_get_value(ma, "uplink_sink", NULL);
+    if (uplink_sink) {
+        const char *z;
+        char *tmp;
+        pa_memchunk silence;
+        pa_sink_flags_t flags;
+        struct uplink_data *uplink;
+
+        pa_sink_new_data_init(&sink_data);
+        sink_data.driver = m->name;
+        sink_data.module = m;
+        sink_data.name = pa_xstrdup(uplink_sink);
+        pa_sink_new_data_set_sample_spec(&sink_data, source_ss);
+        pa_sink_new_data_set_channel_map(&sink_data, source_map);
+        pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
+        pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_CLASS, "uplink sink");
+        pa_proplist_sets(sink_data.proplist, "device.uplink_sink.name", sink_data.name);
+        z = pa_proplist_gets(master->proplist, PA_PROP_DEVICE_DESCRIPTION);
+        pa_proplist_setf(sink_data.proplist, PA_PROP_DEVICE_DESCRIPTION, "Uplink Sink %s on %s", sink_data.name, z ? z : master->name);
+
+        flags = 0;
+        if (master->flags & PA_SOURCE_LATENCY)
+            flags = PA_SINK_LATENCY;
+        if (master->flags & PA_SOURCE_DYNAMIC_LATENCY)
+            flags |= PA_SINK_DYNAMIC_LATENCY;
+        vsource->uplink_sink = pa_sink_new(m->core, &sink_data, flags);
+        pa_sink_new_data_done(&sink_data);
+
+        if (!vsource->uplink_sink) {
+            pa_log("Failed to create uplink sink");
+            pa_virtual_source_destroy(vsource);
+            return NULL;
+        }
+
+        uplink = pa_xnew0(struct uplink_data, 1);
+        vsource->uplink_sink->userdata = uplink;
+
+        tmp = pa_sprintf_malloc("%s uplink sink memblockq", desc_prefix);
+        pa_silence_memchunk_get(&s->core->silence_cache, s->core->mempool, &silence, &s->sample_spec, 0);
+        uplink->memblockq = pa_memblockq_new(tmp, 0, MEMBLOCKQ_MAXLENGTH, 0, source_ss, 1, 1, 0, &silence);
+        pa_memblock_unref(silence.memblock);
+        pa_xfree(tmp);
+        if (!uplink->memblockq) {
+            pa_log("Failed to create sink memblockq");
+            pa_virtual_source_destroy(vsource);
+            return NULL;
+        }
+
+        vsource->uplink_sink->parent.process_msg = sink_process_msg;
+        vsource->uplink_sink->update_requested_latency = sink_update_requested_latency;
+        vsource->uplink_sink->set_state_in_main_thread = sink_set_state_in_main_thread;
+        vsource->uplink_sink->set_state_in_io_thread = sink_set_state_in_io_thread;
+        vsource->uplink_sink->uplink_of = vsource;
+        uplink->vsource = vsource;
+
+        pa_sink_set_asyncmsgq(vsource->uplink_sink, master->asyncmsgq);
     }
 
     return vsource;

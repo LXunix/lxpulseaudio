@@ -2027,7 +2027,7 @@ unsigned pa_source_used_by(pa_source *s) {
 }
 
 /* Called from main thread */
-unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore) {
+unsigned pa_source_check_suspend(pa_source *s, pa_sink_input *ignore_input, pa_source_output *ignore_output) {
     unsigned ret;
     pa_source_output *o;
     uint32_t idx;
@@ -2041,7 +2041,7 @@ unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore) {
     ret = 0;
 
     PA_IDXSET_FOREACH(o, s->outputs, idx) {
-        if (o == ignore)
+        if (o == ignore_output)
             continue;
 
         /* We do not assert here. It is perfectly valid for a source output to
@@ -2060,6 +2060,9 @@ unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore) {
 
         ret ++;
     }
+
+    if (s->vsource && s->vsource->uplink_sink)
+        ret += pa_sink_check_suspend(s->vsource->uplink_sink, ignore_input, ignore_output);
 
     return ret;
 }
@@ -2407,6 +2410,16 @@ pa_usec_t pa_source_get_requested_latency_within_thread(pa_source *s) {
         if (o->thread_info.requested_source_latency != (pa_usec_t) -1 &&
             (result == (pa_usec_t) -1 || result > o->thread_info.requested_source_latency))
             result = o->thread_info.requested_source_latency;
+
+    if (s->vsource && s->vsource->uplink_sink) {
+        pa_usec_t uplink_sink_latency;
+
+        uplink_sink_latency = pa_sink_get_requested_latency_within_thread(s->vsource->uplink_sink);
+
+        if (uplink_sink_latency != (pa_usec_t) -1 &&
+            (result == (pa_usec_t) -1 || result > uplink_sink_latency))
+            result = uplink_sink_latency;
+    }
 
     if (result != (pa_usec_t) -1)
         result = PA_CLAMP(result, s->thread_info.min_latency, s->thread_info.max_latency);
