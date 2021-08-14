@@ -104,6 +104,15 @@ static const char* const valid_modargs[] = {
 
 #define DEFAULT_DEVICE_ID "0"
 
+#define PULSE_MODARGS "PULSE_MODARGS"
+
+/* dynamic profile priority bonus, for all alsa profiles, the original priority
+   needs to be less than 0x7fff (32767), then could apply the rule of priority
+   bonus. So far there are 2 kinds of alsa profiles, one is from alsa ucm, the
+   other is from mixer profile-sets, their priorities are all far less than 0x7fff
+*/
+#define PROFILE_PRIO_BONUS 0x8000
+
 struct userdata {
     pa_core *core;
     pa_module *module;
@@ -144,7 +153,7 @@ static void add_profiles(struct userdata *u, pa_hashmap *h, pa_hashmap *ports) {
         uint32_t idx;
 
         cp = pa_card_profile_new(ap->name, ap->description, sizeof(struct profile_data));
-        cp->priority = ap->priority;
+        cp->priority = ap->priority ? ap->priority : 1;
         cp->input_name = pa_xstrdup(ap->input_name);
         cp->output_name = pa_xstrdup(ap->output_name);
 
@@ -459,9 +468,19 @@ static int report_jack_state(snd_mixer_elem_t *melem, unsigned int mask) {
      * as available (well, "unknown" to be precise, but there's little
      * practical difference).
      *
-     * When all output ports are unavailable, we know that all sinks are
-     * unavailable, and therefore the profile is marked unavailable as well.
-     * The same applies to input ports as well, of course.
+     * A profile will be marked unavailable:
+     * only contains output ports and all ports are unavailable
+     * only contains input ports and all ports are unavailable
+     * contains both input and output ports and all ports are unavailable
+     *
+     * A profile will be awarded priority bonus:
+     * only contains output ports and at least one port is available
+     * only contains input ports and at least one port is available
+     * contains both output and input ports and at least one output port
+     * and one input port are available
+     *
+     * The rest profiles will not be marked unavailable and will not be
+     * awarded priority bonus
      *
      * If there are no output ports at all, but the profile contains at least
      * one sink, then the output is considered to be available. */
@@ -476,6 +495,7 @@ static int report_jack_state(snd_mixer_elem_t *melem, unsigned int mask) {
         bool found_available_output_port = false;
         pa_available_t available = PA_AVAILABLE_UNKNOWN;
 
+        profile->priority &= ~PROFILE_PRIO_BONUS;
         PA_HASHMAP_FOREACH(port, u->card->ports, state2) {
             if (!pa_hashmap_get(port->profiles, profile->name))
                 continue;
@@ -493,8 +513,15 @@ static int report_jack_state(snd_mixer_elem_t *melem, unsigned int mask) {
             }
         }
 
-        if ((has_input_port && !found_available_input_port) || (has_output_port && !found_available_output_port))
-            available = PA_AVAILABLE_NO;
+        if ((has_input_port && found_available_input_port && !has_output_port) ||
+            (has_output_port && found_available_output_port && !has_input_port) ||
+            (has_input_port && found_available_input_port && has_output_port && found_available_output_port))
+                profile->priority |= PROFILE_PRIO_BONUS;
+
+        if ((has_input_port && !found_available_input_port && has_output_port && !found_available_output_port) ||
+            (has_input_port && !found_available_input_port && !has_output_port) ||
+            (has_output_port && !found_available_output_port && !has_input_port))
+                available = PA_AVAILABLE_NO;
 
         /* We want to update the active profile's status last, so logic that
          * may change the active profile based on profile availability status
@@ -621,6 +648,7 @@ static void init_jacks(struct userdata *u) {
     void *state;
     pa_alsa_path* path;
     pa_alsa_jack* jack;
+    char buf[64];
 
     u->jacks = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
 
@@ -663,9 +691,10 @@ static void init_jacks(struct userdata *u) {
             }
         }
         pa_alsa_mixer_set_fdlist(u->mixers, jack->mixer_handle, u->core->mainloop);
-        jack->melem = pa_alsa_mixer_find_card(jack->mixer_handle, jack->alsa_name, 0);
+        jack->melem = pa_alsa_mixer_find_card(jack->mixer_handle, &jack->alsa_id, 0);
         if (!jack->melem) {
-            pa_log_warn("Jack '%s' seems to have disappeared.", jack->alsa_name);
+            pa_alsa_mixer_id_to_string(buf, sizeof(buf), &jack->alsa_id);
+            pa_log_warn("Jack %s seems to have disappeared.", buf);
             pa_alsa_jack_set_has_control(jack, false);
             continue;
         }
@@ -673,6 +702,42 @@ static void init_jacks(struct userdata *u) {
         snd_mixer_elem_set_callback_private(jack->melem, u);
         report_jack_state(jack->melem, 0);
     }
+}
+
+static void prune_singleton_availability_groups(pa_hashmap *ports) {
+    pa_device_port *p;
+    pa_hashmap *group_counts;
+    void *state, *count;
+    const char *group;
+
+    /* Collect groups and erase those that don't have more than 1 path */
+    group_counts = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+
+    PA_HASHMAP_FOREACH(p, ports, state) {
+        if (p->availability_group) {
+            count = pa_hashmap_get(group_counts, p->availability_group);
+            pa_hashmap_remove(group_counts, p->availability_group);
+            pa_hashmap_put(group_counts, p->availability_group, PA_UINT_TO_PTR(PA_PTR_TO_UINT(count) + 1));
+        }
+    }
+
+    /* Now we have an availability_group -> count map, let's drop all groups
+     * that have only one member */
+    PA_HASHMAP_FOREACH_KV(group, count, group_counts, state) {
+        if (count == PA_UINT_TO_PTR(1))
+            pa_hashmap_remove(group_counts, group);
+    }
+
+    PA_HASHMAP_FOREACH(p, ports, state) {
+        if (p->availability_group && !pa_hashmap_get(group_counts, p->availability_group)) {
+            pa_log_debug("Pruned singleton availability group %s from port %s", p->availability_group, p->name);
+
+            pa_xfree(p->availability_group);
+            p->availability_group = NULL;
+        }
+    }
+
+    pa_hashmap_free(group_counts);
 }
 
 static void set_card_name(pa_card_new_data *data, pa_modargs *ma, const char *device_id) {
@@ -784,7 +849,9 @@ int pa__init(pa_module *m) {
     const char *description;
     const char *profile_str = NULL;
     char *fn = NULL;
+    char *udev_args = NULL;
     bool namereg_fail = false;
+    int err = -PA_MODULE_ERR_UNSPECIFIED, rval;
 
     pa_alsa_refcnt_inc();
 
@@ -810,6 +877,47 @@ int pa__init(pa_module *m) {
     if ((u->alsa_card_index = snd_card_get_index(u->device_id)) < 0) {
         pa_log("Card '%s' doesn't exist: %s", u->device_id, pa_alsa_strerror(u->alsa_card_index));
         goto fail;
+    }
+
+#ifdef HAVE_UDEV
+    udev_args = pa_udev_get_property(u->alsa_card_index, PULSE_MODARGS);
+#endif
+
+    if (udev_args) {
+        bool udev_modargs_success = true;
+        pa_modargs *temp_ma = pa_modargs_new(udev_args, valid_modargs);
+
+        if (temp_ma) {
+            /* do not try to replace device_id */
+
+            if (pa_modargs_remove_key(temp_ma, "device_id") == 0) {
+                pa_log_warn("Unexpected 'device_id' module argument override ignored from udev " PULSE_MODARGS "='%s'", udev_args);
+            }
+
+            /* Implement modargs override by copying original module arguments
+             * over udev entry arguments ignoring duplicates. */
+
+            if (pa_modargs_merge_missing(temp_ma, u->modargs, valid_modargs) == 0) {
+                /* swap module arguments */
+                pa_modargs *old_ma = u->modargs;
+                u->modargs = temp_ma;
+                temp_ma = old_ma;
+
+                pa_log_info("Applied module arguments override from udev " PULSE_MODARGS "='%s'", udev_args);
+            } else {
+                pa_log("Failed to apply module arguments override from udev " PULSE_MODARGS "='%s'", udev_args);
+                udev_modargs_success = false;
+            }
+
+            pa_modargs_free(temp_ma);
+        } else {
+            pa_log("Failed to parse module arguments from udev " PULSE_MODARGS "='%s'", udev_args);
+            udev_modargs_success = false;
+        }
+        pa_xfree(udev_args);
+
+        if (!udev_modargs_success)
+            goto fail;
     }
 
     if (pa_modargs_get_value_boolean(u->modargs, "ignore_dB", &ignore_dB) < 0) {
@@ -841,7 +949,12 @@ int pa__init(pa_module *m) {
 
     snd_config_update_free_global();
 
-    if (u->use_ucm && !pa_alsa_ucm_query_profiles(&u->ucm, u->alsa_card_index)) {
+    rval = u->use_ucm ? pa_alsa_ucm_query_profiles(&u->ucm, u->alsa_card_index) : -1;
+    if (rval == -PA_ALSA_ERR_UCM_LINKED) {
+        err = -PA_MODULE_ERR_SKIP;
+        goto fail;
+    }
+    if (rval == 0) {
         pa_log_info("Found UCM profiles");
 
         u->profile_set = pa_alsa_ucm_add_profile_set(&u->ucm, &u->core->default_channel_map);
@@ -918,6 +1031,7 @@ int pa__init(pa_module *m) {
     }
 
     add_disabled_profile(data.profiles);
+    prune_singleton_availability_groups(data.ports);
 
     if (pa_modargs_get_proplist(u->modargs, "card_properties", data.proplist, PA_UPDATE_REPLACE) < 0) {
         pa_log("Invalid properties");
@@ -1009,7 +1123,7 @@ fail:
 
     pa__done(m);
 
-    return -1;
+    return err;
 }
 
 int pa__get_n_used(pa_module *m) {

@@ -154,6 +154,7 @@ struct pa_pstream {
      * @registered_memfd_ids: registered memfd pools SHM IDs. Check
      * pa_pstream_register_memfd_mempool() for more information. */
     bool use_shm, use_memfd;
+    bool non_registered_memfd_id_error_logged;
     pa_idxset *registered_memfd_ids;
 
     pa_memimport *import;
@@ -244,8 +245,16 @@ static void do_pstream_read_write(pa_pstream *p) {
     p->mainloop->defer_enable(p->defer_event, 0);
 
     if (!p->dead && p->srb) {
-         do_write(p);
-         while (!p->dead && do_read(p, &p->readsrb) == 0);
+        int r = 0;
+
+        if(do_write(p) < 0)
+            goto fail;
+
+        while (!p->dead && r == 0) {
+            r = do_read(p, &p->readsrb);
+            if (r < 0)
+                goto fail;
+        }
     }
 
     if (!p->dead && pa_iochannel_is_readable(p->io)) {
@@ -669,9 +678,11 @@ static void prepare_next_write_item(pa_pstream *p) {
                         flags |= PA_FLAG_SHMDATA_MEMFD_BLOCK;
                         send_payload = false;
                     } else {
-                        if (pa_log_ratelimit(PA_LOG_ERROR)) {
+                        if (!p->non_registered_memfd_id_error_logged) {
                             pa_log("Cannot send block reference with non-registered memfd ID = %u", shm_id);
-                            pa_log("Fallig back to copying full block data over socket");
+                            pa_log("Falling back to copying full block data over socket");
+                            pa_log("There's a bug report about this: https://gitlab.freedesktop.org/pulseaudio/pulseaudio/issues/824");
+                            p->non_registered_memfd_id_error_logged = true;
                         }
                     }
                 }

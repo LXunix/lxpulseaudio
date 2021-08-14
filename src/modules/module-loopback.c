@@ -152,6 +152,7 @@ struct userdata {
 struct loopback_msg {
     pa_msgobject parent;
     struct userdata *userdata;
+    bool dead;
 };
 
 PA_DEFINE_PRIVATE_CLASS(loopback_msg, pa_msgobject);
@@ -205,6 +206,9 @@ static void teardown(struct userdata *u) {
 
     u->adjust_time = 0;
     enable_adjust_timer(u, false);
+
+    if (u->msg)
+        u->msg->dead = true;
 
     /* Handling the asyncmsgq between the source output and the sink input
      * requires some care. When the source output is unlinked, nothing needs
@@ -401,7 +405,7 @@ static void adjust_rates(struct userdata *u) {
 
     /* Drop or insert samples if fast_adjust_threshold_msec was specified and the latency difference is too large. */
     if (u->fast_adjust_threshold > 0 && abs(latency_difference) > u->fast_adjust_threshold) {
-        pa_log_debug ("Latency difference larger than %lu msec, skipping or inserting samples.", u->fast_adjust_threshold / PA_USEC_PER_MSEC);
+        pa_log_debug ("Latency difference larger than %" PRIu64 " msec, skipping or inserting samples.", u->fast_adjust_threshold / PA_USEC_PER_MSEC);
 
         pa_asyncmsgq_send(u->sink_input->sink->asyncmsgq, PA_MSGOBJECT(u->sink_input), SINK_INPUT_MESSAGE_FAST_ADJUST, NULL, current_source_sink_latency, NULL);
 
@@ -539,13 +543,13 @@ static void memblockq_adjust(struct userdata *u, int64_t latency_offset_usec, bo
     if (current_memblockq_length > requested_memblockq_length) {
         /* Drop audio from queue */
         buffer_correction = current_memblockq_length - requested_memblockq_length;
-        pa_log_info("Dropping %lu usec of audio from queue", pa_bytes_to_usec(buffer_correction, &u->sink_input->sample_spec));
+        pa_log_info("Dropping %" PRIu64 " usec of audio from queue", pa_bytes_to_usec(buffer_correction, &u->sink_input->sample_spec));
         pa_memblockq_drop(u->memblockq, buffer_correction);
 
     } else if (current_memblockq_length < requested_memblockq_length && allow_push) {
         /* Add silence to queue */
         buffer_correction = requested_memblockq_length - current_memblockq_length;
-        pa_log_info("Adding %lu usec of silence to queue", pa_bytes_to_usec(buffer_correction, &u->sink_input->sample_spec));
+        pa_log_info("Adding %" PRIu64 " usec of silence to queue", pa_bytes_to_usec(buffer_correction, &u->sink_input->sample_spec));
         pa_memblockq_seek(u->memblockq, (int64_t)buffer_correction, PA_SEEK_RELATIVE, true);
     }
 }
@@ -1016,6 +1020,14 @@ static void set_sink_input_latency(struct userdata *u, pa_sink *sink) {
     if (u->min_source_latency > requested_latency) {
         latency = PA_MAX(u->latency, u->minimum_latency);
         requested_latency = (latency - u->min_source_latency) / 2;
+        /* In the case of a fixed alsa source, u->minimum_latency is calculated from
+         * the default fragment size while u->min_source_latency is the reported minimum
+         * of the source latency (nr_of_fragments * fragment_size). This can lead to a
+         * situation where u->minimum_latency < u->min_source_latency. We only fall
+         * back to use the fragment size instead of min_source_latency if the calculation
+         * above does not deliver a usable result. */
+        if (u->fixed_alsa_source && u->min_source_latency >= latency)
+            requested_latency = (latency - u->core->default_fragment_size_msec * PA_USEC_PER_MSEC) / 2;
     }
 
     latency = PA_CLAMP(requested_latency , u->min_sink_latency, u->max_sink_latency);
@@ -1219,6 +1231,12 @@ static int loopback_process_msg_cb(pa_msgobject *o, int code, void *userdata, in
     pa_assert_ctl_context();
 
     msg = LOOPBACK_MSG(o);
+
+    /* If messages are processed after a module unload request, they
+     * must be ignored. */
+    if (msg->dead)
+        return 0;
+
     pa_assert_se(u = msg->userdata);
 
     switch (code) {
@@ -1605,6 +1623,7 @@ int pa__init(pa_module *m) {
     u->msg = pa_msgobject_new(loopback_msg);
     u->msg->parent.process_msg = loopback_process_msg_cb;
     u->msg->userdata = u;
+    u->msg->dead = false;
 
     /* The output thread is not yet running, set effective_source_latency directly */
     update_effective_source_latency(u, u->source_output->source, NULL);
@@ -1647,6 +1666,9 @@ void pa__done(pa_module*m) {
 
     if (u->asyncmsgq)
         pa_asyncmsgq_unref(u->asyncmsgq);
+
+    if (u->msg)
+        loopback_msg_unref(u->msg);
 
     pa_xfree(u);
 }

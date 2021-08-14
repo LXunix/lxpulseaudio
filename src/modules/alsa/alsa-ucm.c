@@ -691,7 +691,7 @@ static char *modifier_name_to_role(const char *mod_name, bool *is_sink) {
 
     if (!sub || !*sub) {
         pa_xfree(sub);
-        pa_log_warn("Can't match media roles for modifer %s", mod_name);
+        pa_log_warn("Can't match media roles for modifier %s", mod_name);
         return NULL;
     }
 
@@ -757,13 +757,11 @@ static void append_lost_relationship(pa_alsa_ucm_device *dev) {
 
 int pa_alsa_ucm_query_profiles(pa_alsa_ucm_config *ucm, int card_index) {
     char *card_name;
-    const char **verb_list;
+    const char **verb_list, *value;
     int num_verbs, i, err = 0;
 
     /* support multiple card instances, address card directly by index */
     card_name = pa_sprintf_malloc("hw:%i", card_index);
-    if (card_name == NULL)
-        return -ENOMEM;
     err = snd_use_case_mgr_open(&ucm->ucm_mgr, card_name);
     if (err < 0) {
         /* fallback longname: is UCM available for this card ? */
@@ -771,14 +769,27 @@ int pa_alsa_ucm_query_profiles(pa_alsa_ucm_config *ucm, int card_index) {
         err = snd_card_get_name(card_index, &card_name);
         if (err < 0) {
             pa_log("Card can't get card_name from card_index %d", card_index);
+            err = -PA_ALSA_ERR_UNSPECIFIED;
             goto name_fail;
         }
 
         err = snd_use_case_mgr_open(&ucm->ucm_mgr, card_name);
         if (err < 0) {
             pa_log_info("UCM not available for card %s", card_name);
+            err = -PA_ALSA_ERR_UCM_OPEN;
             goto ucm_mgr_fail;
         }
+    }
+
+    err = snd_use_case_get(ucm->ucm_mgr, "=Linked", &value);
+    if (err >= 0) {
+        if (strcasecmp(value, "true") == 0 || strcasecmp(value, "1") == 0) {
+            free((void *)value);
+            pa_log_info("Empty (linked) UCM for card %s", card_name);
+            err = -PA_ALSA_ERR_UCM_LINKED;
+            goto ucm_verb_fail;
+        }
+        free((void *)value);
     }
 
     pa_log_info("UCM available for card %s", card_name);
@@ -787,6 +798,7 @@ int pa_alsa_ucm_query_profiles(pa_alsa_ucm_config *ucm, int card_index) {
     num_verbs = snd_use_case_verb_list(ucm->ucm_mgr, &verb_list);
     if (num_verbs < 0) {
         pa_log("UCM verb list not found for %s", card_name);
+        err = -PA_ALSA_ERR_UNSPECIFIED;
         goto ucm_verb_fail;
     }
 
@@ -806,7 +818,7 @@ int pa_alsa_ucm_query_profiles(pa_alsa_ucm_config *ucm, int card_index) {
 
     if (!ucm->verbs) {
         pa_log("No UCM verb is valid for %s", card_name);
-        err = -1;
+        err = -PA_ALSA_ERR_UCM_NO_VERB;
     }
 
     snd_use_case_free_list(verb_list, num_verbs);
@@ -950,10 +962,10 @@ static void probe_volumes(pa_hashmap *hash, bool is_sink, snd_pcm_t *pcm_handle,
 
         PA_HASHMAP_FOREACH_KV(profile, path, data->paths, state2) {
             if (pa_alsa_path_probe(path, NULL, mixer_handle, ignore_dB) < 0) {
-                pa_log_warn("Could not probe path: %s, using s/w volume", data->path->name);
+                pa_log_warn("Could not probe path: %s, using s/w volume", path->name);
                 pa_hashmap_remove(data->paths, profile);
             } else if (!path->has_volume) {
-                pa_log_warn("Path %s is not a volume control", data->path->name);
+                pa_log_warn("Path %s is not a volume control", path->name);
                 pa_hashmap_remove(data->paths, profile);
             } else
                 pa_log_debug("Set up h/w volume using '%s' for %s:%s", path->name, profile, port->name);
@@ -1065,7 +1077,7 @@ static void ucm_add_port_combination(
         pa_device_port_new_data_set_type(&port_data, type);
         pa_device_port_new_data_set_direction(&port_data, is_sink ? PA_DIRECTION_OUTPUT : PA_DIRECTION_INPUT);
         if (jack)
-            pa_device_port_new_data_set_available_group(&port_data, jack->name);
+            pa_device_port_new_data_set_availability_group(&port_data, jack->name);
 
         port = pa_device_port_new(core, &port_data, sizeof(pa_alsa_ucm_port_data));
         pa_device_port_new_data_done(&port_data);
@@ -1526,6 +1538,32 @@ static void alsa_mapping_add_ucm_modifier(pa_alsa_mapping *m, pa_alsa_ucm_modifi
         pa_channel_map_init(&m->channel_map);
 }
 
+static pa_alsa_mapping* ucm_alsa_mapping_get(pa_alsa_ucm_config *ucm, pa_alsa_profile_set *ps, const char *verb_name, const char *device_str, bool is_sink) {
+    pa_alsa_mapping *m;
+    char *mapping_name;
+    size_t ucm_alibpref_len = 0;
+    const char *value;
+
+    /* find private alsa-lib's configuration device prefix */
+    if (snd_use_case_get(ucm->ucm_mgr, "_alibpref", &value) == 0) {
+        if (value[0] && pa_startswith(device_str, value))
+            ucm_alibpref_len = strlen(value);
+
+        free((void *)value);
+    }
+
+    mapping_name = pa_sprintf_malloc("Mapping %s: %s: %s", verb_name, device_str + ucm_alibpref_len, is_sink ? "sink" : "source");
+
+    m = pa_alsa_mapping_get(ps, mapping_name);
+
+    if (!m)
+        pa_log("No mapping for %s", mapping_name);
+
+    pa_xfree(mapping_name);
+
+    return m;
+}
+
 static int ucm_create_mapping_direction(
         pa_alsa_ucm_config *ucm,
         pa_alsa_profile_set *ps,
@@ -1537,19 +1575,14 @@ static int ucm_create_mapping_direction(
         bool is_sink) {
 
     pa_alsa_mapping *m;
-    char *mapping_name;
     unsigned priority, rate, channels;
 
-    mapping_name = pa_sprintf_malloc("Mapping %s: %s: %s", verb_name, device_str, is_sink ? "sink" : "source");
+    m = ucm_alsa_mapping_get(ucm, ps, verb_name, device_str, is_sink);
 
-    m = pa_alsa_mapping_get(ps, mapping_name);
-    if (!m) {
-        pa_log("No mapping for %s", mapping_name);
-        pa_xfree(mapping_name);
+    if (!m)
         return -1;
-    }
-    pa_log_debug("UCM mapping: %s dev %s", mapping_name, device_name);
-    pa_xfree(mapping_name);
+
+    pa_log_debug("UCM mapping: %s dev %s", m->name, device_name);
 
     priority = is_sink ? device->playback_priority : device->capture_priority;
     rate = is_sink ? device->playback_rate : device->capture_rate;
@@ -1594,18 +1627,13 @@ static int ucm_create_mapping_for_modifier(
         bool is_sink) {
 
     pa_alsa_mapping *m;
-    char *mapping_name;
 
-    mapping_name = pa_sprintf_malloc("Mapping %s: %s: %s", verb_name, device_str, is_sink ? "sink" : "source");
+    m = ucm_alsa_mapping_get(ucm, ps, verb_name, device_str, is_sink);
 
-    m = pa_alsa_mapping_get(ps, mapping_name);
-    if (!m) {
-        pa_log("no mapping for %s", mapping_name);
-        pa_xfree(mapping_name);
+    if (!m)
         return -1;
-    }
-    pa_log_info("ucm mapping: %s modifier %s", mapping_name, mod_name);
-    pa_xfree(mapping_name);
+
+    pa_log_info("UCM mapping: %s modifier %s", m->name, mod_name);
 
     if (!m->ucm_context.ucm_devices && !m->ucm_context.ucm_modifiers) {   /* new mapping */
         m->ucm_context.ucm_devices = pa_idxset_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
@@ -1707,7 +1735,7 @@ static pa_alsa_jack* ucm_get_jack(pa_alsa_ucm_config *ucm, pa_alsa_ucm_device *d
         pa_log("[%s] No mixer device name for JackControl \"%s\"", device_name, jack_control);
         return NULL;
     }
-    j = pa_alsa_jack_new(NULL, mixer_device_name, name);
+    j = pa_alsa_jack_new(NULL, mixer_device_name, name, 0);
     PA_LLIST_PREPEND(pa_alsa_jack, ucm->jacks, j);
 
 finish:
@@ -1941,7 +1969,7 @@ static void ucm_mapping_jack_probe(pa_alsa_mapping *m, pa_hashmap *mixers) {
             continue;
         }
 
-        has_control = pa_alsa_mixer_find_card(mixer_handle, dev->jack->alsa_name, 0) != NULL;
+        has_control = pa_alsa_mixer_find_card(mixer_handle, &dev->jack->alsa_id, 0) != NULL;
         pa_alsa_jack_set_has_control(dev->jack, has_control);
         pa_log_info("UCM jack %s has_control=%d", dev->jack->name, dev->jack->has_control);
     }

@@ -731,7 +731,7 @@ snd_pcm_t *pa_alsa_open_by_device_string(
             if (!pa_startswith(d, "plug:") && !pa_startswith(d, "plughw:")) {
                 char *t;
 
-                t = pa_sprintf_malloc("plug:%s", d);
+                t = pa_sprintf_malloc("plug:SLAVE='%s'", d);
                 pa_xfree(d);
                 d = t;
 
@@ -1180,7 +1180,7 @@ snd_pcm_sframes_t pa_alsa_safe_avail(snd_pcm_t *pcm, size_t hwbuf_size, const pa
 
         PA_ONCE_BEGIN {
             char *dn = pa_alsa_get_driver_name_by_pcm(pcm);
-            pa_log(ngettext("snd_pcm_avail() returned a value that is exceptionally large: %lu byte (%lu ms).\n"
+            pa_log_debug(ngettext("snd_pcm_avail() returned a value that is exceptionally large: %lu byte (%lu ms).\n"
                             "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
                             "snd_pcm_avail() returned a value that is exceptionally large: %lu bytes (%lu ms).\n"
                             "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
@@ -1189,7 +1189,7 @@ snd_pcm_sframes_t pa_alsa_safe_avail(snd_pcm_t *pcm, size_t hwbuf_size, const pa
                    (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC),
                    pa_strnull(dn));
             pa_xfree(dn);
-            pa_alsa_dump(PA_LOG_ERROR, pcm);
+            pa_alsa_dump(PA_LOG_DEBUG, pcm);
         } PA_ONCE_END;
 
         /* Mhmm, let's try not to fail completely */
@@ -1246,7 +1246,7 @@ int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_status_t *status, snd_pcm_sframes
 
         PA_ONCE_BEGIN {
             char *dn = pa_alsa_get_driver_name_by_pcm(pcm);
-            pa_log(ngettext("snd_pcm_delay() returned a value that is exceptionally large: %li byte (%s%lu ms).\n"
+            pa_log_debug(ngettext("snd_pcm_delay() returned a value that is exceptionally large: %li byte (%s%lu ms).\n"
                             "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
                             "snd_pcm_delay() returned a value that is exceptionally large: %li bytes (%s%lu ms).\n"
                             "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
@@ -1256,7 +1256,7 @@ int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_status_t *status, snd_pcm_sframes
                    (unsigned long) (pa_bytes_to_usec(abs_k, ss) / PA_USEC_PER_MSEC),
                    pa_strnull(dn));
             pa_xfree(dn);
-            pa_alsa_dump(PA_LOG_ERROR, pcm);
+            pa_alsa_dump(PA_LOG_DEBUG, pcm);
         } PA_ONCE_END;
 
         /* Mhmm, let's try not to fail completely */
@@ -1274,7 +1274,7 @@ int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_status_t *status, snd_pcm_sframes
 
             PA_ONCE_BEGIN {
                 char *dn = pa_alsa_get_driver_name_by_pcm(pcm);
-                pa_log(ngettext("snd_pcm_avail() returned a value that is exceptionally large: %lu byte (%lu ms).\n"
+                pa_log_debug(ngettext("snd_pcm_avail() returned a value that is exceptionally large: %lu byte (%lu ms).\n"
                                 "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
                                 "snd_pcm_avail() returned a value that is exceptionally large: %lu bytes (%lu ms).\n"
                                 "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
@@ -1283,7 +1283,7 @@ int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_status_t *status, snd_pcm_sframes
                        (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC),
                        pa_strnull(dn));
                 pa_xfree(dn);
-                pa_alsa_dump(PA_LOG_ERROR, pcm);
+                pa_alsa_dump(PA_LOG_DEBUG, pcm);
             } PA_ONCE_END;
 
             /* Mhmm, let's try not to fail completely */
@@ -1336,7 +1336,7 @@ int pa_alsa_safe_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas
                     k >= pa_bytes_per_second(ss)*10))
         PA_ONCE_BEGIN {
             char *dn = pa_alsa_get_driver_name_by_pcm(pcm);
-            pa_log(ngettext("snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu byte (%lu ms).\n"
+            pa_log_debug(ngettext("snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu byte (%lu ms).\n"
                             "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
                             "snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu bytes (%lu ms).\n"
                             "Most likely this is a bug in the ALSA driver '%s'. Please report this issue to the ALSA developers.",
@@ -1345,7 +1345,7 @@ int pa_alsa_safe_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas
                    (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC),
                    pa_strnull(dn));
             pa_xfree(dn);
-            pa_alsa_dump(PA_LOG_ERROR, pcm);
+            pa_alsa_dump(PA_LOG_DEBUG, pcm);
         } PA_ONCE_END;
 
     return r;
@@ -1635,8 +1635,8 @@ static snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer,
     return NULL;
 }
 
-snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, const char *name, unsigned int device) {
-    return pa_alsa_mixer_find(mixer, SND_CTL_ELEM_IFACE_CARD, name, 0, device);
+snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, struct pa_alsa_mixer_id *alsa_id, unsigned int device) {
+    return pa_alsa_mixer_find(mixer, SND_CTL_ELEM_IFACE_CARD, alsa_id->name, alsa_id->index, device);
 }
 
 snd_mixer_elem_t *pa_alsa_mixer_find_pcm(snd_mixer_t *mixer, const char *name, unsigned int device) {
@@ -1752,7 +1752,7 @@ snd_mixer_t *pa_alsa_open_mixer_by_name(pa_hashmap *mixers, const char *dev, boo
     if (!pm && pa_strneq(dev, "hw:", 3)) {
         const char *s = dev + 3;
         int card_index;
-        while (*s && *s >= 0 && *s <= '9') s++;
+        while (*s && *s >= '0' && *s <= '9') s++;
         if (*s == '\0' && pa_atoi(dev + 3, &card_index) >= 0) {
             PA_HASHMAP_FOREACH_KV(dev2, pm, mixers, state) {
                 if (pm->card_index == card_index) {
