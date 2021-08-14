@@ -31,6 +31,10 @@
 #include <sys/ioctl.h>
 #include <math.h>
 
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+
 #ifdef HAVE_SYS_FILIO_H
 #include <sys/filio.h>
 #endif
@@ -669,7 +673,7 @@ static size_t handle_udp_timing_packet(pa_raop_client *c, const uint8_t packet[]
     payload = packet[1] ^ 0x80;
     switch (payload) {
         case PAYLOAD_TIMING_REQUEST:
-            pa_log_debug("Sending timing packet at %lu", rci);
+            pa_log_debug("Sending timing packet at %" PRIu64 , rci);
             written = send_udp_timing_packet(c, data, rci);
             break;
         case PAYLOAD_TIMING_REPLY:

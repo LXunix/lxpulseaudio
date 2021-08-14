@@ -654,8 +654,8 @@ void pa_source_put(pa_source *s) {
         pa_cvolume_remap(&s->real_volume, &root_source->channel_map, &s->channel_map);
     } else
         /* We assume that if the sink implementor changed the default
-         * volume he did so in real_volume, because that is the usual
-         * place where he is supposed to place his changes.  */
+         * volume they did so in real_volume, because that is the usual
+         * place where they are supposed to place their changes.  */
         s->reference_volume = s->real_volume;
 
     s->thread_info.soft_volume = s->soft_volume;
@@ -2696,6 +2696,8 @@ int pa_source_set_port(pa_source *s, const char *name, bool save) {
         return 0;
     }
 
+    s->port_changing = true;
+
     if (s->set_port(s, port) < 0)
         return -PA_ERR_NOENTITY;
 
@@ -2712,6 +2714,8 @@ int pa_source_set_port(pa_source *s, const char *name, bool save) {
     pa_source_set_port_latency_offset(s, s->active_port->latency_offset);
 
     pa_hook_fire(&s->core->hooks[PA_CORE_HOOK_SOURCE_PORT_CHANGED], s);
+
+    s->port_changing = false;
 
     return 0;
 }
@@ -3027,6 +3031,10 @@ void pa_source_move_streams_to_default_source(pa_core *core, pa_source *old_sour
             continue;
 
         if (!o->source)
+            continue;
+
+        /* Don't move source-outputs which connect sources to filter sources */
+        if (o->destination_source)
             continue;
 
         /* If default_source_changed is false, the old source became unavailable, so all streams must be moved. */
