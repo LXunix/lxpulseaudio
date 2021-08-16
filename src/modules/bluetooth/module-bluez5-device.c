@@ -1308,9 +1308,10 @@ static int setup_transport(struct userdata *u) {
 
     u->transport = t;
 
-    if (u->profile == PA_BLUETOOTH_PROFILE_A2DP_SOURCE || u->profile == PA_BLUETOOTH_PROFILE_HFP_AG || u->profile == PA_BLUETOOTH_PROFILE_HSP_AG)
-        transport_acquire(u, true); /* In case of error, the sink/sources will be created suspended */
-    else {
+    if (u->profile == PA_BLUETOOTH_PROFILE_A2DP_SOURCE || u->profile == PA_BLUETOOTH_PROFILE_HFP_AG || u->profile == PA_BLUETOOTH_PROFILE_HSP_AG) {
+        if (transport_acquire(u, true) == -1) /* In case of error, the sink/sources will be created suspended */
+	    return -1;
+    } else {
         int transport_error;
 
         transport_error = transport_acquire(u, false);
