@@ -311,9 +311,6 @@ again:
 #ifdef O_NOCTTY
                    O_NOCTTY|
 #endif
-#ifdef O_NOFOLLOW
-                   O_NOFOLLOW|
-#endif
                    O_RDONLY)) < 0)
         goto fail;
 
@@ -345,7 +342,7 @@ again:
 #endif
 
 #ifdef HAVE_FCHMOD
-    if ((st.st_mode & 07777) != m && fchmod(fd, m) < 0) {
+    if ((st.st_gid != gid && (st.st_mode & 070) != 0) || (st.st_mode & 07777) != m && fchmod(fd, m) < 0) {
         pa_assert_se(pa_close(fd) >= 0);
         goto fail;
     };
