@@ -200,7 +200,7 @@ if not get_option('client')
   libpulse_dep = dependency('libpulse', required : true)
   libpulse_simple_dep = dependency('libpulse-simple', required : true)
 else
-  libpulsecommon = shared_library('pulsecommon-' + pa_version_major_minor,
+  libpulsecommon = library('pulsecommon-' + pa_version_major_minor,
     libpulsecommon_sources,
     libpulsecommon_headers,
     include_directories : [configinc, topinc],

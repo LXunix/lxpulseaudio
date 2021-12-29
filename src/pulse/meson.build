@@ -76,7 +76,7 @@ run_target('update-map-file',
 
 versioning_link_args = '-Wl,-version-script=' + join_paths(meson.source_root(), 'src', 'pulse', 'map-file')
 
-libpulse = shared_library('pulse',
+libpulse = library('pulse',
   libpulse_sources,
   libpulse_headers,
   version : libpulse_version,
@@ -95,7 +95,7 @@ install_headers(
   subdir : 'pulse'
 )
 
-libpulse_simple = shared_library('pulse-simple',
+libpulse_simple = library('pulse-simple',
   'simple.c',
   'simple.h',
   version : libpulse_simple_version,
@@ -110,7 +110,7 @@ libpulse_simple = shared_library('pulse-simple',
 libpulse_simple_dep = declare_dependency(link_with: libpulse_simple)
 
 if glib_dep.found()
-  libpulse_mainloop_glib = shared_library('pulse-mainloop-glib',
+  libpulse_mainloop_glib = library('pulse-mainloop-glib',
     'glib-mainloop.c',
     'glib-mainloop.h',
     version : libpulse_mainloop_glib_version,
