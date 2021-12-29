@@ -862,37 +862,43 @@ if get_option('client')
 
   # pkg-config files
 
-  pc_cdata = configuration_data()
-
-  pc_cdata.set('prefix', prefix)
-  pc_cdata.set('exec_prefix', prefix)
-  pc_cdata.set('libdir', libdir)
-  pc_cdata.set('includedir', includedir)
-  pc_cdata.set('modlibexecdir', modlibexecdir)
-  pc_cdata.set('PACKAGE_VERSION', pa_version_str)
-  pc_cdata.set('PA_MAJORMINOR', pa_version_major_minor)
   # FIXME: the line below is wrong. Currently the meson thread dep lacks documentation,
   # and doesn't allow introspection, ie. none of get_pkgconfig_variable() or
   # get_configtool_variable() work with it, so we have no way to get this flag right,
   # unless we do all the work ourselves. See current work in glib, also meson #553.
-  pc_cdata.set('PTHREAD_LIBS', '-pthread')
+  extra_libs = ['-pthread']
+  extra_cflags = ['-D_REENTRANT']
 
-  pc_files = [
-    'libpulse.pc',
-    'libpulse-simple.pc',
-  ]
-
+  pkg = import('pkgconfig')
+  pkg.generate(libpulse,
+    name : 'libpulse',
+    description : 'PulseAudio Client Interface',
+    version : pa_version_str,
+    install_dir : pkgconfigdir,
+    libraries : extra_libs,
+    extra_cflags : extra_cflags,
+    variables : [
+      'modlibexecdir=@0@'.format(modlibexecdir)
+    ],
+  )
+  pkg.generate(libpulse_simple,
+    name : 'libpulse-simple',
+    description : 'PulseAudio Simplified Synchronous Client Interface',
+    version : pa_version_str,
+    install_dir : pkgconfigdir,
+    libraries : extra_libs,
+    extra_cflags : extra_cflags,
+  )
   if glib_dep.found()
-    pc_files += 'libpulse-mainloop-glib.pc'
+    pkg.generate(libpulse_mainloop_glib,
+      name : 'libpulse-mainloop-glib',
+      description : 'PulseAudio GLib 2.0 Main Loop Wrapper',
+      version : pa_version_str,
+      install_dir : pkgconfigdir,
+      libraries : extra_libs,
+      extra_cflags : extra_cflags,
+    )
   endif
-
-  foreach file : pc_files
-    configure_file(
-      input : file + '.in',
-      output : file,
-      configuration : pc_cdata,
-      install_dir : pkgconfigdir)
-  endforeach
 
   # CMake files
 
