@@ -4,6 +4,9 @@ option('daemon',
 option('client',
        type : 'boolean', value : true,
        description : 'Build and install pulseaudio client libraries and utilities')
+option('utils',
+       type : 'boolean', value : true,
+       description : 'Build and install pulseaudio cli utilities')
 option('doxygen',
        type : 'boolean', value : true,
        description : 'Enable building and installation of documentation generated with doxygen')

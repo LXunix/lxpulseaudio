@@ -222,4 +222,6 @@ endif
 if get_option('tests')
   subdir('tests')
 endif
-subdir('utils')
+if get_option('utils')
+  subdir('utils')
+endif

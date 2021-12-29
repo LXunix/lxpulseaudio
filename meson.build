@@ -1021,6 +1021,10 @@ message('\n    '.join(summary))
 
 # Sanity checks
 
+if not get_option('daemon') and not get_option('client')
+  error('You disabled daemon and client. There is nothing to build!')
+endif
+
 if get_option('daemon') and not speex_dep.found() and not webrtc_dep.found() and not get_option('adrian-aec')
   error('At least one echo canceller implementation must be available!')
 endif
