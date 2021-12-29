@@ -45,8 +45,6 @@ libpulsecore_sources = [
   'sink-input.c',
   'sioman.c',
   'socket-server.c',
-  'sound-file-stream.c',
-  'sound-file.c',
   'source.c',
   'source-output.c',
   'start-child.c',
@@ -103,8 +101,6 @@ libpulsecore_headers = [
   'sink.h',
   'sioman.h',
   'socket-server.h',
-  'sound-file-stream.h',
-  'sound-file.h',
   'source-output.h',
   'source.h',
   'start-child.h',
@@ -137,6 +133,17 @@ endif
 
 if samplerate_dep.found()
   libpulsecore_sources += ['resampler/libsamplerate.c']
+endif
+
+if sndfile_dep.found()
+  libpulsecore_sources += [
+    'sound-file-stream.c',
+    'sound-file.c',
+  ]
+  libpulsecore_headers += [
+    'sound-file-stream.h',
+    'sound-file.h',
+  ]
 endif
 
 if soxr_dep.found()

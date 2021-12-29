@@ -602,7 +602,7 @@ if glib_dep.found()
   cdata.set('HAVE_GLIB20', 1) # to match the AM_CONDITIONAL for CMake file generation
 endif
 
-sndfile_dep = dependency('sndfile', version : '>= 1.0.20')
+sndfile_dep = dependency('sndfile', version : '>= 1.0.20', required : get_option('sndfile'))
 
 libsystemd_dep = dependency('libsystemd', required : get_option('systemd'))
 if libsystemd_dep.found()
@@ -638,6 +638,14 @@ if get_option('client')
   gtk_dep = dependency('gtk+-3.0', required : get_option('gtk'))
   if gtk_dep.found()
     cdata.set('HAVE_GTK', 1)
+  endif
+endif
+
+# Utils dependencies
+
+if get_option('utils')
+  if not sndfile_dep.found()
+    error('Utils enabled but sndfile disabled or not found!')
   endif
 endif
 
@@ -815,6 +823,10 @@ if get_option('daemon')
     cdata.set('HAVE_GSTLDAC', 1)
     cdata.set('HAVE_GSTAPTX', 1)
   endif
+
+  if not sndfile_dep.found()
+    error('Daemon enabled but sndfile disabled or not found!')
+  endif
 endif
 
 # These are required for the CMake file generation
@@ -949,6 +961,7 @@ summary = [
   'Enable X11:                    @0@'.format(x11_dep.found()),
   'Enable D-Bus:                  @0@'.format(dbus_dep.found()),
   'Enable GLib 2:                 @0@'.format(glib_dep.found()),
+  'Enable libsndfile:             @0@'.format(sndfile_dep.found()),
   'Enable systemd integration:    @0@'.format(libsystemd_dep.found()),
   'Enable FFTW:                   @0@'.format(fftw_dep.found()),
   'Enable IPv6:                   @0@'.format(get_option('ipv6')),

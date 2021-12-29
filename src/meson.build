@@ -65,7 +65,6 @@ libpulsecommon_sources = [
   'pulsecore/time-smoother_2.c',
   'pulsecore/tokenizer.c',
   'pulsecore/usergroup.c',
-  'pulsecore/sndfile-util.c',
 ]
 
 libpulsecommon_headers = [
@@ -145,7 +144,6 @@ libpulsecommon_headers = [
   'pulsecore/time-smoother_2.h',
   'pulsecore/tokenizer.h',
   'pulsecore/usergroup.h',
-  'pulsecore/sndfile-util.h',
   'pulsecore/socket.h',
 ]
 
@@ -157,6 +155,15 @@ if dbus_dep.found()
   libpulsecommon_headers += [
     'pulsecore/dbus-util.h',
     'pulsecore/rtkit.h',
+  ]
+endif
+
+if sndfile_dep.found()
+  libpulsecommon_sources += [
+    'pulsecore/sndfile-util.c',
+  ]
+  libpulsecommon_headers += [
+    'pulsecore/sndfile-util.h',
   ]
 endif
 

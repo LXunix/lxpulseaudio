@@ -147,6 +147,9 @@ option('oss-output',
 option('samplerate',
        type : 'feature', value : 'disabled',
        description : 'Optional libsamplerate support (DEPRECATED)')
+option('sndfile',
+       type : 'feature', value : 'auto',
+       description : 'Optional libsndfile support')
 option('soxr',
        type : 'feature', value : 'auto',
        description : 'Optional SoXR support (resampling)')
