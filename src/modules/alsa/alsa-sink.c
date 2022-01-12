@@ -124,6 +124,7 @@ struct userdata {
     pa_sample_spec verified_sample_spec;
     pa_sample_format_t *supported_formats;
     unsigned int *supported_rates;
+    unsigned int *supported_channels;
     struct {
         size_t fragment_size;
         size_t nfrags;
@@ -1822,6 +1823,7 @@ static int sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, pa_channel_map 
     int i;
     bool format_supported = false;
     bool rate_supported = false;
+    bool channels_supported = false;
 #ifdef USE_SMOOTHER_2
     pa_sample_spec effective_spec;
 #endif
@@ -1874,6 +1876,27 @@ static int sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, pa_channel_map 
 #ifdef USE_SMOOTHER_2
     pa_smoother_2_set_sample_spec(u->smoother, pa_rtclock_now(), &effective_spec);
 #endif
+
+    for (i = 0; u->supported_channels[i]; i++) {
+        if (u->supported_channels[i] == spec->channels) {
+            pa_sink_set_channels(u->sink, spec->channels);
+            channels_supported = true;
+            break;
+        }
+    }
+
+    if (!channels_supported) {
+        pa_log_info("Sink does not support %u channels, set it to a verified value", spec->channels);
+        pa_sink_set_channels(u->sink, u->verified_sample_spec.channels);
+    }
+
+    if (map) {
+        pa_sink_set_channel_map(s, map);
+    } else {
+        pa_channel_map def_map;
+        pa_channel_map_init_auto(&def_map, spec->channels, PA_CHANNEL_MAP_DEFAULT);
+        pa_sink_set_channel_map(s, &def_map);
+    }
 
     /* Passthrough status change is handled during unsuspend */
 
@@ -2614,6 +2637,12 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
         goto fail;
     }
 
+    u->supported_channels = pa_alsa_get_supported_channels(u->pcm_handle, ss.channels);
+    if (!u->supported_channels) {
+        pa_log_error("Failed to find any supported channel counts.");
+        goto fail;
+    }
+
     /* ALSA might tweak the sample spec, so recalculate the frame size */
     frame_size = pa_frame_size(&ss);
 
@@ -2935,6 +2964,9 @@ static void userdata_free(struct userdata *u) {
 
     if (u->supported_rates)
         pa_xfree(u->supported_rates);
+
+    if (u->supported_channels)
+        pa_xfree(u->supported_channels);
 
     reserve_done(u);
     monitor_done(u);
