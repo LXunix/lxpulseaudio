@@ -32,7 +32,7 @@
 
 static pa_test_context *ctx = NULL;
 static uint32_t sink_idx = PA_INVALID_INDEX;
-static const char *bname = NULL;
+static const char *binary_name = NULL;
 /* We fill in fake AC3 data in terms of the corresponding PCM sample spec (S16LE, 2ch, at the given rate) */
 int16_t data[RATE * 2] = { 0, }; /* one second space */
 
@@ -47,7 +47,7 @@ static void passthrough_teardown() {
 }
 
 static void passthrough_setup() {
-    ctx = pa_test_context_new(bname);
+    ctx = pa_test_context_new(binary_name);
 
     sink_idx = pa_test_context_load_null_sink(ctx,
             "formats='ac3-iec61937, format.rate=\"[32000, 44100, 48000]\" format.channels=\"6\"; pcm'");
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     TCase *tc;
     SRunner *sr;
 
-    bname = argv[0];
+    binary_name = argv[0];
 
     s = suite_create("Passthrough");
     tc = tcase_create("passthrough");

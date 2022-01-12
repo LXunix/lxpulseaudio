@@ -40,7 +40,7 @@
 static pa_context *context = NULL;
 static pa_stream *streams[NSTREAMS];
 static pa_mainloop_api *mainloop_api = NULL;
-static const char *bname = NULL;
+static const char *binary_name = NULL;
 
 static float data[SAMPLE_HZ]; /* one second space */
 
@@ -169,7 +169,7 @@ START_TEST (sync_playback_test) {
 
     mainloop_api = pa_mainloop_get_api(m);
 
-    context = pa_context_new(mainloop_api, bname);
+    context = pa_context_new(mainloop_api, binary_name);
     fail_unless(context != NULL);
 
     pa_context_set_state_callback(context, context_state_callback, NULL);
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
     TCase *tc;
     SRunner *sr;
 
-    bname = argv[0];
+    binary_name = argv[0];
 
     s = suite_create("Sync Playback");
     tc = tcase_create("syncplayback");

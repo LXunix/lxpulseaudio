@@ -27,10 +27,10 @@
 
 pa_test_context *ctx;
 uint32_t sink_idx = PA_INVALID_INDEX;
-static const char *bname = NULL;
+static const char *binary_name = NULL;
 
 static void reconfigure_setup() {
-    ctx = pa_test_context_new(bname);
+    ctx = pa_test_context_new(binary_name);
 
     sink_idx = pa_test_context_load_null_sink(ctx, "avoid_processing=true");
 }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     TCase *tc;
     SRunner *sr;
 
-    bname = argv[0];
+    binary_name = argv[0];
 
     s = suite_create("Reconfigure");
     tc = tcase_create("reconfigure");
