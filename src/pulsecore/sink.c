@@ -1494,7 +1494,7 @@ void pa_sink_render_full(pa_sink *s, size_t length, pa_memchunk *result) {
 }
 
 /* Called from main thread */
-int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough, bool restore) {
+int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     int ret = -1;
     pa_sample_spec desired_spec;
     pa_sample_format_t default_format = s->default_sample_spec.format;
@@ -1508,9 +1508,9 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
     bool avoid_resampling = s->avoid_resampling;
     bool avoid_processing = s->avoid_processing;
     pa_channel_map old_map, *new_map;
+    bool restore = spec == NULL;
 
-    pa_assert(restore || (spec != NULL));
-    pa_assert(!restore || (spec == NULL && map == NULL && pa_sample_spec_valid(&s->saved_spec)));
+    pa_assert(spec != NULL || (map == NULL && pa_sample_spec_valid(&s->saved_spec)));
 
     if (!restore && pa_sample_spec_equal(spec, &s->sample_spec))
         return 0;
@@ -1614,15 +1614,9 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
     if (restore) {
         /* Restore the previous channel map as well */
         new_map = &s->saved_map;
-    } else if (map) {
+    } else {
         /* Set the requested channel map */
         new_map = map;
-    } else if (desired_spec.channels == s->sample_spec.channels) {
-        /* No requested channel map, but channel count is unchanged so don't change */
-        new_map = &s->channel_map;
-    } else {
-        /* No requested channel map, let the device decide */
-        new_map = NULL;
     }
 
     if (s->reconfigure(s, &desired_spec, new_map, passthrough) >= 0) {
@@ -1630,7 +1624,7 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
 
         /* update monitor source as well */
         if (s->monitor_source && !passthrough)
-            pa_source_reconfigure(s->monitor_source, &desired_spec, new_map, false, false);
+            pa_source_reconfigure(s->monitor_source, &desired_spec, new_map, false);
 
         pa_log_info("Reconfigured successfully to: %s",
                 pa_sample_spec_snprint(spec_str, sizeof(spec_str), &desired_spec));

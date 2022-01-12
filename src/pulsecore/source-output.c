@@ -381,7 +381,7 @@ int pa_source_output_new(
 
         pa_log_info("Trying to change sample spec");
         pa_source_reconfigure(data->source, &data->sample_spec, &data->channel_map,
-                pa_source_output_new_data_is_passthrough(data), false);
+                pa_source_output_new_data_is_passthrough(data));
     }
 
     if (pa_source_output_new_data_is_passthrough(data) &&
@@ -560,7 +560,7 @@ static void source_output_set_state(pa_source_output *o, pa_source_output_state_
             !pa_sample_spec_equal(&o->sample_spec, &o->source->sample_spec)) {
             /* We were uncorked and the source was not playing anything -- let's try
              * to update the sample format and rate to avoid resampling */
-            pa_source_reconfigure(o->source, &o->sample_spec, &o->channel_map, pa_source_output_is_passthrough(o), false);
+            pa_source_reconfigure(o->source, &o->sample_spec, &o->channel_map, pa_source_output_is_passthrough(o));
         }
 
         pa_assert_se(pa_asyncmsgq_send(o->source->asyncmsgq, PA_MSGOBJECT(o), PA_SOURCE_OUTPUT_MESSAGE_SET_STATE, PA_UINT_TO_PTR(state), 0, NULL) == 0);
@@ -631,7 +631,7 @@ void pa_source_output_unlink(pa_source_output*o) {
 
             if (pa_source_output_is_passthrough(o)) {
                 pa_log_debug("Leaving passthrough, trying to restore previous configuration");
-                pa_source_reconfigure(o->source, NULL, NULL, false, true);
+                pa_source_reconfigure(o->source, NULL, NULL, false);
             }
         }
 
@@ -1412,7 +1412,7 @@ int pa_source_output_start_move(pa_source_output *o) {
 
     if (pa_source_output_is_passthrough(o)) {
         pa_log_debug("Leaving passthrough, trying to restore previous configuration");
-        pa_source_reconfigure(o->source, NULL, NULL, false, true);
+        pa_source_reconfigure(o->source, NULL, NULL, false);
     }
 
     pa_cvolume_remap(&o->volume_factor_source, &o->source->channel_map, &o->channel_map);
@@ -1608,7 +1608,7 @@ int pa_source_output_finish_move(pa_source_output *o, pa_source *dest, bool save
            SOURCE_OUTPUT_MOVE_FINISH hook */
 
         pa_log_info("Trying to change sample spec");
-        pa_source_reconfigure(dest, &o->sample_spec, &o->channel_map, pa_source_output_is_passthrough(o), false);
+        pa_source_reconfigure(dest, &o->sample_spec, &o->channel_map, pa_source_output_is_passthrough(o));
     }
 
     if (o->moving)

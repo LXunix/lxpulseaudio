@@ -1059,7 +1059,7 @@ void pa_source_post_direct(pa_source*s, pa_source_output *o, const pa_memchunk *
 }
 
 /* Called from main thread */
-int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough, bool restore) {
+int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     int ret;
     pa_sample_spec desired_spec;
     pa_sample_format_t default_format = s->default_sample_spec.format;
@@ -1071,9 +1071,9 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
     bool avoid_resampling = s->avoid_resampling;
     bool avoid_processing = s->avoid_processing;
     pa_channel_map old_map, *new_map;
+    bool restore = spec == NULL;
 
-    pa_assert(restore || (spec != NULL));
-    pa_assert(!restore || (spec == NULL && map == NULL && pa_sample_spec_valid(&s->saved_spec)));
+    pa_assert(spec != NULL || (map == NULL && pa_sample_spec_valid(&s->saved_spec)));
 
     if (!restore && pa_sample_spec_equal(spec, &s->sample_spec))
         return 0;
@@ -1178,15 +1178,9 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
     if (restore) {
         /* Restore the previous channel map as well */
         new_map = &s->saved_map;
-    } else if (map) {
+    } else {
         /* Set the requested channel map */
         new_map = map;
-    } else if (desired_spec.channels == s->sample_spec.channels) {
-        /* No requested channel map, but channel count is unchanged so don't change */
-        new_map = &s->channel_map;
-    } else {
-        /* No requested channel map, let the device decide */
-        new_map = NULL;
     }
 
     if (s->reconfigure)
@@ -1200,7 +1194,7 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
         if (!passthrough) {
             pa_sample_spec old_spec = s->sample_spec;
             s->sample_spec = desired_spec;
-            ret = pa_sink_reconfigure(s->monitor_of, &desired_spec, new_map, false, false);
+            ret = pa_sink_reconfigure(s->monitor_of, &desired_spec, new_map, false);
 
             if (ret < 0) {
                 /* Changing the sink rate failed, roll back the old rate for
