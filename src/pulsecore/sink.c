@@ -1545,7 +1545,7 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
         s->saved_map = s->channel_map;
 
         /* Save the volume, we're going to reset it to NORM while in passthrough */
-        s->saved_volume = *pa_sink_get_volume(s, true);
+        s->saved_volume = *pa_sink_get_volume(s, false);
         s->saved_save_volume = s->save_volume;
     }
 
