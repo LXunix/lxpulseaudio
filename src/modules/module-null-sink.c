@@ -178,8 +178,9 @@ static void sink_update_requested_latency_cb(pa_sink *s) {
 }
 
 static int sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
-    /* We don't need to do anything */
-    s->sample_spec = *spec;
+    pa_sink_assert_ref(s);
+
+    pa_sink_set_sample_spec(s, spec);
 
     if (map)
         pa_sink_set_channel_map(s, map);
