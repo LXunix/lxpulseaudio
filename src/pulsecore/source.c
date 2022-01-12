@@ -1177,8 +1177,8 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
     if (!passthrough && pa_source_used_by(s) > 0)
         return -1;
 
-    pa_log_debug("Suspending source %s due to changing format, desired format = %s rate = %u",
-                 s->name, pa_sample_format_to_string(desired_spec.format), desired_spec.rate);
+    pa_log_debug("Suspending source %s due to changing format, desired format = %s rate = %u, channels = %u",
+                 s->name, pa_sample_format_to_string(desired_spec.format), desired_spec.rate, desired_spec.channels);
 
     pa_source_suspend(s, true, PA_SUSPEND_INTERNAL);
 

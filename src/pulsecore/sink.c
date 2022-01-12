@@ -1613,8 +1613,8 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
     if (!passthrough && pa_sink_used_by(s) > 0)
         return -1;
 
-    pa_log_debug("Suspending sink %s due to changing format, desired format = %s rate = %u",
-                 s->name, pa_sample_format_to_string(desired_spec.format), desired_spec.rate);
+    pa_log_debug("Suspending sink %s due to changing format, desired format = %s rate = %u, channels = %u",
+                 s->name, pa_sample_format_to_string(desired_spec.format), desired_spec.rate, desired_spec.channels);
     pa_sink_suspend(s, true, PA_SUSPEND_INTERNAL);
 
     /* Keep the old channel map in case it changes */
