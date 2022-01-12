@@ -1073,10 +1073,22 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
     pa_channel_map old_map, *new_map;
     bool restore = spec == NULL;
 
-    pa_assert(spec != NULL || (map == NULL && pa_sample_spec_valid(&s->saved_spec)));
+    /* if spec is unspecified (i.e. we want to restore), map must not be specified either */
+    pa_assert(spec != NULL || map == NULL);
+    pa_assert(spec == NULL || pa_sample_spec_valid(spec));
+    pa_assert(map == NULL || pa_channel_map_valid(map));
+
 
     if (!restore && pa_sample_spec_equal(spec, &s->sample_spec))
         return 0;
+
+    if (restore && !pa_sample_spec_valid(&s->saved_spec)) {
+        /* If we were asked to restore and nothing was saved, this is not an
+         * error -- it means that no reconfiguration was required in the
+         * "entry" phase, so none is required in the "exit" phase either.
+         */
+        return 0;
+    }
 
     if (!s->reconfigure && !s->monitor_of)
         return -1;
@@ -1098,9 +1110,6 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
             return -1;
         }
     }
-
-    if (PA_UNLIKELY(!restore && !pa_sample_spec_valid(spec)))
-        return -1;
 
     if (passthrough) {
         /* Save the previous sample spec and channel map, we will try to restore it when leaving passthrough */
