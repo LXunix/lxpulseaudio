@@ -1170,6 +1170,7 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
             desired_spec.rate = default_rate;
     }
 
+    /* We don't expect to change only the channel map, so we don't check that */
     if (pa_sample_spec_equal(&desired_spec, &s->sample_spec) && passthrough == pa_source_is_passthrough(s))
         return 0;
 

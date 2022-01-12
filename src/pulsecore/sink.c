@@ -1606,6 +1606,7 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
             desired_spec.rate = default_rate;
     }
 
+    /* We don't expect to change only the channel map, so we don't check that */
     if (pa_sample_spec_equal(&desired_spec, &s->sample_spec) && passthrough == pa_sink_is_passthrough(s))
         return 0;
 
