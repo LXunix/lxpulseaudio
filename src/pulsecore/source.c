@@ -3045,103 +3045,41 @@ done:
 }
 
 /* Called from the main thread */
-void pa_source_set_sample_spec(pa_source *s, pa_sample_spec *spec) {
+void pa_source_set_sample_spec(pa_source *s, pa_sample_spec *spec, pa_channel_map *map) {
     pa_sample_spec old_spec;
+    pa_channel_map old_map;
     char spec_str[PA_SAMPLE_SPEC_SNPRINT_MAX], old_spec_str[PA_SAMPLE_SPEC_SNPRINT_MAX];
+    char old_map_str[PA_CHANNEL_MAP_SNPRINT_MAX], new_map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
+    bool changed = false;
 
     pa_assert(s);
     pa_assert(pa_sample_spec_valid(spec));
-
-    old_spec = s->sample_spec;
-    if (pa_sample_spec_equal(&old_spec, spec))
-        return;
-
-    pa_sample_spec_snprint(spec_str, sizeof(spec_str), spec);
-    pa_sample_spec_snprint(old_spec_str, sizeof(old_spec_str), &old_spec);
-
-    pa_log_info("%s: spec: %s -> %s", s->name, old_spec_str, spec_str);
-
-    s->sample_spec = *spec;
-
-    pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
-}
-
-/* Called from the main thread */
-void pa_source_set_sample_format(pa_source *s, pa_sample_format_t format) {
-    pa_sample_format_t old_format;
-
-    pa_assert(s);
-    pa_assert(pa_sample_format_valid(format));
-
-    old_format = s->sample_spec.format;
-    if (old_format == format)
-        return;
-
-    pa_log_info("%s: format: %s -> %s",
-                s->name, pa_sample_format_to_string(old_format), pa_sample_format_to_string(format));
-
-    s->sample_spec.format = format;
-
-    pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
-}
-
-/* Called from the main thread */
-void pa_source_set_sample_rate(pa_source *s, uint32_t rate) {
-    uint32_t old_rate;
-
-    pa_assert(s);
-    pa_assert(pa_sample_rate_valid(rate));
-
-    old_rate = s->sample_spec.rate;
-    if (old_rate == rate)
-        return;
-
-    pa_log_info("%s: rate: %u -> %u", s->name, old_rate, rate);
-
-    s->sample_spec.rate = rate;
-
-    pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
-}
-
-/* Called from the main thread */
-void pa_source_set_channels(pa_source *s, uint8_t channels) {
-    uint8_t old_channels;
-
-    pa_assert(s);
-    pa_assert(pa_channels_valid(channels));
-
-    old_channels = s->sample_spec.channels;
-    if (old_channels == channels)
-        return;
-
-    pa_log_info("%s: channels: %u -> %u", s->name, old_channels, channels);
-
-    s->sample_spec.channels = channels;
-
-    pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
-}
-
-/* Called from the main thread */
-void pa_source_set_channel_map(pa_source *s, pa_channel_map *map) {
-    pa_channel_map old_map;
-    char old_map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
-    char new_map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
-
-    pa_assert(s);
     pa_assert(map);
     pa_assert(pa_channel_map_valid(map));
 
+    old_spec = s->sample_spec;
+    if (!pa_sample_spec_equal(&old_spec, spec)) {
+        pa_sample_spec_snprint(spec_str, sizeof(spec_str), spec);
+        pa_sample_spec_snprint(old_spec_str, sizeof(old_spec_str), &old_spec);
+
+        pa_log_info("%s: spec: %s -> %s", s->name, old_spec_str, spec_str);
+
+        s->sample_spec = *spec;
+        changed = true;
+    }
+
     old_map = s->channel_map;
-    if (pa_channel_map_equal(&old_map, map))
-        return;
+    if (!pa_channel_map_equal(&old_map, map)) {
+        pa_log_info("%s: channel map: %s -> %s", s->name,
+                pa_channel_map_snprint(old_map_str, sizeof(old_map_str), &old_map),
+                pa_channel_map_snprint(new_map_str, sizeof(new_map_str), map));
 
-    pa_log_info("%s: channel map: %s -> %s", s->name,
-            pa_channel_map_snprint(old_map_str, sizeof(old_map_str), &old_map),
-            pa_channel_map_snprint(new_map_str, sizeof(new_map_str), map));
+        s->channel_map = *map;
+        changed = true;
+    }
 
-    s->channel_map = *map;
-
-    pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
+    if (changed)
+        pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE | PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
 }
 
 /* Called from the main thread. */

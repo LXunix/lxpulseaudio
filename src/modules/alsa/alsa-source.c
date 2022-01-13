@@ -1645,16 +1645,11 @@ static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_
 
     pa_assert(u);
 
-#ifdef USE_SMOOTHER_2
-    effective_spec.channels = s->sample_spec.channels;
-#endif
+    effective_spec = s->sample_spec;
 
     for (i = 0; u->supported_formats[i] != PA_SAMPLE_MAX; i++) {
         if (u->supported_formats[i] == spec->format) {
-            pa_source_set_sample_format(u->source, spec->format);
-#ifdef USE_SMOOTHER_2
             effective_spec.format = spec->format;
-#endif
             format_supported = true;
             break;
         }
@@ -1663,18 +1658,12 @@ static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_
     if (!format_supported) {
         pa_log_info("Source does not support sample format of %s, set it to a verified value",
                     pa_sample_format_to_string(spec->format));
-        pa_source_set_sample_format(u->source, u->verified_sample_spec.format);
-#ifdef USE_SMOOTHER_2
         effective_spec.format = u->verified_sample_spec.format;
-#endif
     }
 
     for (i = 0; u->supported_rates[i]; i++) {
         if (u->supported_rates[i] == spec->rate) {
-            pa_source_set_sample_rate(u->source, spec->rate);
-#ifdef USE_SMOOTHER_2
             effective_spec.rate = spec->rate;
-#endif
             rate_supported = true;
             break;
         }
@@ -1682,19 +1671,12 @@ static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_
 
     if (!rate_supported) {
         pa_log_info("Source does not support sample rate of %u, set it to a verfied value", spec->rate);
-        pa_source_set_sample_rate(u->source, u->verified_sample_spec.rate);
-#ifdef USE_SMOOTHER_2
         effective_spec.rate = u->verified_sample_spec.rate;
-#endif
     }
-
-#ifdef USE_SMOOTHER_2
-    pa_smoother_2_set_sample_spec(u->smoother, pa_rtclock_now(), &effective_spec);
-#endif
 
     for (i = 0; u->supported_channels[i]; i++) {
         if (u->supported_channels[i] == spec->channels) {
-            pa_source_set_channels(u->source, spec->channels);
+            effective_spec.channels = spec->channels;
             channels_supported = true;
             break;
         }
@@ -1702,16 +1684,14 @@ static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_
 
     if (!channels_supported) {
         pa_log_info("Sink does not support %u channels, set it to a verified value", spec->channels);
-        pa_source_set_channels(u->source, u->verified_sample_spec.channels);
+        effective_spec.channels = u->verified_sample_spec.channels;
     }
 
-    if (map) {
-       pa_source_set_channel_map(s, map);
-    } else {
-        pa_channel_map def_map;
-        pa_channel_map_init_auto(&def_map, spec->channels, PA_CHANNEL_MAP_DEFAULT);
-        pa_source_set_channel_map(s, &def_map);
-    }
+    pa_source_set_sample_spec(u->source, &effective_spec, map);
+
+#if USE_SMOOTHER_2
+    pa_smoother_2_set_sample_spec(u->smoother, pa_rtclock_now(), &effective_spec);
+#endif
 
     return 0;
 }
