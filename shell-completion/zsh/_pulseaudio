@@ -668,6 +668,7 @@ _pacat_completion() {
         '--format=[sample type to use]:format:((${(q)_pacat_sample_formats}))' \
         '--channels=[number of channels to use]:number:(1 2)' \
         '--channel-map=[channel map to use]:map' \
+        '--encoding=[encoding to use for non-PCM audio]:encoding' \
         '--fix-format[use the sample format of the sink]' \
         '--fix-rate[use the rate of the sink]' \
         '--fix-channels[channel map of the sink]' \

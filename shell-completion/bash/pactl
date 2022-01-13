@@ -435,7 +435,7 @@ _pacat () {
     local cur prev comps
     local flags='-h --help --version -r --record -p --playback -v --verbose -s
                 --server= -d --device= -n --client-name= --stream-name= --volume=
-                --rate= --format= --channels= --channel-map= --fix-format --fix-rate
+                --rate= --format= --channels= --channel-map= --encoding= --fix-format --fix-rate
                 --fix-channels --no-remix --no-remap --latency= --process-time=
                 --latency-msec= --process-time-msec= --property= --raw --passthrough
                 --file-format= --list-file-formats --monitor-stream='
