@@ -1639,9 +1639,8 @@ static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_
     bool format_supported = false;
     bool rate_supported = false;
     bool channels_supported = false;
-#ifdef USE_SMOOTHER_2
     pa_sample_spec effective_spec;
-#endif
+    pa_channel_map effective_map;
 
     pa_assert(u);
 
@@ -1685,6 +1684,16 @@ static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_
     if (!channels_supported) {
         pa_log_info("Sink does not support %u channels, set it to a verified value", spec->channels);
         effective_spec.channels = u->verified_sample_spec.channels;
+    }
+
+    /* We con't actually support configuring the channel map, so let's do the best we can */
+    pa_channel_map_init_auto(&effective_map, effective_spec.channels, PA_CHANNEL_MAP_ALSA);
+    if (!pa_channel_map_equal(map, &effective_map)) {
+        char req_map_str[PA_CHANNEL_MAP_SNPRINT_MAX], eff_map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
+
+        pa_log_info("Cannot set channel map to %s, using default of %s",
+            pa_channel_map_snprint(req_map_str, sizeof(req_map_str), map),
+            pa_channel_map_snprint(eff_map_str, sizeof(eff_map_str), &effective_map));
     }
 
     pa_source_set_sample_spec(u->source, &effective_spec, map);
