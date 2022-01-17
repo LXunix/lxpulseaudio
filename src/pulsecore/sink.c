@@ -1630,13 +1630,15 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
 
     if (s->reconfigure(s, &desired_spec, new_map, passthrough) >= 0) {
         char spec_str[PA_SAMPLE_SPEC_SNPRINT_MAX];
+        char map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
 
         /* update monitor source as well */
         if (s->monitor_source && !passthrough)
-            pa_source_reconfigure(s->monitor_source, &desired_spec, new_map, false);
+            pa_source_reconfigure(s->monitor_source, &s->sample_spec, &s->channel_map, false);
 
-        pa_log_info("Reconfigured successfully to: %s",
-                pa_sample_spec_snprint(spec_str, sizeof(spec_str), &desired_spec));
+        pa_log_info("Reconfigured successfully to: %s, %s",
+                pa_sample_spec_snprint(spec_str, sizeof(spec_str), &s->sample_spec),
+                pa_channel_map_snprint(map_str, sizeof(map_str), &s->channel_map));
     }
 
     PA_IDXSET_FOREACH(i, s->inputs, idx) {

@@ -1105,6 +1105,12 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
     }
 
     if (s->monitor_of) {
+        /* We only allow monitor source reconfiguration to match its sink */
+        if (!pa_sample_spec_equal(spec, &s->monitor_of->sample_spec) ||
+            !pa_channel_map_equal(map, &s->monitor_of->channel_map)) {
+            pa_log_info("Skipping monitor source reconfigruation to different spec from sink.");
+            return -1;
+        }
         if (PA_SINK_IS_RUNNING(s->monitor_of->state)) {
             pa_log_info("Cannot update sample spec, this is a monitor source and the sink is running.");
             return -1;
@@ -1195,32 +1201,14 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
 
     if (s->reconfigure)
         ret = s->reconfigure(s, &desired_spec, new_map, passthrough);
-    else {
-        /* This is a monitor source. */
-
-        /* XXX: This code is written with non-passthrough streams in mind. I
-         * have no idea whether the behaviour with passthrough streams is
-         * sensible. */
-        if (!passthrough) {
-            pa_sample_spec old_spec = s->sample_spec;
-            s->sample_spec = desired_spec;
-            ret = pa_sink_reconfigure(s->monitor_of, &desired_spec, new_map, false);
-
-            if (ret < 0) {
-                /* Changing the sink rate failed, roll back the old rate for
-                 * the monitor source. Why did we set the source rate before
-                 * calling pa_sink_reconfigure(), you may ask. The reason is
-                 * that pa_sink_reconfigure() tries to update the monitor
-                 * source rate, but we are already in the process of updating
-                 * the monitor source rate, so there's a risk of entering an
-                 * infinite loop. Setting the source rate before calling
-                 * pa_sink_reconfigure() makes the rate == s->sample_spec.rate
-                 * check in the beginning of this function return early, so we
-                 * avoid looping. */
-                s->sample_spec = old_spec;
-            }
-        } else
-            goto unsuspend;
+    else if (s->monitor_of) {
+        /* This is a monitor source, just set the desired spec and map */
+        s->sample_spec = desired_spec;
+        s->channel_map = *new_map;
+        ret = 0;
+    } else {
+        ret = -1;
+        goto unsuspend;
     }
 
     if (ret >= 0) {
