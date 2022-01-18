@@ -159,6 +159,7 @@ struct userdata {
 
     char *device_name;  /* name of the PCM device */
     char *control_device; /* name of the control device */
+    bool passthrough;
 
     bool use_mmap:1, use_tsched:1, deferred_volume:1, fixed_latency_range:1;
 
@@ -1203,7 +1204,7 @@ static int unsuspend(struct userdata *u, bool recovering) {
 
     pa_log_info("Trying resume...");
 
-    if ((is_iec958(u) || is_hdmi(u)) && pa_sink_is_passthrough(u->sink)) {
+    if ((is_iec958(u) || is_hdmi(u))) {
         /* Need to open device in NONAUDIO mode */
         int len = strlen(u->device_name) + 50;
         uint8_t aes3;
@@ -1227,7 +1228,7 @@ static int unsuspend(struct userdata *u, bool recovering) {
 
         device_name = pa_xmalloc(len);
         pa_snprintf(device_name, len, "%s,AES0=0x%02x,AES1=0x%02x,AES2=0x%02x,AES3=0x%02x", u->device_name,
-                IEC958_AES0_CON_EMPHASIS_NONE | IEC958_AES0_NONAUDIO,
+                IEC958_AES0_CON_EMPHASIS_NONE | (u->passthrough ? IEC958_AES0_NONAUDIO : 0),
                 IEC958_AES1_CON_ORIGINAL | IEC958_AES1_CON_PCM_CODER,
                 0, aes3);
         pa_log_debug("Opening device for passthrough as: %s", device_name);
@@ -1910,6 +1911,7 @@ static int sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, pa_channel_map 
 #endif
 
     /* Passthrough status change is handled during unsuspend */
+    u->passthrough = passthrough;
 
     return 0;
 }
@@ -2499,6 +2501,7 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
     u->first = true;
     u->rewind_safeguard = rewind_safeguard;
     u->rtpoll = pa_rtpoll_new();
+    u->passthrough = false;
 
     if (pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll) < 0) {
         pa_log("pa_thread_mq_init() failed.");
