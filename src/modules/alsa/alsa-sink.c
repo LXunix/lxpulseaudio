@@ -1205,10 +1205,32 @@ static int unsuspend(struct userdata *u, bool recovering) {
 
     if ((is_iec958(u) || is_hdmi(u)) && pa_sink_is_passthrough(u->sink)) {
         /* Need to open device in NONAUDIO mode */
-        int len = strlen(u->device_name) + 8;
+        int len = strlen(u->device_name) + 50;
+        uint8_t aes3;
+
+        switch (u->sink->sample_spec.rate) {
+            case 22050: aes3 = IEC958_AES3_CON_FS_22050; break;
+            case 24000: aes3 = IEC958_AES3_CON_FS_24000; break;
+            case 32000: aes3 = IEC958_AES3_CON_FS_32000; break;
+            case 44100: aes3 = IEC958_AES3_CON_FS_44100; break;
+            case 48000: aes3 = IEC958_AES3_CON_FS_48000; break;
+            case 88200: aes3 = IEC958_AES3_CON_FS_88200; break;
+            case 96000: aes3 = IEC958_AES3_CON_FS_96000; break;
+            case 176400: aes3 = IEC958_AES3_CON_FS_176400; break;
+            case 192000: aes3 = IEC958_AES3_CON_FS_192000; break;
+            case 768000: aes3 = IEC958_AES3_CON_FS_768000; break;
+            default: aes3 = IEC958_AES3_CON_FS_NOTID; break;
+        }
+
+        if (u->sink->sample_spec.channels == 8)
+            aes3 = IEC958_AES3_CON_FS_768000;
 
         device_name = pa_xmalloc(len);
-        pa_snprintf(device_name, len, "%s,AES0=6", u->device_name);
+        pa_snprintf(device_name, len, "%s,AES0=0x%02x,AES1=0x%02x,AES2=0x%02x,AES3=0x%02x", u->device_name,
+                IEC958_AES0_CON_EMPHASIS_NONE | IEC958_AES0_NONAUDIO,
+                IEC958_AES1_CON_ORIGINAL | IEC958_AES1_CON_PCM_CODER,
+                0, aes3);
+        pa_log_debug("Opening device for passthrough as: %s", device_name);
     }
 
     /*
