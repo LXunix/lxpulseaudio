@@ -1494,8 +1494,7 @@ void pa_sink_render_full(pa_sink *s, size_t length, pa_memchunk *result) {
 }
 
 /* Called from main thread */
-int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
-    int ret = -1;
+void pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     pa_sample_spec desired_spec;
     pa_sample_format_t default_format = s->default_sample_spec.format;
     uint32_t default_rate = s->default_sample_spec.rate;
@@ -1516,34 +1515,34 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
     pa_assert(map == NULL || pa_channel_map_valid(map));
 
     if (!restore && pa_sample_spec_equal(spec, &s->sample_spec))
-        return 0;
+        return;
 
     if (restore && !pa_sample_spec_valid(&s->saved_spec)) {
         /* If we were asked to restore and nothing was saved, this is not an
          * error -- it means that no reconfiguration was required in the
          * "entry" phase, so none is required in the "exit" phase either.
          */
-        return 0;
+        return;
     }
 
     if (!s->reconfigure)
-        return -1;
+        return;
 
     if (PA_UNLIKELY(default_rate == alternate_rate && !passthrough && !restore && !avoid_resampling && !avoid_processing)) {
         pa_log_debug("Default and alternate sample rates are the same, so there is no point in switching.");
-        return -1;
+        return;
     }
 
     if (PA_SINK_IS_RUNNING(s->state)) {
         pa_log_info("Cannot update sample spec, SINK_IS_RUNNING, will keep using %s, %u ch and %u Hz",
                     pa_sample_format_to_string(s->sample_spec.format), s->sample_spec.channels, s->sample_spec.rate);
-        return -1;
+        return;
     }
 
     if (s->monitor_source) {
         if (PA_SOURCE_IS_RUNNING(s->monitor_source->state) == true) {
             pa_log_info("Cannot update sample spec, monitor source is RUNNING");
-            return -1;
+            return;
         }
     }
 
@@ -1608,10 +1607,10 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
 
     /* We don't expect to change only the channel map, so we don't check that */
     if (pa_sample_spec_equal(&desired_spec, &s->sample_spec) && passthrough == pa_sink_is_passthrough(s))
-        return 0;
+        return;
 
     if (!passthrough && pa_sink_used_by(s) > 0)
-        return -1;
+        return;
 
     pa_log_debug("Suspending sink %s due to changing format, desired format = %s rate = %u, channels = %u",
                  s->name, pa_sample_format_to_string(desired_spec.format), desired_spec.rate, desired_spec.channels);
@@ -1685,8 +1684,6 @@ int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, b
     }
 
     pa_sink_suspend(s, false, PA_SUSPEND_INTERNAL);
-
-    return ret;
 }
 
 /* Called from main thread */

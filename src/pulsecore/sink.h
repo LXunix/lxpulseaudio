@@ -456,7 +456,7 @@ unsigned pa_device_init_priority(pa_proplist *p);
 
 /**** May be called by everyone, from main context */
 
-int pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough);
+void pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough);
 void pa_sink_set_port_latency_offset(pa_sink *s, int64_t offset);
 
 /* The returned value is supposed to be in the time domain of the sound card! */

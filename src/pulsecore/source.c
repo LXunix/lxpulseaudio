@@ -1059,7 +1059,7 @@ void pa_source_post_direct(pa_source*s, pa_source_output *o, const pa_memchunk *
 }
 
 /* Called from main thread */
-int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
+void pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     int ret;
     pa_sample_spec desired_spec;
     pa_sample_format_t default_format = s->default_sample_spec.format;
@@ -1080,28 +1080,28 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
 
 
     if (!restore && pa_sample_spec_equal(spec, &s->sample_spec))
-        return 0;
+        return;
 
     if (restore && !pa_sample_spec_valid(&s->saved_spec)) {
         /* If we were asked to restore and nothing was saved, this is not an
          * error -- it means that no reconfiguration was required in the
          * "entry" phase, so none is required in the "exit" phase either.
          */
-        return 0;
+        return;
     }
 
     if (!s->reconfigure && !s->monitor_of)
-        return -1;
+        return;
 
     if (PA_UNLIKELY(default_rate == alternate_rate && !passthrough && !restore && !avoid_resampling && !avoid_processing)) {
         pa_log_debug("Default and alternate sample rates are the same, so there is no point in switching.");
-        return -1;
+        return;
     }
 
     if (PA_SOURCE_IS_RUNNING(s->state)) {
         pa_log_info("Cannot update sample spec, SOURCE_IS_RUNNING, will keep using %s, %u ch and %u Hz",
                     pa_sample_format_to_string(s->sample_spec.format), s->sample_spec.channels, s->sample_spec.rate);
-        return -1;
+        return;
     }
 
     if (s->monitor_of) {
@@ -1109,11 +1109,11 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
         if (!pa_sample_spec_equal(spec, &s->monitor_of->sample_spec) ||
             !pa_channel_map_equal(map, &s->monitor_of->channel_map)) {
             pa_log_info("Skipping monitor source reconfigruation to different spec from sink.");
-            return -1;
+            return;
         }
         if (PA_SINK_IS_RUNNING(s->monitor_of->state)) {
             pa_log_info("Cannot update sample spec, this is a monitor source and the sink is running.");
-            return -1;
+            return;
         }
     }
 
@@ -1178,10 +1178,10 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
 
     /* We don't expect to change only the channel map, so we don't check that */
     if (pa_sample_spec_equal(&desired_spec, &s->sample_spec) && passthrough == pa_source_is_passthrough(s))
-        return 0;
+        return;
 
     if (!passthrough && pa_source_used_by(s) > 0)
-        return -1;
+        return;
 
     pa_log_debug("Suspending source %s due to changing format, desired format = %s rate = %u, channels = %u",
                  s->name, pa_sample_format_to_string(desired_spec.format), desired_spec.rate, desired_spec.channels);
@@ -1256,8 +1256,6 @@ int pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *ma
 
 unsuspend:
     pa_source_suspend(s, false, PA_SUSPEND_INTERNAL);
-
-    return ret;
 }
 
 /* Called from main thread */
