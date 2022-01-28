@@ -1638,11 +1638,11 @@ void pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, 
         pa_log_info("Reconfigured successfully to: %s, %s",
                 pa_sample_spec_snprint(spec_str, sizeof(spec_str), &s->sample_spec),
                 pa_channel_map_snprint(map_str, sizeof(map_str), &s->channel_map));
-    }
 
-    PA_IDXSET_FOREACH(i, s->inputs, idx) {
-        if (i->state == PA_SINK_INPUT_CORKED)
-            pa_sink_input_update_resampler(i, true);
+        PA_IDXSET_FOREACH(i, s->inputs, idx) {
+            if (i->state == PA_SINK_INPUT_CORKED)
+                pa_sink_input_update_resampler(i, true);
+        }
     }
 
     if (!restore && !pa_channel_map_equal(&old_map, &s->channel_map)) {
