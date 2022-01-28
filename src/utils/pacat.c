@@ -326,7 +326,7 @@ static void stream_state_callback(pa_stream *s, void *userdata) {
 
             if (verbose) {
                 const pa_buffer_attr *a;
-                char cmt[PA_CHANNEL_MAP_SNPRINT_MAX], sst[PA_SAMPLE_SPEC_SNPRINT_MAX], fst[PA_FORMAT_INFO_SNPRINT_MAX];
+                char map_str[PA_CHANNEL_MAP_SNPRINT_MAX], spec_str[PA_SAMPLE_SPEC_SNPRINT_MAX], format_str[PA_FORMAT_INFO_SNPRINT_MAX];
 
                 pa_log(_("Stream successfully created."));
 
@@ -344,11 +344,11 @@ static void stream_state_callback(pa_stream *s, void *userdata) {
 
                 if (!encoding_set) {
                     pa_log(_("Using sample spec '%s', channel map '%s'."),
-                            pa_sample_spec_snprint(sst, sizeof(sst), pa_stream_get_sample_spec(s)),
-                            pa_channel_map_snprint(cmt, sizeof(cmt), pa_stream_get_channel_map(s)));
+                            pa_sample_spec_snprint(spec_str, sizeof(spec_str), pa_stream_get_sample_spec(s)),
+                            pa_channel_map_snprint(map_str, sizeof(map_str), pa_stream_get_channel_map(s)));
                 } else {
                     pa_log(_("Using format '%s'."),
-                            pa_format_info_snprint(fst, sizeof(fst), pa_stream_get_format_info(s)));
+                            pa_format_info_snprint(format_str, sizeof(format_str), pa_stream_get_format_info(s)));
                 }
 
                 pa_log(_("Connected to device %s (index: %u, suspended: %s)."),
@@ -1190,18 +1190,18 @@ int main(int argc, char *argv[]) {
 
     if (verbose) {
         if (!encoding_set) {
-            char tss[PA_SAMPLE_SPEC_SNPRINT_MAX], tcm[PA_CHANNEL_MAP_SNPRINT_MAX];
+            char spec_str[PA_SAMPLE_SPEC_SNPRINT_MAX], map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
 
             pa_log(_("Opening a %s stream with sample specification '%s' and channel map '%s'."),
                     mode == RECORD ? _("recording") : _("playback"),
-                    pa_sample_spec_snprint(tss, sizeof(tss), &sample_spec),
-                    pa_channel_map_snprint(tcm, sizeof(tcm), &channel_map));
+                    pa_sample_spec_snprint(spec_str, sizeof(spec_str), &sample_spec),
+                    pa_channel_map_snprint(map_str, sizeof(map_str), &channel_map));
         } else {
-            char tsf[PA_FORMAT_INFO_SNPRINT_MAX];
+            char format_str[PA_FORMAT_INFO_SNPRINT_MAX];
 
             pa_log(_("Opening a %s stream with format specification '%s'."),
                     mode == RECORD ? _("recording") : _("playback"),
-                    pa_format_info_snprint(tsf, sizeof(tsf), formats[0]));
+                    pa_format_info_snprint(format_str, sizeof(format_str), formats[0]));
         }
     }
 
