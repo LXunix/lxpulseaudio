@@ -1060,6 +1060,9 @@ int main(int argc, char *argv[]) {
         pa_format_info_set_rate(formats[0], sample_spec.rate);
         pa_format_info_set_channels(formats[0], sample_spec.channels);
 
+        /* Fix up the sample spec based on the format we have */
+        pa_format_info_to_sample_spec(formats[0], &sample_spec, NULL);
+
         if (!pa_format_info_valid(formats[0])) {
             pa_log(_("Invalid format specification."));
             goto quit;
@@ -1229,7 +1232,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (raw && !encoding_set && mode == PLAYBACK)
+    if (raw && mode == PLAYBACK)
         partialframe_buf = pa_xmalloc(pa_frame_size(&sample_spec));
 
     /* Set up a new main loop */
