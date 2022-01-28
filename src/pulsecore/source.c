@@ -1215,9 +1215,11 @@ void pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *m
         uint32_t idx;
         pa_source_output *o;
         char spec_str[PA_SAMPLE_SPEC_SNPRINT_MAX];
+        char map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
 
-        pa_log_info("Changed source format successfully to: %s",
-                pa_sample_spec_snprint(spec_str, sizeof(spec_str), &desired_spec));
+        pa_log_info("Reconfigured successfully to: %s, %s",
+                pa_sample_spec_snprint(spec_str, sizeof(spec_str), &s->sample_spec),
+                pa_channel_map_snprint(map_str, sizeof(map_str), &s->channel_map));
 
         PA_IDXSET_FOREACH(o, s->outputs, idx) {
             if (o->state == PA_SOURCE_OUTPUT_CORKED)
