@@ -1176,7 +1176,10 @@ void pa_source_reconfigure(pa_source *s, pa_sample_spec *spec, pa_channel_map *m
             desired_spec.rate = default_rate;
     }
 
-    /* We don't expect to change only the channel map, so we don't check that */
+    /* We don't expect to change only the channel map, so we don't check that.
+     * If the passthrough state is toggled, we want to continue through and
+     * make sure volumes are restored and the source can toggle passthrough
+     * state if it's keeping track. */
     if (pa_sample_spec_equal(&desired_spec, &s->sample_spec) && passthrough == pa_source_is_passthrough(s))
         return;
 

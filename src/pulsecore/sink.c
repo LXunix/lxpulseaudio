@@ -1605,7 +1605,10 @@ void pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, 
             desired_spec.rate = default_rate;
     }
 
-    /* We don't expect to change only the channel map, so we don't check that */
+    /* We don't expect to change only the channel map, so we don't check that.
+     * If the passthrough state is toggled, we want to continue through and
+     * make sure volumes are restored and the sink can toggle passthrough
+     * state if it's keeping track. */
     if (pa_sample_spec_equal(&desired_spec, &s->sample_spec) && passthrough == pa_sink_is_passthrough(s))
         return;
 
