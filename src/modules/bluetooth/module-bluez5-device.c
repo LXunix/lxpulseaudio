@@ -1400,13 +1400,18 @@ static int init_profile(struct userdata *u) {
 
     pa_assert(u->transport);
 
-    if (get_profile_direction (u->profile) & PA_DIRECTION_OUTPUT)
+    /* For a profile with both input and output directions */
+    if ((get_profile_direction (u->profile) & PA_DIRECTION_OUTPUT) &&
+        (get_profile_direction (u->profile) & PA_DIRECTION_INPUT)) {
+        if (add_sink(u) < 0 || add_source(u) < 0)
+            r = -1;
+    } else if (get_profile_direction (u->profile) & PA_DIRECTION_OUTPUT) {
         if (add_sink(u) < 0)
             r = -1;
-
-    if (get_profile_direction (u->profile) & PA_DIRECTION_INPUT)
+    } else if (get_profile_direction (u->profile) & PA_DIRECTION_INPUT) {
         if (add_source(u) < 0)
             r = -1;
+    }
 
     return r;
 }
