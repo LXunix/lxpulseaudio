@@ -43,13 +43,21 @@ int pa_client_conf_from_x11(pa_client_conf *c) {
 
     pa_assert(c);
 
-    /* Local connections will have configuration and X root window
-     * properties match 1:1, these paths are only strictly necessary
-     * for remote clients, so check for SSH_CONNECTION to make sure
-     * this is a remote session with X forwarding.
+    /* Xwayland is expensive to start. Do not check for X11 properties
+     * if the session is primarily a Wayland session
      */
-    if (!getenv("SSH_CONNECTION"))
+    const char *xdg_session_type = getenv("XDG_SESSION_TYPE");
+    if (xdg_session_type && !strcmp(xdg_session_type, "wayland"))
         goto finish;
+
+    if (!xdg_session_type) {
+        /* If XDG_SESSION_TYPE is not set, it might still be a wayland session
+         * running under an older systemd (or not running under systemd at all).
+         * Only check X11 properties if we're running under ssh.
+         */
+        if (!getenv("SSH_CONNECTION"))
+                goto finish;
+    }
 
     if (!(dname = getenv("DISPLAY")))
         goto finish;
