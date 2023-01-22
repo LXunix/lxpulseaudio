@@ -44,6 +44,7 @@
 #include <pulsecore/macro.h>
 #include <pulsecore/sndfile-util.h>
 #include <pulsecore/sample-util.h>
+#include <sys/queue.h>
 
 #define TIME_EVENT_USEC 50000
 
@@ -73,8 +74,14 @@ static void *partialframe_buf = NULL;
 static size_t partialframe_len = 0;
 
 /* Recording Mode buffers */
-static void *buffer = NULL;
-static size_t buffer_length = 0, buffer_index = 0;
+struct buffer_t {
+    void *buffer;
+    size_t length;
+    SIMPLEQ_ENTRY(buffer_t) next;
+};
+
+SIMPLEQ_HEAD(buffer_queue_t, buffer_t);
+struct buffer_queue_t buffer_head;
 
 static void *silence_buffer = NULL;
 static size_t silence_buffer_length = 0;
@@ -251,13 +258,16 @@ static void stream_read_callback(pa_stream *s, size_t length, void *userdata) {
             /* If there is a hole in the stream, we generate silence, except
              * if it's a passthrough stream in which case we skip the hole. */
             if (data || !(flags & PA_STREAM_PASSTHROUGH)) {
-                buffer = pa_xrealloc(buffer, buffer_index + buffer_length + length);
+                void *buffer = pa_xmalloc(length);
                 if (data)
-                    memcpy((uint8_t *) buffer + buffer_index + buffer_length, data, length);
+                    memcpy((uint8_t *) buffer, data, length);
                 else
-                    pa_silence_memory((uint8_t *) buffer + buffer_index + buffer_length, length, &sample_spec);
+                    pa_silence_memory((uint8_t *) buffer, length, &sample_spec);
 
-                buffer_length += length;
+                struct buffer_t *buf = pa_xmalloc(sizeof(struct buffer_t));
+                buf->buffer = buffer;
+                buf->length = length;
+                SIMPLEQ_INSERT_TAIL(&buffer_head, buf, next);
             }
 
             pa_stream_drop(s);
@@ -594,14 +604,16 @@ static void stdout_callback(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_eve
     pa_assert(e);
     pa_assert(stdio_event == e);
 
-    if (!buffer) {
+    if (SIMPLEQ_EMPTY(&buffer_head)) {
         mainloop_api->io_enable(stdio_event, PA_IO_EVENT_NULL);
         return;
     }
 
-    pa_assert(buffer_length);
+    struct buffer_t *buf = SIMPLEQ_FIRST(&buffer_head);
+    void *buffer = buf->buffer;
+    size_t length = buf->length;
 
-    if ((r = pa_write(fd, (uint8_t*) buffer+buffer_index, buffer_length, userdata)) <= 0) {
+    if ((r = pa_write(fd, (uint8_t*) buffer, length, userdata)) <= 0) {
         pa_log(_("write() failed: %s"), strerror(errno));
         quit(1);
 
@@ -610,14 +622,9 @@ static void stdout_callback(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_eve
         return;
     }
 
-    buffer_length -= (uint32_t) r;
-    buffer_index += (uint32_t) r;
-
-    if (!buffer_length) {
-        pa_xfree(buffer);
-        buffer = NULL;
-        buffer_length = buffer_index = 0;
-    }
+    pa_xfree(buffer);
+    SIMPLEQ_REMOVE_HEAD(&buffer_head, next);
+    pa_xfree(buf);
 }
 
 /* UNIX signal to quit received */
@@ -779,6 +786,8 @@ int main(int argc, char *argv[]) {
         {"monitor-stream", 1, NULL, ARG_MONITOR_STREAM},
         {NULL,           0, NULL, 0}
     };
+
+    SIMPLEQ_INIT(&buffer_head);
 
     setlocale(LC_ALL, "");
 #ifdef ENABLE_NLS
@@ -1247,7 +1256,13 @@ quit:
     }
 
     pa_xfree(silence_buffer);
-    pa_xfree(buffer);
+    while(!SIMPLEQ_EMPTY(&buffer_head)) {
+        struct buffer_t *buf = SIMPLEQ_FIRST(&buffer_head);
+        pa_xfree(buf->buffer);
+        SIMPLEQ_REMOVE_HEAD(&buffer_head, next);
+        pa_xfree(buf);
+    }
+
     pa_xfree(partialframe_buf);
 
     pa_xfree(server);
