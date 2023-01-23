@@ -77,6 +77,7 @@ static size_t partialframe_len = 0;
 struct buffer_t {
     void *buffer;
     size_t length;
+    size_t index;
     SIMPLEQ_ENTRY(buffer_t) next;
 };
 
@@ -267,6 +268,7 @@ static void stream_read_callback(pa_stream *s, size_t length, void *userdata) {
                 struct buffer_t *buf = pa_xmalloc(sizeof(struct buffer_t));
                 buf->buffer = buffer;
                 buf->length = length;
+                buf->index = 0;
                 SIMPLEQ_INSERT_TAIL(&buffer_head, buf, next);
             }
 
@@ -610,8 +612,8 @@ static void stdout_callback(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_eve
     }
 
     struct buffer_t *buf = SIMPLEQ_FIRST(&buffer_head);
-    void *buffer = buf->buffer;
-    size_t length = buf->length;
+    void *buffer = buf->buffer + buf->index;
+    size_t length = buf->length - buf->index;
 
     if ((r = pa_write(fd, (uint8_t*) buffer, length, userdata)) <= 0) {
         pa_log(_("write() failed: %s"), strerror(errno));
@@ -621,10 +623,15 @@ static void stdout_callback(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_eve
         stdio_event = NULL;
         return;
     }
-
-    pa_xfree(buffer);
-    SIMPLEQ_REMOVE_HEAD(&buffer_head, next);
-    pa_xfree(buf);
+    
+    buf->index += r;
+    
+    if (buf->index == buf->length)
+    {
+        pa_xfree(buffer);
+        SIMPLEQ_REMOVE_HEAD(&buffer_head, next);
+        pa_xfree(buf);
+    }
 }
 
 /* UNIX signal to quit received */
