@@ -626,8 +626,7 @@ static void stdout_callback(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_eve
     
     buf->index += r;
     
-    if (buf->index == buf->length)
-    {
+    if (buf->index == buf->length) {
         pa_xfree(buffer);
         SIMPLEQ_REMOVE_HEAD(&buffer_head, next);
         pa_xfree(buf);
