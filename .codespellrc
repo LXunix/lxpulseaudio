@@ -1,3 +1,8 @@
 [codespell]
-skip = .git,*.pdf,*.svg
-# ignore-words-list = 
+skip = .git,*.pdf,*.svg,po,rfc*.txt
+# nd,te,wath - short variables used
+# numer - API used
+# Mattern,Stach - names
+# entrie - entrie(s) string
+# HDA - domain terms used
+ignore-words-list = nd,te,wath,mattern,entrie,stach,hda,numer
