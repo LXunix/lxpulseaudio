@@ -42,7 +42,7 @@ static void underflow_cb(struct pa_stream *s, void *userdata) {
 }
 
 static void overflow_cb(struct pa_stream *s, void *userdata) {
-    pa_log_warn("Overlow");
+    pa_log_warn("Overflow");
 }
 
 /*

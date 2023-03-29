@@ -137,7 +137,7 @@ static struct ucm_items item[] = {
     {NULL, NULL},
 };
 
-/* UCM verb info - this should eventually be part of policy manangement */
+/* UCM verb info - this should eventually be part of policy management */
 static struct ucm_info verb_info[] = {
     {SND_USE_CASE_VERB_INACTIVE, 0},
     {SND_USE_CASE_VERB_HIFI, 8000},

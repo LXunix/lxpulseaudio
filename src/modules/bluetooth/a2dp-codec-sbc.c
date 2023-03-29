@@ -1447,7 +1447,7 @@ const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_sbc = {
  * SBC codec in Dual Channel mode, 8 bands, block length 16, allocation method Loudness,
  * with bitpool adjusted to match target bitrates.
  *
- * Most commonly choosen bitrates and reasons are:
+ * Most commonly chosen bitrates and reasons are:
  * 453000 - this yields most efficient packing of frames on Android for bluetooth EDR 2mbps
  * 512000 - this looks to be old limit stated in bluetooth documents
  * 552000 - this yields most efficient packing of frames on Android for bluetooth EDR 3mbps

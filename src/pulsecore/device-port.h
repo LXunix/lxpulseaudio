@@ -47,7 +47,7 @@ struct pa_device_port {
 
     unsigned priority;
     pa_available_t available;         /* PA_AVAILABLE_UNKNOWN, PA_AVAILABLE_NO or PA_AVAILABLE_YES */
-    char *availability_group;         /* a string indentifier which determine the group of devices handling the available state simulteneously */
+    char *availability_group;         /* a string identifier which determine the group of devices handling the available state simulteneously */
 
     pa_proplist *proplist;
     pa_hashmap *profiles; /* Does not own the profiles */

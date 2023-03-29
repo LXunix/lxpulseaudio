@@ -1367,7 +1367,7 @@ pa_bluetooth_backend *pa_bluetooth_native_backend_new(pa_core *c, pa_bluetooth_d
 
     backend->upower = pa_upower_backend_new(c, y);
 
-    /* All CIND indicators are enabled by default until overriden by AT+BIA */
+    /* All CIND indicators are enabled by default until overridden by AT+BIA */
     for (i = 1; i < CIND_INDICATOR_MAX; i++)
         backend->cind_enabled_indicators |= (1 << i);
 

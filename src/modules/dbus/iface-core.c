@@ -2047,7 +2047,7 @@ static pa_hook_result_t sink_put_cb(void *hook_data, void *call_data, void *slot
     pa_assert(c);
     pa_assert(s);
 
-    /* We may have alredy encountered this sink, because if the new sink was
+    /* We may have already encountered this sink, because if the new sink was
      * chosen as the default sink, the default sink change hook was fired
      * first, and we saw the sink in default_sink_changed_cb(). */
     if (pa_hashmap_get(c->sinks_by_index, PA_UINT32_TO_PTR(s->index)))
@@ -2092,7 +2092,7 @@ static pa_hook_result_t source_put_cb(void *hook_data, void *call_data, void *sl
     pa_assert(c);
     pa_assert(s);
 
-    /* We may have alredy encountered this source, because if the new source
+    /* We may have already encountered this source, because if the new source
      * was chosen as the default source, the default source change hook was
      * fired first, and we saw the source in default_source_changed_cb(). */
     if (pa_hashmap_get(c->sources_by_index, PA_UINT32_TO_PTR(s->index)))

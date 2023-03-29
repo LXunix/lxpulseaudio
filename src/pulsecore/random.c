@@ -120,7 +120,7 @@ void pa_random(void *ret_data, size_t length) {
         return;
 
     if (!has_whined) {
-        pa_log_warn("Failed to get proper entropy. Falling back to unsecure pseudo RNG.");
+        pa_log_warn("Failed to get proper entropy. Falling back to insecure pseudo RNG.");
         has_whined = true;
     }
 

@@ -45,7 +45,7 @@ PA_MODULE_USAGE(
         "tsched_buffer_size=<buffer size when using timer based scheduling> "
         "fixed_latency_range=<disable latency range changes on underrun?> "
         "ignore_dB=<ignore dB information from the device?> "
-        "deferred_volume=<syncronize sw and hw volume changes in IO-thread?> "
+        "deferred_volume=<synchronize sw and hw volume changes in IO-thread?> "
         "use_ucm=<use ALSA UCM for card configuration?> "
         "avoid_resampling=<use stream original sample rate if possible?>");
 

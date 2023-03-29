@@ -225,7 +225,7 @@ static void resolver_cb(
             else
                 et = pa_xstrdup("none");
         } else if (pa_streq(key, "cn")) {
-            /* Suported audio codecs:
+            /* Supported audio codecs:
              *  - 0 = PCM,
              *  - 1 = ALAC,
              *  - 2 = AAC,

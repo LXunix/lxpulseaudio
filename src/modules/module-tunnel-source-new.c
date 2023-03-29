@@ -673,7 +673,7 @@ static int do_init(pa_module *m) {
     u->msg = pa_msgobject_new(tunnel_msg);
     u->msg->parent.process_msg = tunnel_process_msg;
 
-    /* The rtpoll created here must curently only exist to avoid crashes when
+    /* The rtpoll created here must currently only exist to avoid crashes when
      * the module is used together with module-loopback. Because module-loopback
      * runs pa_asyncmsgq_process_one() from the pop callback, the rtpoll need not
      * be run. We will do so anyway for potential modules similar to
