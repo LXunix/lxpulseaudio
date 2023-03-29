@@ -11,8 +11,8 @@
 # moment.
 
 stages:
-  - lint
   - container
+  - lint
   - build
 
 variables:
