@@ -1884,7 +1884,7 @@ static void setup_complete_callback(pa_pdispatch *pd, uint32_t command, uint32_t
 #ifdef TUNNEL_SINK
         pa_tagstruct_put_boolean(reply, false); /* volume_set */
 #endif
-        pa_tagstruct_put_boolean(reply, true); /* early rquests */
+        pa_tagstruct_put_boolean(reply, true); /* early requests */
     }
 
     if (u->version >= 15) {
