@@ -21,6 +21,11 @@
 #include <config.h>
 #endif
 
+/* To define _WIN32_WINT */
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
 #if !defined(HAVE_ARPA_INET_H) && defined(OS_IS_WIN32) && (_WIN32_WINNT < 0x0600)
 
 #include <errno.h>
