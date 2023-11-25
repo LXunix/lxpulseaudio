@@ -286,6 +286,10 @@ struct pa_alsa_ucm_port_data {
     int eld_device; /* PCM device number */
 };
 
+int pa_alsa_ucm_port_device_enable(pa_alsa_ucm_port_data *data);
+int pa_alsa_ucm_port_device_disable(pa_alsa_ucm_port_data *data);
+long pa_alsa_ucm_port_device_status(pa_alsa_ucm_port_data *data);
+
 struct pa_alsa_ucm_volume {
     char *mixer_elem;	/* mixer element identifier */
     char *master_elem;	/* master mixer element identifier */

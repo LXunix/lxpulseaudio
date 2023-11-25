@@ -176,6 +176,7 @@ enum {
 
 static void userdata_free(struct userdata *u);
 static int unsuspend(struct userdata *u, bool recovering);
+static void sync_mixer(struct userdata *u, pa_device_port *port);
 
 static pa_hook_result_t reserve_cb(pa_reserve_wrapper *r, void *forced, struct userdata *u) {
     pa_assert(r);
@@ -995,6 +996,12 @@ static void suspend(struct userdata *u) {
     /* Close PCM device */
     close_pcm(u);
 
+    /* Disabling the UCM devices may save some power. */
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(u->source->active_port);
+        pa_alsa_ucm_port_device_disable(data);
+    }
+
     pa_log_info("Device suspended...");
 }
 
@@ -1084,6 +1091,13 @@ static int unsuspend(struct userdata *u, bool recovering) {
     pa_assert(!u->pcm_handle);
 
     pa_log_info("Trying resume...");
+
+    /* We disable all UCM devices when suspending, so let's enable them again. */
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(u->source->active_port);
+        pa_alsa_ucm_port_device_enable(data);
+        sync_mixer(u, u->source->active_port);
+    }
 
     /*
      * On some machines, during the system suspend and resume, the thread_func could receive
@@ -1382,6 +1396,12 @@ static void source_get_volume_cb(pa_source *s) {
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
 
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
+
     if (pa_alsa_path_get_volume(u->mixer_path, u->mixer_handle, &s->channel_map, &r) < 0)
         return;
 
@@ -1411,6 +1431,12 @@ static void source_set_volume_cb(pa_source *s) {
     pa_assert(u);
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
+
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
 
     /* Shift up by the base volume */
     pa_sw_cvolume_divide_scalar(&r, &s->real_volume, s->base_volume);
@@ -1475,6 +1501,12 @@ static void source_write_volume_cb(pa_source *s) {
     pa_assert(u->mixer_handle);
     pa_assert(s->flags & PA_SOURCE_DEFERRED_VOLUME);
 
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
+
     /* Shift up by the base volume */
     pa_sw_cvolume_divide_scalar(&hw_vol, &hw_vol, s->base_volume);
 
@@ -1513,6 +1545,14 @@ static int source_get_mute_cb(pa_source *s, bool *mute) {
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
 
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0) {
+            *mute = s->muted;
+            return 0;
+        }
+    }
+
     if (pa_alsa_path_get_mute(u->mixer_path, u->mixer_handle, mute) < 0)
         return -1;
 
@@ -1525,6 +1565,12 @@ static void source_set_mute_cb(pa_source *s) {
     pa_assert(u);
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
+
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
 
     pa_alsa_path_set_mute(u->mixer_path, u->mixer_handle, s->muted);
 }
