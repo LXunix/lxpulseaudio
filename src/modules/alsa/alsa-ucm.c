@@ -1208,14 +1208,14 @@ static unsigned devset_capture_priority(pa_idxset *devices, bool invert) {
     return (unsigned) priority;
 }
 
-static void ucm_add_port_props(
-       pa_device_port *port,
-       bool is_sink)
-{
+static void proplist_set_icon_name(
+        pa_proplist *proplist,
+        pa_device_port_type_t type,
+        bool is_sink) {
     const char *icon;
 
     if (is_sink) {
-        switch (port->type) {
+        switch (type) {
             case PA_DEVICE_PORT_TYPE_HEADPHONES:
                 icon = "audio-headphones";
                 break;
@@ -1228,7 +1228,7 @@ static void ucm_add_port_props(
                 break;
         }
     } else {
-        switch (port->type) {
+        switch (type) {
             case PA_DEVICE_PORT_TYPE_HEADSET:
                 icon = "audio-headset";
                 break;
@@ -1239,7 +1239,14 @@ static void ucm_add_port_props(
         }
     }
 
-    pa_proplist_sets(port->proplist, "device.icon_name", icon);
+    pa_proplist_sets(proplist, PA_PROP_DEVICE_ICON_NAME, icon);
+}
+
+static void ucm_add_port_props(
+       pa_device_port *port,
+       bool is_sink)
+{
+    proplist_set_icon_name(port->proplist, port->type, is_sink);
 }
 
 void pa_alsa_ucm_add_port(
@@ -1689,6 +1696,8 @@ static void alsa_mapping_add_ucm_device(pa_alsa_mapping *m, pa_alsa_ucm_device *
         device->playback_mapping = m;
     else
         device->capture_mapping = m;
+
+    proplist_set_icon_name(m->proplist, device->type, is_sink);
 
     mdev = get_mixer_device(device, is_sink);
     if (mdev)
