@@ -213,6 +213,7 @@ pa_bluetooth_transport *pa_bluetooth_transport_new(pa_bluetooth_device *d, const
     /* Always force initial volume to be set/propagated correctly */
     t->sink_volume = PA_VOLUME_INVALID;
     t->source_volume = PA_VOLUME_INVALID;
+    t->set_sink_volume_count = 0;
 
     if (size > 0) {
         t->config = pa_xnew(uint8_t, size);
@@ -590,10 +591,12 @@ static pa_volume_t pa_bluetooth_transport_set_volume(pa_bluetooth_transport *t, 
 
     if (t->profile == PA_BLUETOOTH_PROFILE_A2DP_SOURCE)
         t->source_volume = volume;
-    else if (t->profile == PA_BLUETOOTH_PROFILE_A2DP_SINK)
+    else if (t->profile == PA_BLUETOOTH_PROFILE_A2DP_SINK){
         t->sink_volume = volume;
+        t->set_sink_volume_count++;
+    }
 
-    pa_log_debug("Sending A2DP volume %d/127 to peer", gain);
+    pa_log_debug("Sending A2DP volume %d/127 to peer, set_sink_volume_count: %d", gain, t->set_sink_volume_count);
 
     pa_assert_se(m = dbus_message_new_method_call(BLUEZ_SERVICE, t->path, DBUS_INTERFACE_PROPERTIES, "Set"));
 
@@ -648,8 +651,17 @@ static void pa_bluetooth_transport_remote_volume_changed(pa_bluetooth_transport 
         t->source_volume = volume;
         hook = PA_BLUETOOTH_HOOK_TRANSPORT_SOURCE_VOLUME_CHANGED;
     } else if (t->profile == PA_BLUETOOTH_PROFILE_A2DP_SINK) {
-        if (t->sink_volume == volume)
+        if (t->sink_volume == volume){
+            t->set_sink_volume_count = 0;
             return;
+        }
+
+        if (t->set_sink_volume_count > 0){
+            t->set_sink_volume_count--;
+            pa_log_debug("set_sink_volume_count: %d, volume: %d, sink_volume: %d", t->set_sink_volume_count, volume, t->sink_volume);
+            return;
+        }
+
         t->sink_volume = volume;
         hook = PA_BLUETOOTH_HOOK_TRANSPORT_SINK_VOLUME_CHANGED;
 
