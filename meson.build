@@ -621,6 +621,11 @@ if libsystemd_dep.found()
 endif
 
 x11_dep = dependency('x11-xcb', required : get_option('x11'))
+if x11_dep.found()
+  # Base X11 dependencies
+  xcb_dep  = dependency('xcb',  required : true, version : '>= 1.6')
+  cdata.set('HAVE_X11', 1)
+endif
 
 # OSS support
 if cc.has_header('sys/soundcard.h', required: get_option('oss-output'))
@@ -751,11 +756,10 @@ if get_option('daemon')
   endif
 
   if x11_dep.found()
-    xcb_dep  = dependency('xcb',  required : true, version : '>= 1.6')
+    # Additional X11 dependencies required by x11-modules
     ice_dep  = dependency('ice',  required : true)
     sm_dep   = dependency('sm',   required : true)
     xtst_dep = dependency('xtst', required : true)
-    cdata.set('HAVE_X11', 1)
     if cc.has_function('XSetIOErrorExitHandler', dependencies: x11_dep)
       cdata.set('HAVE_XSETIOERROREXITHANDLER', 1)
     endif
