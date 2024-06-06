@@ -187,7 +187,7 @@ static void headers_read(pa_rtsp_client *c) {
     c->callback(c, c->state, c->status, c->response_headers, c->userdata);
 }
 
-static void line_callback(pa_ioline *line, const char *s, void *userdata) {
+static void line_callback(pa_ioline *line, const char *s, size_t l, void *userdata) {
     pa_rtsp_client *c = userdata;
     char *delimpos;
     char *s2, *s2p;

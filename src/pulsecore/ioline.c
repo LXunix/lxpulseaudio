@@ -227,14 +227,14 @@ static void failure(pa_ioline *l, bool process_leftover) {
         /* Pass the last missing bit to the client */
 
         if (l->callback) {
-            char *p = pa_xstrndup(l->rbuf+l->rbuf_index, l->rbuf_valid_length);
-            l->callback(l, p, l->userdata);
+            char *p = pa_xmemdup(l->rbuf+l->rbuf_index, l->rbuf_valid_length);
+            l->callback(l, p, l->rbuf_valid_length, l->userdata);
             pa_xfree(p);
         }
     }
 
     if (l->callback) {
-        l->callback(l, NULL, l->userdata);
+        l->callback(l, NULL, 0, l->userdata);
         l->callback = NULL;
     }
 
@@ -256,7 +256,7 @@ static void scan_for_lines(pa_ioline *l, size_t skip) {
         *e = 0;
 
         p = l->rbuf + l->rbuf_index;
-        m = strlen(p);
+        m = e - p;
 
         l->rbuf_index += m+1;
         l->rbuf_valid_length -= m+1;
@@ -266,7 +266,7 @@ static void scan_for_lines(pa_ioline *l, size_t skip) {
             l->rbuf_index = 0;
 
         if (l->callback)
-            l->callback(l, pa_strip_nl(p), l->userdata);
+            l->callback(l, pa_strip_nl(p), m, l->userdata);
 
         skip = 0;
     }

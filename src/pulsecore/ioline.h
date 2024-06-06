@@ -30,7 +30,7 @@
 
 typedef struct pa_ioline pa_ioline;
 
-typedef void (*pa_ioline_cb_t)(pa_ioline*io, const char *s, void *userdata);
+typedef void (*pa_ioline_cb_t)(pa_ioline*io, const char *s, size_t l, void *userdata);
 typedef void (*pa_ioline_drain_cb_t)(pa_ioline *io, void *userdata);
 
 pa_ioline* pa_ioline_new(pa_iochannel *io);

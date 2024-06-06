@@ -49,7 +49,7 @@ struct userdata {
     pa_ioline *line;
 };
 
-static void line_callback(pa_ioline *line, const char *s, void *userdata) {
+static void line_callback(pa_ioline *line, const char *s, size_t l, void *userdata) {
     struct userdata *u = userdata;
     pa_module *m = NULL;
     unsigned devnum;
