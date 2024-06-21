@@ -39,7 +39,7 @@
 #include <pulsecore/core-util.h>
 #include <pulsecore/macro.h>
 
-#include "raop-util.h"
+#include "rtsp-util.h"
 
 #ifndef MD5_DIGEST_LENGTH
 #define MD5_DIGEST_LENGTH 16
@@ -94,7 +94,7 @@ static unsigned int token_decode(const char *token) {
     return (marker << 24) | val;
 }
 
-int pa_raop_base64_encode(const void *data, int len, char **str) {
+int pa_rtsp_base64_encode(const void *data, int len, char **str) {
     const unsigned char *q;
     char *p, *s = NULL;
     int i, c;
@@ -130,7 +130,7 @@ int pa_raop_base64_encode(const void *data, int len, char **str) {
     return strlen(s);
 }
 
-int pa_raop_base64_decode(const char *str, void *data) {
+int pa_rtsp_base64_decode(const char *str, void *data) {
     const char *p;
     unsigned char *q;
 
@@ -153,7 +153,7 @@ int pa_raop_base64_decode(const char *str, void *data) {
     return q - (unsigned char *) data;
 }
 
-int pa_raop_md5_hash(const char *data, int len, char **str) {
+int pa_rtsp_md5_hash(const char *data, int len, char **str) {
     unsigned char d[MD5_DIGEST_LENGTH];
     char *s = NULL;
     int i;
@@ -162,7 +162,7 @@ int pa_raop_md5_hash(const char *data, int len, char **str) {
     pa_assert(str);
 
     MD5((unsigned char*) data, len, d);
-    s = pa_xnew(char, MD5_HASH_LENGTH);
+    s = pa_xnew(char, MD5_HASH_LENGTH+1);
     for (i = 0; i < MD5_DIGEST_LENGTH; i++)
         sprintf(&s[2*i], "%02x", (unsigned int) d[i]);
 
@@ -171,36 +171,36 @@ int pa_raop_md5_hash(const char *data, int len, char **str) {
     return strlen(s);
 }
 
-int pa_raop_basic_response(const char *user, const char *pwd, char **str) {
+int pa_rtsp_basic_response(const char *user, const char *pwd, char **str) {
     char *tmp, *B = NULL;
 
     pa_assert(str);
 
     tmp = pa_sprintf_malloc("%s:%s", user, pwd);
-    pa_raop_base64_encode(tmp, strlen(tmp), &B);
+    pa_rtsp_base64_encode(tmp, strlen(tmp), &B);
     pa_xfree(tmp);
 
     *str = B;
     return strlen(B);
 }
 
-int pa_raop_digest_response(const char *user, const char *realm, const char *password,
-                            const char *nonce, const char *uri, char **str) {
+int pa_rtsp_digest_response(const char *user, const char *realm, const char *password,
+                            const char *nonce, const char *method, const char *uri, char **str) {
     char *A1, *HA1, *A2, *HA2;
     char *tmp, *KD = NULL;
 
     pa_assert(str);
 
     A1 = pa_sprintf_malloc("%s:%s:%s", user, realm, password);
-    pa_raop_md5_hash(A1, strlen(A1), &HA1);
+    pa_rtsp_md5_hash(A1, strlen(A1), &HA1);
     pa_xfree(A1);
 
-    A2 = pa_sprintf_malloc("OPTIONS:%s", uri);
-    pa_raop_md5_hash(A2, strlen(A2), &HA2);
+    A2 = pa_sprintf_malloc("%s:%s", method, uri);
+    pa_rtsp_md5_hash(A2, strlen(A2), &HA2);
     pa_xfree(A2);
 
     tmp = pa_sprintf_malloc("%s:%s:%s", HA1, nonce, HA2);
-    pa_raop_md5_hash(tmp, strlen(tmp), &KD);
+    pa_rtsp_md5_hash(tmp, strlen(tmp), &KD);
     pa_xfree(tmp);
 
     pa_xfree(HA1);
@@ -208,4 +208,17 @@ int pa_raop_digest_response(const char *user, const char *realm, const char *pas
 
     *str = KD;
     return strlen(KD);
+}
+
+/**
+ * Function to trim a given character at the end of a string (no realloc).
+ * @param str Pointer to string
+ * @param rc Character to trim
+ */
+void pa_rtsp_rtrim_char(char *str, char rc) {
+    char *sp = str + strlen(str) - 1;
+    while (sp >= str && *sp == rc) {
+        *sp = '\0';
+        sp -= 1;
+    }
 }

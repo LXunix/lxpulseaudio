@@ -39,6 +39,7 @@ typedef enum pa_rtsp_state {
   STATE_SETUP,
   STATE_RECORD,
   STATE_SET_PARAMETER,
+  STATE_POST,
   STATE_FLUSH,
   STATE_TEARDOWN,
   STATE_DISCONNECTED
@@ -63,9 +64,9 @@ void pa_rtsp_disconnect(pa_rtsp_client *c);
 
 const char* pa_rtsp_localip(pa_rtsp_client *c);
 uint32_t pa_rtsp_serverport(pa_rtsp_client *c);
-bool pa_rtsp_exec_ready(const pa_rtsp_client *c);
 
 void pa_rtsp_set_url(pa_rtsp_client *c, const char *url);
+void pa_rtsp_set_credentials(pa_rtsp_client *c, const char *username, const char*password);
 
 bool pa_rtsp_has_header(pa_rtsp_client *c, const char *key);
 void pa_rtsp_add_header(pa_rtsp_client *c, const char *key, const char *value);
@@ -77,6 +78,7 @@ int pa_rtsp_announce(pa_rtsp_client *c, const char *sdp);
 int pa_rtsp_setup(pa_rtsp_client *c, const char *transport);
 int pa_rtsp_record(pa_rtsp_client *c, uint16_t *seq, uint32_t *rtptime);
 int pa_rtsp_setparameter(pa_rtsp_client *c, const char *param);
+int pa_rtsp_post(pa_rtsp_client *c, const char *url);
 int pa_rtsp_flush(pa_rtsp_client *c, uint16_t seq, uint32_t rtptime);
 int pa_rtsp_teardown(pa_rtsp_client *c);
 

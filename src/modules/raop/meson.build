@@ -3,7 +3,6 @@ libraop_sources = [
   'raop-crypto.c',
   'raop-packet-buffer.c',
   'raop-sink.c',
-  'raop-util.c',
 ]
 
 libraop_headers = [
@@ -11,7 +10,7 @@ libraop_headers = [
   'raop-crypto.h',
   'raop-packet-buffer.h',
   'raop-sink.h',
-  'raop-util.h',
+  'raop-common.h',
 ]
 
 # FIXME: meson doesn't support multiple RPATH arguments currently

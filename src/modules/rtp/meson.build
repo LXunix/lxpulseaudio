@@ -2,16 +2,18 @@ librtp_sources = [
   'rtp-common.c',
   'sdp.c',
   'sap.c',
-  'rtsp_client.c',
+  'rtsp-client.c',
   'headerlist.c',
+  'rtsp-util.c'
 ]
 
 librtp_headers = [
   'rtp.h',
   'sdp.h',
   'sap.h',
-  'rtsp_client.h',
+  'rtsp-client.h',
   'headerlist.h',
+  'rtsp-util.h'
 ]
 
 if have_gstreamer
@@ -26,7 +28,7 @@ librtp = shared_library('rtp',
   c_args : [pa_c_args, server_c_args],
   link_args : [nodelete_link_args],
   include_directories : [configinc, topinc],
-  dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep, libatomic_ops_dep, gst_dep, gstapp_dep, gstrtp_dep, gio_dep],
+  dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep, libatomic_ops_dep, gst_dep, gstapp_dep, gstrtp_dep, gio_dep, openssl_dep],
   install : true,
   install_rpath : privlibdir,
   install_dir : modlibexecdir,

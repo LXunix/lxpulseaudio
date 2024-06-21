@@ -43,7 +43,7 @@
 #include <pulsecore/namereg.h>
 #include <pulsecore/avahi-wrap.h>
 
-#include "raop-util.h"
+#include "raop-common.h"
 
 PA_MODULE_AUTHOR("Colin Guthrie");
 PA_MODULE_DESCRIPTION("mDNS/DNS-SD Service Discovery of RAOP devices");
