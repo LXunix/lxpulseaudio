@@ -228,7 +228,11 @@ char *pa_get_binary_name(char *s, size_t l) {
     }
 #endif
 
+<<<<<<< HEAD
+#if defined(__linux__) || (defined(__FreeBSD_kernel__) && !defined(__FreeBSD__))
+=======
 #if defined(__linux__) || (defined(__FreeBSD_kernel__) && !defined(__FreeBSD__)) || defined(__GNU__)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     {
         char *rp;
         /* This works on Linux and Debian/kFreeBSD */

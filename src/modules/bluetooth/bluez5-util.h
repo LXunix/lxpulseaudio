@@ -69,7 +69,10 @@ typedef enum pa_bluetooth_hook {
     PA_BLUETOOTH_HOOK_DEVICE_CONNECTION_CHANGED,        /* Call data: pa_bluetooth_device */
     PA_BLUETOOTH_HOOK_DEVICE_UNLINK,                    /* Call data: pa_bluetooth_device */
     PA_BLUETOOTH_HOOK_DEVICE_BATTERY_LEVEL_CHANGED,     /* Call data: pa_bluetooth_device */
+<<<<<<< HEAD
+=======
     PA_BLUETOOTH_HOOK_HOST_BATTERY_LEVEL_CHANGED,       /* Call data: pa_upower_backend */
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     PA_BLUETOOTH_HOOK_TRANSPORT_STATE_CHANGED,          /* Call data: pa_bluetooth_transport */
     PA_BLUETOOTH_HOOK_TRANSPORT_SOURCE_VOLUME_CHANGED,  /* Call data: pa_bluetooth_transport */
     PA_BLUETOOTH_HOOK_TRANSPORT_SINK_VOLUME_CHANGED,    /* Call data: pa_bluetooth_transport */
@@ -247,5 +250,8 @@ void pa_bluetooth_discovery_set_ofono_running(pa_bluetooth_discovery *y, bool is
 bool pa_bluetooth_discovery_get_enable_native_hsp_hs(pa_bluetooth_discovery *y);
 bool pa_bluetooth_discovery_get_enable_native_hfp_hf(pa_bluetooth_discovery *y);
 bool pa_bluetooth_discovery_get_enable_msbc(pa_bluetooth_discovery *y);
+<<<<<<< HEAD
+=======
 pa_hashmap* pa_bluetooth_discovery_get_transports(pa_bluetooth_discovery *y);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #endif

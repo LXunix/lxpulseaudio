@@ -69,6 +69,9 @@ load-module module-position-event-sounds
 
 ### Allow including a system.pa.d directory, which if present, can be used
 ### for additional configuration snippets.
+<<<<<<< HEAD
+=======
 ### Note that those snippet files must have a .pa file extension, not .conf
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 .nofail
 .include @PA_DEFAULT_CONFIG_DIR_UNQUOTED@/system.pa.d

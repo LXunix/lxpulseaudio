@@ -8,7 +8,11 @@ msgstr ""
 "Project-Id-Version: pulseaudio.master-tx.as\n"
 "Report-Msgid-Bugs-To: https://gitlab.freedesktop.org/pulseaudio/pulseaudio/"
 "issues/new\n"
+<<<<<<< HEAD
+"POT-Creation-Date: 2021-07-05 14:01+0300\n"
+=======
 "POT-Creation-Date: 2022-06-18 09:49+0300\n"
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 "PO-Revision-Date: 2012-01-30 09:52+0000\n"
 "Last-Translator: Amitakhya Phukan <aphukan@fedoraproject.org>\n"
 "Language-Team: Assamese <>\n"
@@ -169,10 +173,16 @@ msgid "--fail expects boolean argument"
 msgstr "  fail দ্বাৰা বুলিয়েন তৰ্ক প্ৰত্যাশিত"
 
 #: src/daemon/cmdline.c:265
+<<<<<<< HEAD
+msgid ""
+"--log-level expects log level argument (either numeric in range 0..4 or one "
+"of debug, info, notice, warn, error)."
+=======
 #, fuzzy
 msgid ""
 "--log-level expects log level argument (either numeric in range 0..4 or one "
 "of error, warn, notice, info, debug)."
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgstr ""
 "  log level ৰ কাৰণে লগ স্তৰৰ তৰ্ক প্ৰত্যাশিত (হয় সংখ্যা ০..৪ ৰ সীমাত বা debug, "
 "info, notice, warn, error ৰ যিকোনো এটা) ।"
@@ -589,7 +599,11 @@ msgid "Line In"
 msgstr "লাইন ইন"
 
 #: src/modules/alsa/alsa-mixer.c:2713 src/modules/alsa/alsa-mixer.c:2797
+<<<<<<< HEAD
+#: src/modules/bluetooth/module-bluez5-device.c:1886
+=======
 #: src/modules/bluetooth/module-bluez5-device.c:1956
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Microphone"
 msgstr "মাইক্ৰোফোন"
 
@@ -612,12 +626,20 @@ msgid "Internal Microphone"
 msgstr "অভ্যন্তৰীণ মাইক্ৰোফোন"
 
 #: src/modules/alsa/alsa-mixer.c:2718 src/modules/alsa/alsa-mixer.c:2804
+<<<<<<< HEAD
+#: src/utils/pactl.c:295
+=======
 #: src/utils/pactl.c:343
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Radio"
 msgstr "ৰেডিঅ'"
 
 #: src/modules/alsa/alsa-mixer.c:2719 src/modules/alsa/alsa-mixer.c:2805
+<<<<<<< HEAD
+#: src/utils/pactl.c:296
+=======
 #: src/utils/pactl.c:344
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Video"
 msgstr "ভিডিঅ'"
 
@@ -656,12 +678,20 @@ msgid "No Bass Boost"
 msgstr "বুস্ট প্ৰয়োগ কৰা ন'হ'ব"
 
 #: src/modules/alsa/alsa-mixer.c:2728
+<<<<<<< HEAD
+#: src/modules/bluetooth/module-bluez5-device.c:1894 src/utils/pactl.c:285
+=======
 #: src/modules/bluetooth/module-bluez5-device.c:1964 src/utils/pactl.c:333
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Speaker"
 msgstr ""
 
 #: src/modules/alsa/alsa-mixer.c:2729 src/modules/alsa/alsa-mixer.c:2807
+<<<<<<< HEAD
+#: src/utils/pactl.c:286
+=======
 #: src/utils/pactl.c:334
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Headphones"
 msgstr "এনালগ হেড ফোন"
@@ -749,6 +779,64 @@ msgstr "নিবেশ"
 #, fuzzy
 msgid "Virtual Surround 7.1"
 msgstr "এনালগ ছাৰাউন্ড ৭.১"
+<<<<<<< HEAD
+
+#: src/modules/alsa/alsa-mixer.c:4563
+msgid "Analog Mono"
+msgstr "এনালগ মোনো"
+
+#: src/modules/alsa/alsa-mixer.c:4564
+#, fuzzy
+msgid "Analog Mono (Left)"
+msgstr "এনালগ মোনো"
+
+#: src/modules/alsa/alsa-mixer.c:4565
+#, fuzzy
+msgid "Analog Mono (Right)"
+msgstr "এনালগ মোনো"
+
+#. Note: Not translated to "Analog Stereo Input", because the source
+#. * name gets "Input" appended to it automatically, so adding "Input"
+#. * here would lead to the source name to become "Analog Stereo Input
+#. * Input". The same logic applies to analog-stereo-output,
+#. * multichannel-input and multichannel-output.
+#: src/modules/alsa/alsa-mixer.c:4566 src/modules/alsa/alsa-mixer.c:4574
+#: src/modules/alsa/alsa-mixer.c:4575
+msgid "Analog Stereo"
+msgstr "এনালগ স্টিৰিঅ'"
+
+#: src/modules/alsa/alsa-mixer.c:4567 src/pulse/channelmap.c:103
+#: src/pulse/channelmap.c:770
+msgid "Mono"
+msgstr "মোনো"
+
+#: src/modules/alsa/alsa-mixer.c:4568 src/pulse/channelmap.c:774
+msgid "Stereo"
+msgstr "স্টিৰিঅ'"
+
+#: src/modules/alsa/alsa-mixer.c:4576 src/modules/alsa/alsa-mixer.c:4734
+#: src/modules/bluetooth/module-bluez5-device.c:1874 src/utils/pactl.c:289
+msgid "Headset"
+msgstr ""
+
+#: src/modules/alsa/alsa-mixer.c:4577 src/modules/alsa/alsa-mixer.c:4735
+#, fuzzy
+msgid "Speakerphone"
+msgstr "এনালগ স্টিৰিঅ'"
+
+#: src/modules/alsa/alsa-mixer.c:4578 src/modules/alsa/alsa-mixer.c:4579
+msgid "Multichannel"
+msgstr ""
+
+#: src/modules/alsa/alsa-mixer.c:4580
+msgid "Analog Surround 2.1"
+msgstr "এনালগ ছাৰাউন্ড ২.১"
+
+#: src/modules/alsa/alsa-mixer.c:4581
+msgid "Analog Surround 3.0"
+msgstr "এনালগ ছাৰাউন্ড ৩.০"
+
+=======
 
 #: src/modules/alsa/alsa-mixer.c:4563
 msgid "Analog Mono"
@@ -805,6 +893,7 @@ msgstr "এনালগ ছাৰাউন্ড ২.১"
 msgid "Analog Surround 3.0"
 msgstr "এনালগ ছাৰাউন্ড ৩.০"
 
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #: src/modules/alsa/alsa-mixer.c:4582
 msgid "Analog Surround 3.1"
 msgstr "এনালগ ছাৰাউন্ড ৩.১"
@@ -901,7 +990,11 @@ msgid "Mono Chat + 7.1 Surround"
 msgstr ""
 
 #: src/modules/alsa/alsa-mixer.c:4740 src/modules/alsa/module-alsa-card.c:197
+<<<<<<< HEAD
+#: src/modules/bluetooth/module-bluez5-device.c:2177
+=======
 #: src/modules/bluetooth/module-bluez5-device.c:2263
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Off"
 msgstr "বন্ধ"
 
@@ -915,7 +1008,11 @@ msgstr "Null ফলাফল"
 msgid "%s Input"
 msgstr "নিবেশ"
 
+<<<<<<< HEAD
+#: src/modules/alsa/alsa-sink.c:652 src/modules/alsa/alsa-sink.c:842
+=======
 #: src/modules/alsa/alsa-sink.c:672 src/modules/alsa/alsa-sink.c:862
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "ALSA woke us up to write new data to the device, but there was actually "
@@ -931,7 +1028,11 @@ msgstr ""
 "POLLOUT নিৰ্ধাৰিত হোৱাৰি পিছতো আমি উথিলো    কিন্তু তাৰ পিছৰ snd_pcm_avail() এ ০ "
 "দিলে বা অন্য এটা মান < min_avail."
 
+<<<<<<< HEAD
+#: src/modules/alsa/alsa-source.c:611 src/modules/alsa/alsa-source.c:777
+=======
 #: src/modules/alsa/alsa-source.c:636 src/modules/alsa/alsa-source.c:802
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "ALSA woke us up to read new data from the device, but there was actually "
@@ -1021,6 +1122,26 @@ msgstr[1] ""
 "snd_pcm_mmap_begin() এ এটা বৰ ডাঙৰ মান ঘূৰালে: %lu bytes (%lu ms) ।\n"
 "অতি সম্ভৱ এইটো ALSA চালক '%s' ৰ এটা বাগ । অনুগ্ৰহ কৰি এই সমস্যা ALSA বিকাশকক "
 "জনাওক ।"
+<<<<<<< HEAD
+
+#: src/modules/bluetooth/module-bluez5-device.c:1867
+#: src/modules/bluetooth/module-bluez5-device.c:1893
+#: src/modules/bluetooth/module-bluez5-device.c:1900
+msgid "Bluetooth Input"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:1868
+#: src/modules/bluetooth/module-bluez5-device.c:1887
+#, fuzzy
+msgid "Bluetooth Output"
+msgstr "এনালগ নিৰ্গম"
+
+#: src/modules/bluetooth/module-bluez5-device.c:1880 src/utils/pactl.c:300
+msgid "Handsfree"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:1901
+=======
 
 #: src/modules/bluetooth/module-bluez5-device.c:1937
 #: src/modules/bluetooth/module-bluez5-device.c:1963
@@ -1039,10 +1160,30 @@ msgid "Handsfree"
 msgstr ""
 
 #: src/modules/bluetooth/module-bluez5-device.c:1971
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Headphone"
 msgstr "এনালগ হেড ফোন"
 
+<<<<<<< HEAD
+#: src/modules/bluetooth/module-bluez5-device.c:1907 src/utils/pactl.c:299
+msgid "Portable"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:1913 src/utils/pactl.c:301
+msgid "Car"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:1919 src/utils/pactl.c:302
+msgid "HiFi"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:1925 src/utils/pactl.c:303
+msgid "Phone"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:1972
+=======
 #: src/modules/bluetooth/module-bluez5-device.c:1977 src/utils/pactl.c:347
 msgid "Portable"
 msgstr ""
@@ -1060,15 +1201,35 @@ msgid "Phone"
 msgstr ""
 
 #: src/modules/bluetooth/module-bluez5-device.c:2042
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "High Fidelity Playback (A2DP Sink)"
 msgstr "High Fidelity Playback (A2DP)"
 
+<<<<<<< HEAD
+#: src/modules/bluetooth/module-bluez5-device.c:1984
+=======
 #: src/modules/bluetooth/module-bluez5-device.c:2054
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "High Fidelity Capture (A2DP Source)"
 msgstr "হাই ফিডেলিটি ক্যাপচাৰ (A2DP)"
 
+<<<<<<< HEAD
+#: src/modules/bluetooth/module-bluez5-device.c:1996
+msgid "Headset Head Unit (HSP)"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:2009
+msgid "Headset Audio Gateway (HSP)"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:2022
+msgid "Handsfree Head Unit (HFP)"
+msgstr ""
+
+#: src/modules/bluetooth/module-bluez5-device.c:2035
+=======
 #: src/modules/bluetooth/module-bluez5-device.c:2066
 msgid "Headset Head Unit (HSP)"
 msgstr ""
@@ -1082,6 +1243,7 @@ msgid "Handsfree Head Unit (HFP)"
 msgstr ""
 
 #: src/modules/bluetooth/module-bluez5-device.c:2105
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Handsfree Audio Gateway (HFP)"
 msgstr ""
 
@@ -1142,8 +1304,13 @@ msgstr ""
 "plugin name> label=<ladspa plugin label> control=<comma separated list of "
 "input control values>"
 
+<<<<<<< HEAD
+#: src/modules/module-equalizer-sink.c:1094
+#: src/modules/module-equalizer-sink.c:1217
+=======
 #: src/modules/module-equalizer-sink.c:1097
 #: src/modules/module-equalizer-sink.c:1220
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "FFT based equalizer on %s"
 msgstr ""
@@ -1179,11 +1346,19 @@ msgstr ""
 msgid "Clocked NULL sink"
 msgstr "NULL sink ৰ সময় নিৰ্ধাৰণ"
 
+<<<<<<< HEAD
+#: src/modules/module-null-sink.c:338
+msgid "Null Output"
+msgstr "Null ফলাফল"
+
+#: src/modules/module-null-sink.c:350 src/utils/pactl.c:1297
+=======
 #: src/modules/module-null-sink.c:356
 msgid "Null Output"
 msgstr "Null ফলাফল"
 
 #: src/modules/module-null-sink.c:368 src/utils/pactl.c:2064
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid "Failed to set format: invalid format string %s"
 msgstr "উৎস সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
@@ -1206,14 +1381,24 @@ msgstr "@HOSTNAME@ ত অ'ডিঅ'"
 
 #. TODO: old tunnel put here the remote sink_name into stream name e.g. 'Null Output for lynxis@lazus'
 #. TODO: old tunnel put here the remote source_name into stream name e.g. 'Null Output for lynxis@lazus'
+<<<<<<< HEAD
+#: src/modules/module-tunnel-sink-new.c:320
+#: src/modules/module-tunnel-source-new.c:305
+=======
 #: src/modules/module-tunnel-sink-new.c:370
 #: src/modules/module-tunnel-source-new.c:354
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Tunnel for %s@%s"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/modules/module-tunnel-sink-new.c:564
+#: src/modules/module-tunnel-source-new.c:540
+=======
 #: src/modules/module-tunnel-sink-new.c:715
 #: src/modules/module-tunnel-source-new.c:684
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Tunnel to %s/%s"
 msgstr ""
@@ -1245,7 +1430,11 @@ msgstr ""
 msgid "Unknown device model"
 msgstr "অজানা ত্ৰুটিৰ কোড"
 
+<<<<<<< HEAD
+#: src/modules/raop/raop-sink.c:655
+=======
 #: src/modules/raop/raop-sink.c:689
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "RAOP standard profile"
 msgstr ""
 
@@ -1432,6 +1621,102 @@ msgstr "ওপৰত কেন্দ্ৰস্থিত"
 #: src/pulse/channelmap.c:156
 msgid "Top Front Center"
 msgstr "ওপৰত সন্মুখত কেন্দ্ৰস্থিত"
+<<<<<<< HEAD
+
+#: src/pulse/channelmap.c:157
+msgid "Top Front Left"
+msgstr "ওপৰত সন্মুখত বাওঁফালে"
+
+#: src/pulse/channelmap.c:158
+msgid "Top Front Right"
+msgstr "ওপৰত সন্মুখত বাওঁফালে"
+
+#: src/pulse/channelmap.c:160
+msgid "Top Rear Center"
+msgstr "ওপৰত পিছত কেন্দ্ৰস্থিত"
+
+#: src/pulse/channelmap.c:161
+msgid "Top Rear Left"
+msgstr "ওপৰত পিছত বাওঁফালে"
+
+#: src/pulse/channelmap.c:162
+msgid "Top Rear Right"
+msgstr "ওপৰত পিছত সোঁফালে"
+
+#: src/pulse/channelmap.c:478 src/pulse/format.c:123 src/pulse/sample.c:177
+#: src/pulse/volume.c:306 src/pulse/volume.c:332 src/pulse/volume.c:352
+#: src/pulse/volume.c:384 src/pulse/volume.c:424 src/pulse/volume.c:443
+msgid "(invalid)"
+msgstr "(অবৈধ)"
+
+#: src/pulse/channelmap.c:779
+msgid "Surround 4.0"
+msgstr "ছাৰাউণ্ড ৪.০"
+
+#: src/pulse/channelmap.c:785
+msgid "Surround 4.1"
+msgstr "ছাৰাউণ্ড ৪.১"
+
+#: src/pulse/channelmap.c:791
+msgid "Surround 5.0"
+msgstr "ছাৰাউণ্ড ৫.০"
+
+#: src/pulse/channelmap.c:797
+msgid "Surround 5.1"
+msgstr "ছাৰাউণ্ড ৫.১"
+
+#: src/pulse/channelmap.c:804
+msgid "Surround 7.1"
+msgstr "ছাৰাউণ্ড ৭.১"
+
+#: src/pulse/client-conf-x11.c:61 src/utils/pax11publish.c:97
+#, fuzzy
+msgid "xcb_connect() failed"
+msgstr "pa_context_connect() ব্যৰ্থ: %s"
+
+#: src/pulse/client-conf-x11.c:66 src/utils/pax11publish.c:102
+msgid "xcb_connection_has_error() returned true"
+msgstr ""
+
+#: src/pulse/client-conf-x11.c:102
+msgid "Failed to parse cookie data"
+msgstr "কুকিৰ তথ্য বিশ্লেষণ কৰিবলৈ ব্যৰ্থ"
+
+#: src/pulse/context.c:717
+#, c-format
+msgid "fork(): %s"
+msgstr "fork(): %s"
+
+#: src/pulse/context.c:772
+#, c-format
+msgid "waitpid(): %s"
+msgstr "waitpid(): %s"
+
+#: src/pulse/context.c:1488
+#, c-format
+msgid "Received message for unknown extension '%s'"
+msgstr "অজানা এক্সটেনশন '%s' ৰ বাবে বাৰ্তা প্ৰাপ্ত হৈছে"
+
+#: src/pulse/direction.c:37
+#, fuzzy
+msgid "input"
+msgstr "নিবেশ"
+
+#: src/pulse/direction.c:39
+#, fuzzy
+msgid "output"
+msgstr "Null ফলাফল"
+
+#: src/pulse/direction.c:41
+msgid "bidirectional"
+msgstr ""
+
+#: src/pulse/direction.c:43
+#, fuzzy
+msgid "invalid"
+msgstr "(অবৈধ)"
+
+=======
 
 #: src/pulse/channelmap.c:157
 msgid "Top Front Left"
@@ -1527,6 +1812,7 @@ msgstr ""
 msgid "invalid"
 msgstr "(অবৈধ)"
 
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #: src/pulsecore/core-util.c:1790
 #, c-format
 msgid ""
@@ -1564,11 +1850,19 @@ msgstr ""
 msgid "Invalid log target."
 msgstr "[%s:%u] লগ লক্ষ্য '%s' বৈধ নহয় ।"
 
+<<<<<<< HEAD
+#: src/pulsecore/sink.c:3539
+msgid "Built-in Audio"
+msgstr "আভ্যন্তৰীণ অ'ডিঅ'"
+
+#: src/pulsecore/sink.c:3544
+=======
 #: src/pulsecore/sink.c:3609
 msgid "Built-in Audio"
 msgstr "আভ্যন্তৰীণ অ'ডিঅ'"
 
 #: src/pulsecore/sink.c:3614
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Modem"
 msgstr "মোডেম"
 
@@ -1844,7 +2138,11 @@ msgstr "স্ট্ৰিম ড্ৰেইন (অৰ্থাৎ ফাঁ�
 msgid "pa_stream_connect_record() failed: %s"
 msgstr "pa_stream_connect_record() ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pacat.c:514 src/utils/pactl.c:1723
+=======
 #: src/utils/pacat.c:514 src/utils/pactl.c:2508
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Connection failure: %s"
 msgstr "সংযোগ বিফল: %s"
@@ -2038,7 +2336,11 @@ msgstr ""
 "libpulse ৰ সৈতে সঙ্কলন কৰা হৈছে %s\n"
 "libpulse ৰ সৈতে যুক্ত %s\n"
 
+<<<<<<< HEAD
+#: src/utils/pacat.c:852 src/utils/pactl.c:1929
+=======
 #: src/utils/pacat.c:852 src/utils/pactl.c:2731
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Invalid client name '%s'"
 msgstr "ক্লায়েন্টেৰ নাম '%s' বৈধ নয়"
@@ -2111,7 +2413,11 @@ msgstr ""
 "সতৰ্কবাৰ্তা: চিহ্নিত স্যাম্পেল নিৰ্ধাৰণেৰ ফাইলটিৰ তথ্য, এই ফাইলেৰৰ পৰা উপলব্ধ তথ্য "
 "দ্বাৰা প্ৰতিস্থাপিত হ'ব।"
 
+<<<<<<< HEAD
+#: src/utils/pacat.c:1091 src/utils/pactl.c:1994
+=======
 #: src/utils/pacat.c:1091 src/utils/pactl.c:2806
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "Failed to determine sample specification from file."
 msgstr "ফাইলৰ পৰা স্যাম্পেল সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ।"
 
@@ -2148,7 +2454,11 @@ msgstr "প্লে বেক"
 msgid "Failed to set media name."
 msgstr "আদেশ শাৰী বিশ্লেষণ কৰিবলৈ বিফল ।"
 
+<<<<<<< HEAD
+#: src/utils/pacat.c:1172 src/utils/pactl.c:2406
+=======
 #: src/utils/pacat.c:1172 src/utils/pactl.c:3218
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "pa_mainloop_new() failed."
 msgstr "pa_mainloop_new() ব্যৰ্থ।"
 
@@ -2156,11 +2466,19 @@ msgstr "pa_mainloop_new() ব্যৰ্থ।"
 msgid "io_new() failed."
 msgstr "io_new() ব্যৰ্থ।"
 
+<<<<<<< HEAD
+#: src/utils/pacat.c:1202 src/utils/pactl.c:2418
+msgid "pa_context_new() failed."
+msgstr "pa_context_new() ব্যৰ্থ।"
+
+#: src/utils/pacat.c:1210 src/utils/pactl.c:2424
+=======
 #: src/utils/pacat.c:1202 src/utils/pactl.c:3230
 msgid "pa_context_new() failed."
 msgstr "pa_context_new() ব্যৰ্থ।"
 
 #: src/utils/pacat.c:1210 src/utils/pactl.c:3236
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "pa_context_connect() failed: %s"
 msgstr "pa_context_connect() ব্যৰ্থ: %s"
@@ -2169,6 +2487,23 @@ msgstr "pa_context_connect() ব্যৰ্থ: %s"
 msgid "pa_context_rttime_new() failed."
 msgstr "pa_context_rttime_new() ব্যৰ্থ।"
 
+<<<<<<< HEAD
+#: src/utils/pacat.c:1223 src/utils/pactl.c:2429
+msgid "pa_mainloop_run() failed."
+msgstr "pa_mainloop_run() ব্যৰ্থ।"
+
+#: src/utils/pacmd.c:51 src/utils/pactl.c:1847
+msgid "NAME [ARGS ...]"
+msgstr ""
+
+#: src/utils/pacmd.c:52 src/utils/pacmd.c:60 src/utils/pactl.c:1848
+#: src/utils/pactl.c:1855 src/utils/pactl.c:1856
+msgid "NAME|#N"
+msgstr ""
+
+#: src/utils/pacmd.c:53 src/utils/pacmd.c:63 src/utils/pactl.c:1846
+#: src/utils/pactl.c:1853
+=======
 #: src/utils/pacat.c:1223 src/utils/pactl.c:3241
 msgid "pa_mainloop_run() failed."
 msgstr "pa_mainloop_run() ব্যৰ্থ।"
@@ -2184,6 +2519,7 @@ msgstr ""
 
 #: src/utils/pacmd.c:53 src/utils/pacmd.c:63 src/utils/pactl.c:2642
 #: src/utils/pactl.c:2649
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "NAME"
 msgstr ""
 
@@ -2195,7 +2531,11 @@ msgstr ""
 msgid "#N VOLUME"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pacmd.c:56 src/utils/pacmd.c:70 src/utils/pactl.c:1850
+=======
 #: src/utils/pacmd.c:56 src/utils/pacmd.c:70 src/utils/pactl.c:2646
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "NAME|#N 1|0"
 msgstr ""
 
@@ -2231,7 +2571,11 @@ msgstr ""
 msgid "FILENAME SINK|#N"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pacmd.c:69 src/utils/pactl.c:1849
+=======
 #: src/utils/pacmd.c:69 src/utils/pactl.c:2645
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "#N SINK|SOURCE"
 msgstr ""
 
@@ -2239,6 +2583,17 @@ msgstr ""
 msgid "1|0"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pacmd.c:72 src/utils/pactl.c:1851
+msgid "CARD PROFILE"
+msgstr ""
+
+#: src/utils/pacmd.c:73 src/utils/pactl.c:1854
+msgid "NAME|#N PORT"
+msgstr ""
+
+#: src/utils/pacmd.c:74 src/utils/pactl.c:1862
+=======
 #: src/utils/pacmd.c:72 src/utils/pactl.c:2647
 msgid "CARD PROFILE"
 msgstr ""
@@ -2248,6 +2603,7 @@ msgid "NAME|#N PORT"
 msgstr ""
 
 #: src/utils/pacmd.c:74 src/utils/pactl.c:2658
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "CARD-NAME|CARD-#N PORT OFFSET"
 msgstr ""
 
@@ -2263,7 +2619,11 @@ msgstr ""
 msgid "FRAMES"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pacmd.c:80 src/utils/pactl.c:1863
+=======
 #: src/utils/pacmd.c:80 src/utils/pactl.c:2659
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "RECIPIENT MESSAGE [MESSAGE_PARAMETERS]"
 msgstr ""
 
@@ -2307,6 +2667,7 @@ msgstr "socket(PF_UNIX, SOCK_STREAM, 0): %s"
 #, c-format
 msgid "connect(): %s"
 msgstr "connect(): %s"
+<<<<<<< HEAD
 
 #: src/utils/pacmd.c:173
 msgid "Failed to kill PulseAudio daemon."
@@ -2316,6 +2677,17 @@ msgstr "PulseAudio ডেমন kill কৰিবলৈ ব্যৰ্থ ।"
 msgid "Daemon not responding."
 msgstr "ডেমনৰ পৰা কোনো প্ৰতিক্ৰিয়া পোৱা নাযায় ।"
 
+=======
+
+#: src/utils/pacmd.c:173
+msgid "Failed to kill PulseAudio daemon."
+msgstr "PulseAudio ডেমন kill কৰিবলৈ ব্যৰ্থ ।"
+
+#: src/utils/pacmd.c:181
+msgid "Daemon not responding."
+msgstr "ডেমনৰ পৰা কোনো প্ৰতিক্ৰিয়া পোৱা নাযায় ।"
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #: src/utils/pacmd.c:213 src/utils/pacmd.c:322 src/utils/pacmd.c:340
 #, c-format
 msgid "write(): %s"
@@ -2331,17 +2703,37 @@ msgstr "poll(): %s"
 msgid "read(): %s"
 msgstr "read(): %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:175
+=======
 #: src/utils/pactl.c:183
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get statistics: %s"
 msgstr "পৰিসংখ্যান প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:181
+=======
 #: src/utils/pactl.c:199
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid "Currently in use: %u block containing %s bytes total.\n"
 msgid_plural "Currently in use: %u blocks containing %s bytes total.\n"
 msgstr[0] "বৰ্ত্তমানে ব্যৱহৃত: %u blocks containing %s bytes total.\n"
 msgstr[1] "বৰ্ত্তমানে ব্যৱহৃত: %u blocks containing %s bytes total.\n"
+<<<<<<< HEAD
+
+#: src/utils/pactl.c:187
+#, fuzzy, c-format
+msgid "Allocated during whole lifetime: %u block containing %s bytes total.\n"
+msgid_plural ""
+"Allocated during whole lifetime: %u blocks containing %s bytes total.\n"
+msgstr[0] "সম্পূৰ্ণ জীৱনকালত বিতৰণ কৰা: %u blocks containing %s bytes total.\n"
+msgstr[1] "সম্পূৰ্ণ জীৱনকালত বিতৰণ কৰা: %u blocks containing %s bytes total.\n"
+
+#: src/utils/pactl.c:193
+=======
 
 #: src/utils/pactl.c:205
 #, fuzzy, c-format
@@ -2352,21 +2744,34 @@ msgstr[0] "সম্পূৰ্ণ জীৱনকালত বিতৰণ ক
 msgstr[1] "সম্পূৰ্ণ জীৱনকালত বিতৰণ কৰা: %u blocks containing %s bytes total.\n"
 
 #: src/utils/pactl.c:211
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Sample cache size: %s\n"
 msgstr "চানেকি কেশ্বৰ মাপ: %s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:200 src/utils/pactl.c:212 src/utils/pactl.c:226
+=======
 #: src/utils/pactl.c:219 src/utils/pactl.c:231 src/utils/pactl.c:245
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get server information: %s"
 msgstr "সাৰ্ভাৰ সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:205 src/utils/pactl.c:217
+=======
 #: src/utils/pactl.c:224 src/utils/pactl.c:236
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid "%s\n"
 msgstr "%s %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:231
+=======
 #: src/utils/pactl.c:281
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "Server String: %s\n"
@@ -2377,7 +2782,11 @@ msgid ""
 "Tile Size: %zu\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:247
+=======
 #: src/utils/pactl.c:294
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "User Name: %s\n"
@@ -2400,6 +2809,77 @@ msgstr ""
 "অবিকল্পিত উৎস: %s\n"
 "কুকি: %08x\n"
 
+#: src/utils/pactl.c:272
+msgid "availability unknown"
+msgstr ""
+
+#: src/utils/pactl.c:273
+msgid "available"
+msgstr ""
+
+#: src/utils/pactl.c:274
+msgid "not available"
+msgstr ""
+
+#: src/utils/pactl.c:283 src/utils/pactl.c:307
+#, fuzzy
+msgid "Unknown"
+msgstr "অজ্ঞাত নিৰ্দেশ"
+
+#: src/utils/pactl.c:284
+msgid "Aux"
+msgstr ""
+
+#: src/utils/pactl.c:287
+#, fuzzy
+msgid "Line"
+msgstr "লাইন ইন"
+
+#: src/utils/pactl.c:288
+msgid "Mic"
+msgstr ""
+
+#: src/utils/pactl.c:290
+msgid "Handset"
+msgstr ""
+
+#: src/utils/pactl.c:291
+msgid "Earpiece"
+msgstr ""
+
+#: src/utils/pactl.c:292
+msgid "SPDIF"
+msgstr ""
+
+#: src/utils/pactl.c:293
+msgid "HDMI"
+msgstr ""
+
+#: src/utils/pactl.c:294
+msgid "TV"
+msgstr ""
+
+#: src/utils/pactl.c:297
+msgid "USB"
+msgstr ""
+
+#: src/utils/pactl.c:298
+msgid "Bluetooth"
+msgstr ""
+
+#: src/utils/pactl.c:304
+msgid "Network"
+msgstr ""
+
+#: src/utils/pactl.c:305
+#, fuzzy
+msgid "Analog"
+msgstr "এনালগ মোনো"
+
+<<<<<<< HEAD
+#: src/utils/pactl.c:329 src/utils/pactl.c:1067 src/utils/pactl.c:1085
+#: src/utils/pactl.c:1108 src/utils/pactl.c:1225
+=======
 #: src/utils/pactl.c:320
 msgid "availability unknown"
 msgstr ""
@@ -2469,11 +2949,16 @@ msgstr "এনালগ মোনো"
 
 #: src/utils/pactl.c:567 src/utils/pactl.c:1834 src/utils/pactl.c:1852
 #: src/utils/pactl.c:1875 src/utils/pactl.c:1992
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get sink information: %s"
 msgstr "sink সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:355
+=======
 #: src/utils/pactl.c:664
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "Sink #%u\n"
@@ -2512,37 +2997,66 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:399 src/utils/pactl.c:507 src/utils/pactl.c:670
+=======
 #: src/utils/pactl.c:706 src/utils/pactl.c:890 src/utils/pactl.c:1251
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\tPorts:\n"
 msgstr "\tপোৰ্ট:\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:401 src/utils/pactl.c:509
+=======
 #: src/utils/pactl.c:708 src/utils/pactl.c:892
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\t\t%s: %s (type: %s, priority: %u%s%s, %s)\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:403 src/utils/pactl.c:511 src/utils/pactl.c:675
+msgid ", availability group: "
+msgstr ""
+
+#: src/utils/pactl.c:408 src/utils/pactl.c:516
+=======
 #: src/utils/pactl.c:710 src/utils/pactl.c:894 src/utils/pactl.c:1256
 msgid ", availability group: "
 msgstr ""
 
 #: src/utils/pactl.c:715 src/utils/pactl.c:899
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\tActive Port: %s\n"
 msgstr "\tসক্ৰিয় পোৰ্ট: %s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:414 src/utils/pactl.c:522
+=======
 #: src/utils/pactl.c:721 src/utils/pactl.c:905
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid "\tFormats:\n"
 msgstr "\tপোৰ্ট:\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:438 src/utils/pactl.c:1126 src/utils/pactl.c:1144
+#: src/utils/pactl.c:1167 src/utils/pactl.c:1240
+=======
 #: src/utils/pactl.c:753 src/utils/pactl.c:1893 src/utils/pactl.c:1911
 #: src/utils/pactl.c:1934 src/utils/pactl.c:2007
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get source information: %s"
 msgstr "উৎস সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:464
+=======
 #: src/utils/pactl.c:849
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "Source #%u\n"
@@ -2581,6 +3095,17 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:492 src/utils/pactl.c:564 src/utils/pactl.c:607
+#: src/utils/pactl.c:649 src/utils/pactl.c:748 src/utils/pactl.c:749
+#: src/utils/pactl.c:760 src/utils/pactl.c:818 src/utils/pactl.c:819
+#: src/utils/pactl.c:830 src/utils/pactl.c:881 src/utils/pactl.c:882
+#: src/utils/pactl.c:888
+msgid "n/a"
+msgstr "n/a"
+
+#: src/utils/pactl.c:533 src/utils/pactl.c:1026
+=======
 #: src/utils/pactl.c:877 src/utils/pactl.c:962 src/utils/pactl.c:1062
 #: src/utils/pactl.c:1232 src/utils/pactl.c:1384 src/utils/pactl.c:1385
 #: src/utils/pactl.c:1396 src/utils/pactl.c:1507 src/utils/pactl.c:1508
@@ -2590,11 +3115,16 @@ msgid "n/a"
 msgstr "n/a"
 
 #: src/utils/pactl.c:924 src/utils/pactl.c:1793
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get module information: %s"
 msgstr "মডিউল সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:556
+=======
 #: src/utils/pactl.c:976
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "Module #%u\n"
@@ -2611,12 +3141,20 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:575
+=======
 #: src/utils/pactl.c:1002
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get client information: %s"
 msgstr "ক্লায়েন্ট সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:601
+=======
 #: src/utils/pactl.c:1056
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "Client #%u\n"
@@ -2631,12 +3169,20 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:618
+=======
 #: src/utils/pactl.c:1168
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get card information: %s"
 msgstr "কাৰ্ড সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:641
+=======
 #: src/utils/pactl.c:1224
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "Card #%u\n"
@@ -2653,45 +3199,77 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:657
+=======
 #: src/utils/pactl.c:1238
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\tProfiles:\n"
 msgstr "\tপাৰ্শ্বৰূপ:\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:659
+=======
 #: src/utils/pactl.c:1240
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\t\t%s: %s (sinks: %u, sources: %u, priority: %u, available: %s)\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:664
+=======
 #: src/utils/pactl.c:1245
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\tActive Profile: %s\n"
 msgstr "\tসক্ৰিয় পাৰ্শ্বৰূপ: %s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:673
+=======
 #: src/utils/pactl.c:1254
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "\t\t%s: %s (type: %s, priority: %u, latency offset: %<PRId64> usec%s%s, %s)\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:679
+=======
 #: src/utils/pactl.c:1261
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "\t\t\tProperties:\n"
 "\t\t\t\t%s\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:684
+=======
 #: src/utils/pactl.c:1265
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "\t\t\tPart of profile(s): %s"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:701 src/utils/pactl.c:1187 src/utils/pactl.c:1255
+=======
 #: src/utils/pactl.c:1290 src/utils/pactl.c:1954 src/utils/pactl.c:2022
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get sink input information: %s"
 msgstr "sink নিবেশ সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:730
+=======
 #: src/utils/pactl.c:1366
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "Sink Input #%u\n"
@@ -2729,12 +3307,20 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:771 src/utils/pactl.c:1207 src/utils/pactl.c:1270
+=======
 #: src/utils/pactl.c:1413 src/utils/pactl.c:1974 src/utils/pactl.c:2037
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get source output information: %s"
 msgstr "উৎস নিৰ্গম সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:800
+=======
 #: src/utils/pactl.c:1489
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "Source Output #%u\n"
@@ -2772,12 +3358,20 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:841
+=======
 #: src/utils/pactl.c:1536
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to get sample information: %s"
 msgstr "স্যাম্পেল সংক্ৰান্ত তথ্য প্ৰাপ্ত কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:868
+=======
 #: src/utils/pactl.c:1604
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "Sample #%u\n"
@@ -2807,21 +3401,44 @@ msgstr ""
 "\tগুণ:\n"
 "\t\t%s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:896 src/utils/pactl.c:906
+=======
 #: src/utils/pactl.c:1633 src/utils/pactl.c:1643
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failure: %s"
 msgstr "ব্যৰ্থতা: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:919
+=======
 #: src/utils/pactl.c:1667
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid "Send message failed: %s"
 msgstr "read() বিফল: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:936
+=======
 #: src/utils/pactl.c:1695
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "list-handlers message failed: %s"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:944 src/utils/pactl.c:993
+msgid "list-handlers message response could not be parsed correctly"
+msgstr ""
+
+#: src/utils/pactl.c:951
+msgid "list-handlers message response is not a JSON array"
+msgstr ""
+
+#: src/utils/pactl.c:962
+=======
 #: src/utils/pactl.c:1711 src/utils/pactl.c:1760
 msgid "list-handlers message response could not be parsed correctly"
 msgstr ""
@@ -2831,10 +3448,30 @@ msgid "list-handlers message response is not a JSON array"
 msgstr ""
 
 #: src/utils/pactl.c:1729
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "list-handlers message response array element %d is not a JSON object"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1033
+#, fuzzy, c-format
+msgid "Failed to unload module: Module %s not loaded"
+msgstr "স্যাম্পেল আপলোড কৰতে ব্যৰ্থ: %s"
+
+#: src/utils/pactl.c:1051
+#, c-format
+msgid ""
+"Failed to set volume: You tried to set volumes for %d channel, whereas "
+"channel(s) supported = %d\n"
+msgid_plural ""
+"Failed to set volume: You tried to set volumes for %d channels, whereas "
+"channel(s) supported = %d\n"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/utils/pactl.c:1340
+=======
 #: src/utils/pactl.c:1800
 #, fuzzy, c-format
 msgid "Failed to unload module: Module %s not loaded"
@@ -2852,10 +3489,62 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: src/utils/pactl.c:2107
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Failed to upload sample: %s"
 msgstr "স্যাম্পেল আপলোড কৰতে ব্যৰ্থ: %s"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1357
+msgid "Premature end of file"
+msgstr "সম্পূৰ্ণ হওয়াৰ পূৰ্বে ফাইল সমাপ্ত হয়েছে"
+
+#: src/utils/pactl.c:1377
+msgid "new"
+msgstr ""
+
+#: src/utils/pactl.c:1380
+msgid "change"
+msgstr ""
+
+#: src/utils/pactl.c:1383
+msgid "remove"
+msgstr ""
+
+#: src/utils/pactl.c:1386 src/utils/pactl.c:1421
+msgid "unknown"
+msgstr ""
+
+#: src/utils/pactl.c:1394
+msgid "sink"
+msgstr ""
+
+#: src/utils/pactl.c:1397
+msgid "source"
+msgstr ""
+
+#: src/utils/pactl.c:1400
+msgid "sink-input"
+msgstr ""
+
+#: src/utils/pactl.c:1403
+msgid "source-output"
+msgstr ""
+
+#: src/utils/pactl.c:1406
+msgid "module"
+msgstr ""
+
+#: src/utils/pactl.c:1409
+msgid "client"
+msgstr ""
+
+#: src/utils/pactl.c:1412
+msgid "sample-cache"
+msgstr ""
+
+#: src/utils/pactl.c:1415
+=======
 #: src/utils/pactl.c:2124
 msgid "Premature end of file"
 msgstr "সম্পূৰ্ণ হওয়াৰ পূৰ্বে ফাইল সমাপ্ত হয়েছে"
@@ -2905,19 +3594,43 @@ msgid "sample-cache"
 msgstr ""
 
 #: src/utils/pactl.c:2182
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "server"
 msgstr "সেৱক বৈধ নহয়"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1418
+msgid "card"
+msgstr ""
+
+#: src/utils/pactl.c:1427
+=======
 #: src/utils/pactl.c:2185
 msgid "card"
 msgstr ""
 
 #: src/utils/pactl.c:2206
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Event '%s' on %s #%u\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1729
+msgid "Got SIGINT, exiting."
+msgstr "SIGINT প্ৰাপ্ত হয়েছে, প্ৰস্থান কৰা হয়েছে।"
+
+#: src/utils/pactl.c:1762
+msgid "Invalid volume specification"
+msgstr "অবৈধ শব্দেৰ মাত্ৰা নিৰ্ধাৰিত"
+
+#: src/utils/pactl.c:1785
+msgid "Volume outside permissible range.\n"
+msgstr ""
+
+#: src/utils/pactl.c:1798
+=======
 #: src/utils/pactl.c:2514
 msgid "Got SIGINT, exiting."
 msgstr "SIGINT প্ৰাপ্ত হয়েছে, প্ৰস্থান কৰা হয়েছে।"
@@ -2931,15 +3644,67 @@ msgid "Volume outside permissible range.\n"
 msgstr ""
 
 #: src/utils/pactl.c:2594
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Invalid number of volume specifications.\n"
 msgstr "অবৈধ শব্দেৰ মাত্ৰা নিৰ্ধাৰিত"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1810
+=======
 #: src/utils/pactl.c:2606
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Inconsistent volume specification.\n"
 msgstr "অবৈধ শব্দেৰ মাত্ৰা নিৰ্ধাৰিত"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1840 src/utils/pactl.c:1841 src/utils/pactl.c:1842
+#: src/utils/pactl.c:1843 src/utils/pactl.c:1844 src/utils/pactl.c:1845
+#: src/utils/pactl.c:1846 src/utils/pactl.c:1847 src/utils/pactl.c:1848
+#: src/utils/pactl.c:1849 src/utils/pactl.c:1850 src/utils/pactl.c:1851
+#: src/utils/pactl.c:1852 src/utils/pactl.c:1853 src/utils/pactl.c:1854
+#: src/utils/pactl.c:1855 src/utils/pactl.c:1856 src/utils/pactl.c:1857
+#: src/utils/pactl.c:1858 src/utils/pactl.c:1859 src/utils/pactl.c:1860
+#: src/utils/pactl.c:1861 src/utils/pactl.c:1862 src/utils/pactl.c:1863
+#: src/utils/pactl.c:1864
+msgid "[options]"
+msgstr ""
+
+#: src/utils/pactl.c:1842
+msgid "[TYPE]"
+msgstr ""
+
+#: src/utils/pactl.c:1844
+msgid "FILENAME [NAME]"
+msgstr ""
+
+#: src/utils/pactl.c:1845
+msgid "NAME [SINK]"
+msgstr ""
+
+#: src/utils/pactl.c:1857
+msgid "NAME|#N VOLUME [VOLUME ...]"
+msgstr ""
+
+#: src/utils/pactl.c:1858
+msgid "#N VOLUME [VOLUME ...]"
+msgstr ""
+
+#: src/utils/pactl.c:1859
+msgid "NAME|#N 1|0|toggle"
+msgstr ""
+
+#: src/utils/pactl.c:1860
+msgid "#N 1|0|toggle"
+msgstr ""
+
+#: src/utils/pactl.c:1861
+msgid "#N FORMATS"
+msgstr ""
+
+#: src/utils/pactl.c:1865
+=======
 #: src/utils/pactl.c:2636 src/utils/pactl.c:2637 src/utils/pactl.c:2638
 #: src/utils/pactl.c:2639 src/utils/pactl.c:2640 src/utils/pactl.c:2641
 #: src/utils/pactl.c:2642 src/utils/pactl.c:2643 src/utils/pactl.c:2644
@@ -2985,6 +3750,7 @@ msgid "#N FORMATS"
 msgstr ""
 
 #: src/utils/pactl.c:2661
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "\n"
@@ -2992,7 +3758,11 @@ msgid ""
 "can be used to specify the default sink, source and monitor.\n"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1868
+=======
 #: src/utils/pactl.c:2664
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy, c-format
 msgid ""
 "\n"
@@ -3014,7 +3784,11 @@ msgstr ""
 "to\n"
 "\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1909
+=======
 #: src/utils/pactl.c:2707
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid ""
 "pactl %s\n"
@@ -3025,16 +3799,55 @@ msgstr ""
 "libpulseৰ সৈতে সঙ্কলন কৰা %s\n"
 "libpulse ৰ সৈতে যুক্ত %s\n"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1966
+=======
 #: src/utils/pactl.c:2751
 #, fuzzy, c-format
 msgid "Invalid format value '%s'"
 msgstr "স্ট্ৰিমেৰ নাম '%s' বৈধ নয়।"
 
 #: src/utils/pactl.c:2778
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, c-format
 msgid "Specify nothing, or one of: %s"
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:1976
+msgid "Please specify a sample file to load"
+msgstr "লোড কৰাৰ উদ্দেশ্যে অনুগ্ৰহ কৰি এটা স্যাম্পেল ফাইল উল্লেখ কৰুন"
+
+#: src/utils/pactl.c:1989
+msgid "Failed to open sound file."
+msgstr "শব্দেৰ ফাইল খুলতে ব্যৰ্থ।"
+
+#: src/utils/pactl.c:2001
+msgid "Warning: Failed to determine sample specification from file."
+msgstr "সতৰ্কবাৰ্তা: ফাইলৰ পৰা স্যাম্পেলেৰ নিৰ্ধাৰিত মাপ নিৰ্মাণ কৰতে ব্যৰ্থ।"
+
+#: src/utils/pactl.c:2011
+msgid "You have to specify a sample name to play"
+msgstr "বাজানোৰ উদ্দেশ্যে এটা স্যাম্পেল ফাইল উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2023
+msgid "You have to specify a sample name to remove"
+msgstr "অপসাৰণেৰ উদ্দেশ্যে এটা স্যাম্পেল ফাইল উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2032
+msgid "You have to specify a sink input index and a sink"
+msgstr "সিংক নিবেশ ইন্ডেক্স ও এটা সিংক নিৰ্ধাৰণ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2042
+msgid "You have to specify a source output index and a source"
+msgstr "সোৰ্স নিৰ্গম ইন্ডেক্স ও এটা সোৰ্স নিৰ্ধাৰণ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2057
+msgid "You have to specify a module name and arguments."
+msgstr "মডিউলেৰ নাম ও আৰ্গুমেন্ট নিৰ্ধাৰণ কৰা আবশ্যক।"
+
+#: src/utils/pactl.c:2077
+=======
 #: src/utils/pactl.c:2788
 msgid "Please specify a sample file to load"
 msgstr "লোড কৰাৰ উদ্দেশ্যে অনুগ্ৰহ কৰি এটা স্যাম্পেল ফাইল উল্লেখ কৰুন"
@@ -3068,26 +3881,50 @@ msgid "You have to specify a module name and arguments."
 msgstr "মডিউলেৰ নাম ও আৰ্গুমেন্ট নিৰ্ধাৰণ কৰা আবশ্যক।"
 
 #: src/utils/pactl.c:2889
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a module index or name"
 msgstr "মডিউল ইন্ডেক্স নিৰ্ধাৰণ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2090
+=======
 #: src/utils/pactl.c:2902
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid ""
 "You may not specify more than one sink. You have to specify a boolean value."
 msgstr "একাধিক সিংক নিৰ্ধাৰণ কৰা যাবে না। বুলিয়েন মান নিৰ্ধাৰণ কৰা আবশ্যক।"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2095 src/utils/pactl.c:2115
+=======
 #: src/utils/pactl.c:2907 src/utils/pactl.c:2927
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Invalid suspend specification."
 msgstr "অবৈধ স্যাম্পেল নিৰ্ধাৰিত"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2110
+=======
 #: src/utils/pactl.c:2922
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid ""
 "You may not specify more than one source. You have to specify a boolean "
 "value."
 msgstr "একাধিক সোৰ্স নিৰ্ধাৰণ কৰা যাবে না। বুলিয়েন মান নিৰ্ধাৰণ কৰা আবশ্যক।"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2127
+msgid "You have to specify a card name/index and a profile name"
+msgstr "কাৰ্ডেৰ নাম/ইন্ডেক্স ও এটা প্ৰোফাইলেৰ নাম উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2138
+msgid "You have to specify a sink name/index and a port name"
+msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা পোৰ্টেৰ নাম উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2149
+=======
 #: src/utils/pactl.c:2939
 msgid "You have to specify a card name/index and a profile name"
 msgstr "কাৰ্ডেৰ নাম/ইন্ডেক্স ও এটা প্ৰোফাইলেৰ নাম উল্লেখ কৰা আবশ্যক"
@@ -3097,33 +3934,69 @@ msgid "You have to specify a sink name/index and a port name"
 msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা পোৰ্টেৰ নাম উল্লেখ কৰা আবশ্যক"
 
 #: src/utils/pactl.c:2961
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a sink name"
 msgstr "বাজানোৰ উদ্দেশ্যে এটা স্যাম্পেল ফাইল উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2162
+msgid "You have to specify a source name/index and a port name"
+msgstr "উৎসেৰ নাম/ইন্ডেক্স ও এটা পোৰ্টে নাম উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2173
+=======
 #: src/utils/pactl.c:2974
 msgid "You have to specify a source name/index and a port name"
 msgstr "উৎসেৰ নাম/ইন্ডেক্স ও এটা পোৰ্টে নাম উল্লেখ কৰা আবশ্যক"
 
 #: src/utils/pactl.c:2985
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a source name"
 msgstr "মডিউল ইন্ডেক্স নিৰ্ধাৰণ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2186 src/utils/pactl.c:2264
+=======
 #: src/utils/pactl.c:2998 src/utils/pactl.c:3076
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a sink name/index"
 msgstr "বাজানোৰ উদ্দেশ্যে এটা স্যাম্পেল ফাইল উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2196
+msgid "You have to specify a sink name/index and a volume"
+msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা পোৰ্টেৰ নাম উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2209 src/utils/pactl.c:2289
+=======
 #: src/utils/pactl.c:3008
 msgid "You have to specify a sink name/index and a volume"
 msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা পোৰ্টেৰ নাম উল্লেখ কৰা আবশ্যক"
 
 #: src/utils/pactl.c:3021 src/utils/pactl.c:3101
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a source name/index"
 msgstr "মডিউল ইন্ডেক্স নিৰ্ধাৰণ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2219
+msgid "You have to specify a source name/index and a volume"
+msgstr "উৎসেৰ নাম/ইন্ডেক্স ও এটা শব্দেৰ মাত্ৰা উল্লেখ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2232
+msgid "You have to specify a sink input index and a volume"
+msgstr "সিংক নিবেশ ইন্ডেক্স ও শব্দেৰ মাত্ৰা নিৰ্ধাৰণ কৰা আবশ্যক"
+
+#: src/utils/pactl.c:2237
+msgid "Invalid sink input index"
+msgstr "সিংক নিবেশ ইন্ডেক্স বৈধ নয়"
+
+#: src/utils/pactl.c:2248
+=======
 #: src/utils/pactl.c:3031
 msgid "You have to specify a source name/index and a volume"
 msgstr "উৎসেৰ নাম/ইন্ডেক্স ও এটা শব্দেৰ মাত্ৰা উল্লেখ কৰা আবশ্যক"
@@ -3137,83 +4010,141 @@ msgid "Invalid sink input index"
 msgstr "সিংক নিবেশ ইন্ডেক্স বৈধ নয়"
 
 #: src/utils/pactl.c:3060
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a source output index and a volume"
 msgstr "সোৰ্স নিৰ্গম ইন্ডেক্স ও এটা সোৰ্স নিৰ্ধাৰণ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2253
+=======
 #: src/utils/pactl.c:3065
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Invalid source output index"
 msgstr "সিংক নিবেশ ইন্ডেক্স বৈধ নয়"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2274
+=======
 #: src/utils/pactl.c:3086
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid ""
 "You have to specify a sink name/index and a mute action (0, 1, or 'toggle')"
 msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা নিঃশব্দতাৰ বুলিয়ান উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2279 src/utils/pactl.c:2304 src/utils/pactl.c:2324
+#: src/utils/pactl.c:2342
+=======
 #: src/utils/pactl.c:3091 src/utils/pactl.c:3116 src/utils/pactl.c:3136
 #: src/utils/pactl.c:3154
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Invalid mute specification"
 msgstr "অবৈধ স্যাম্পেল নিৰ্ধাৰিত"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2299
+=======
 #: src/utils/pactl.c:3111
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid ""
 "You have to specify a source name/index and a mute action (0, 1, or 'toggle')"
 msgstr "উৎসেৰ নাম/ইন্ডেক্স ও নিঃশব্দতাৰ বুলিয়ান উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2314
+=======
 #: src/utils/pactl.c:3126
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid ""
 "You have to specify a sink input index and a mute action (0, 1, or 'toggle')"
 msgstr "সিংক নিবেশ ইন্ডেক্স ও নিঃশব্দতাৰ বুলিয়ান নিৰ্ধাৰণ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2319
+msgid "Invalid sink input index specification"
+msgstr "অবৈধ সিংক নিবেশ ইন্ডেক্স নিৰ্ধাৰিত"
+
+#: src/utils/pactl.c:2332
+=======
 #: src/utils/pactl.c:3131
 msgid "Invalid sink input index specification"
 msgstr "অবৈধ সিংক নিবেশ ইন্ডেক্স নিৰ্ধাৰিত"
 
 #: src/utils/pactl.c:3144
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid ""
 "You have to specify a source output index and a mute action (0, 1, or "
 "'toggle')"
 msgstr "উৎসেৰ নাম/ইন্ডেক্স ও নিঃশব্দতাৰ বুলিয়ান উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2337
+=======
 #: src/utils/pactl.c:3149
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "Invalid source output index specification"
 msgstr "অবৈধ সিংক নিবেশ ইন্ডেক্স নিৰ্ধাৰিত"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2350
+=======
 #: src/utils/pactl.c:3162
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify at least an object path and a message name"
 msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা পোৰ্টেৰ নাম উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2360
+=======
 #: src/utils/pactl.c:3172
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid ""
 "Excess arguments given, they will be ignored. Note that all message "
 "parameters must be given as a single string."
 msgstr ""
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2370
+=======
 #: src/utils/pactl.c:3182
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid ""
 "You have to specify a sink index and a semicolon-separated list of supported "
 "formats"
 msgstr "sink ৰ নাম/ইন্ডেক্স ও এটা নিঃশব্দতাৰ বুলিয়ান উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2382
+=======
 #: src/utils/pactl.c:3194
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #, fuzzy
 msgid "You have to specify a card name/index, a port name and a latency offset"
 msgstr "কাৰ্ডেৰ নাম/ইন্ডেক্স ও এটা প্ৰোফাইলেৰ নাম উল্লেখ কৰা আবশ্যক"
 
+<<<<<<< HEAD
+#: src/utils/pactl.c:2389
+msgid "Could not parse latency offset"
+msgstr ""
+
+#: src/utils/pactl.c:2401
+=======
 #: src/utils/pactl.c:3201
 msgid "Could not parse latency offset"
 msgstr ""
 
 #: src/utils/pactl.c:3213
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 msgid "No valid command specified."
 msgstr "কোনো বৈধ কমান্ড নিৰ্ধাৰিত হয়নি।"
 

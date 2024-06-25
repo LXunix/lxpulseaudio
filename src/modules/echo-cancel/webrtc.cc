@@ -75,6 +75,38 @@ static const char* const valid_modargs[] = {
     NULL
 };
 
+<<<<<<< HEAD
+static int routing_mode_from_string(const char *rmode) {
+    if (pa_streq(rmode, "quiet-earpiece-or-headset"))
+        return webrtc::EchoControlMobile::kQuietEarpieceOrHeadset;
+    else if (pa_streq(rmode, "earpiece"))
+        return webrtc::EchoControlMobile::kEarpiece;
+    else if (pa_streq(rmode, "loud-earpiece"))
+        return webrtc::EchoControlMobile::kLoudEarpiece;
+    else if (pa_streq(rmode, "speakerphone"))
+        return webrtc::EchoControlMobile::kSpeakerphone;
+    else if (pa_streq(rmode, "loud-speakerphone"))
+        return webrtc::EchoControlMobile::kLoudSpeakerphone;
+    else
+        return -1;
+}
+
+class PaWebrtcTraceCallback : public webrtc::TraceCallback {
+    void Print(webrtc::TraceLevel level, const char *message, int length)
+    {
+        if (level & webrtc::kTraceError || level & webrtc::kTraceCritical)
+            pa_log("%s", message);
+        else if (level & webrtc::kTraceWarning)
+            pa_log_warn("%s", message);
+        else if (level & webrtc::kTraceInfo)
+            pa_log_info("%s", message);
+        else
+            pa_log_debug("%s", message);
+    }
+};
+
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 static int webrtc_volume_from_pa(pa_volume_t v)
 {
     return (v * WEBRTC_AGC_MAX_VOLUME) / PA_VOLUME_NORM;

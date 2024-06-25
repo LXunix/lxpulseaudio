@@ -70,6 +70,13 @@ if glib_dep.found()
   libpulse_headers += 'glib-mainloop.h'
 endif
 
+<<<<<<< HEAD
+run_target('update-map-file',
+  command : [ join_paths(meson.source_root(), 'scripts/generate-map-file.sh'), 'map-file',
+              [ libpulse_headers, 'simple.h', join_paths(meson.build_root(), 'src', 'pulse', 'version.h') ] ])
+
+versioning_link_args = '-Wl,-version-script=' + join_paths(meson.source_root(), 'src', 'pulse', 'map-file')
+=======
 if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
   run_target('update-map-file',
     command : [ join_paths(meson.source_root(), 'scripts/generate-map-file.sh'), 'map-file', 'libpulse.def',
@@ -79,6 +86,7 @@ if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
 else
   versioning_link_args = []
 endif
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 libpulse = shared_library('pulse',
   libpulse_sources,
@@ -89,10 +97,15 @@ libpulse = shared_library('pulse',
   link_args : [nodelete_link_args, versioning_link_args],
   install : true,
   install_rpath : privlibdir,
+<<<<<<< HEAD
+  dependencies : [libm_dep, thread_dep, libpulsecommon_dep, dbus_dep, dl_dep, iconv_dep, libintl_dep, platform_dep, platform_socket_dep],
+  implicit_include_directories : false)
+=======
   dependencies : [libm_dep, thread_dep, libpulsecommon_dep, dbus_dep, dl_dep, iconv_dep, libintl_dep, platform_dep, platform_socket_dep, libatomic_ops_dep],
   implicit_include_directories : false,
   vs_module_defs : 'libpulse.def',
 )
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 libpulse_dep = declare_dependency(link_with: libpulse)
 

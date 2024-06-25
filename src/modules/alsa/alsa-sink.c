@@ -2350,11 +2350,15 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
     bool volume_is_set;
     bool mute_is_set;
     pa_alsa_profile_set *profile_set = NULL;
+<<<<<<< HEAD
+    void *state;
+=======
     void *state = NULL;
 #ifdef USE_SMOOTHER_2
     snd_pcm_info_t* pcm_info;
     const char *id;
 #endif
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     pa_assert(m);
     pa_assert(ma);

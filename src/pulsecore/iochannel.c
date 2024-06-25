@@ -261,7 +261,11 @@ ssize_t pa_iochannel_read(pa_iochannel*io, void*data, size_t l) {
 
 #ifdef HAVE_CREDS
 
+<<<<<<< HEAD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+=======
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__GNU__)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 typedef struct cmsgcred pa_ucred_t;
 #define SCM_CREDENTIALS SCM_CREDS
 #else
@@ -291,14 +295,22 @@ bool pa_iochannel_creds_supported(pa_iochannel *io) {
 }
 
 int pa_iochannel_creds_enable(pa_iochannel *io) {
+<<<<<<< HEAD
+#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__)
+=======
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__GNU__)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     int t = 1;
 #endif
 
     pa_assert(io);
     pa_assert(io->ifd >= 0);
 
+<<<<<<< HEAD
+#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__)
+=======
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__GNU__)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     if (setsockopt(io->ifd, SOL_SOCKET, SO_PASSCRED, &t, sizeof(t)) < 0) {
         pa_log_error("setsockopt(SOL_SOCKET, SO_PASSCRED): %s", pa_cstrerror(errno));
         return -1;
@@ -334,7 +346,11 @@ ssize_t pa_iochannel_write_with_creds(pa_iochannel*io, const void*data, size_t l
 
     u = (pa_ucred_t*) CMSG_DATA(&cmsg.hdr);
 
+<<<<<<< HEAD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+=======
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__GNU__)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     // the kernel fills everything
 #else
     u->pid = getpid();
@@ -457,7 +473,11 @@ ssize_t pa_iochannel_read_with_ancil_data(pa_iochannel*io, void*data, size_t l, 
                 pa_ucred_t u;
                 pa_assert(cmh->cmsg_len == CMSG_LEN(sizeof(pa_ucred_t)));
                 memcpy(&u, CMSG_DATA(cmh), sizeof(pa_ucred_t));
+<<<<<<< HEAD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+=======
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__GNU__)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
                 ancil_data->creds.gid = u.cmcred_gid;
                 ancil_data->creds.uid = u.cmcred_uid;
 #else
