@@ -182,29 +182,6 @@ if host_machine.system() == 'windows'
 else
   libpulsecommon_sources += [
     'pulsecore/mutex-posix.c',
-<<<<<<< HEAD
-    'pulsecore/semaphore-posix.c',
-    'pulsecore/thread-posix.c'
-  ]
-endif
-# FIXME: Do SIMD things
-
-libpulsecommon = shared_library('pulsecommon-' + pa_version_major_minor,
-  libpulsecommon_sources,
-  libpulsecommon_headers,
-  include_directories : [configinc, topinc],
-  c_args : [pa_c_args],
-  link_args : [nodelete_link_args],
-  install : true,
-  install_dir : privlibdir,
-  dependencies : [
-    libm_dep, thread_dep, dl_dep, shm_dep, iconv_dep, sndfile_dep, dbus_dep,
-    x11_dep, libsystemd_dep, glib_dep.partial_dependency(compile_args: true),
-    gtk_dep.partial_dependency(compile_args: true), asyncns_dep, libintl_dep,
-    platform_dep, tcpwrap_dep, platform_socket_dep, execinfo_dep,
-  ],
-  implicit_include_directories : false)
-=======
     'pulsecore/poll-posix.c',
     'pulsecore/thread-posix.c',
   ]
@@ -238,15 +215,10 @@ else
     implicit_include_directories : false)
 
   libpulsecommon_dep = declare_dependency(link_with: libpulsecommon)
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
   subdir('pulse')
 endif
 
-<<<<<<< HEAD
-subdir('pulse')
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 if get_option('daemon')
   subdir('pulsecore')
   subdir('daemon')

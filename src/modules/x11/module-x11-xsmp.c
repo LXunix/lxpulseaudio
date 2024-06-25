@@ -60,7 +60,26 @@ struct userdata {
     pa_x11_client *x11_client;
 };
 
-<<<<<<< HEAD
+typedef struct {
+    IceConn connection;
+    struct userdata *userdata;
+} ice_io_callback_data;
+
+static void* ice_io_cb_data_new(IceConn connection, struct userdata *userdata) {
+    ice_io_callback_data *data = pa_xnew(ice_io_callback_data, 1);
+
+    data->connection = connection;
+    data->userdata = userdata;
+
+    return data;
+}
+
+static void ice_io_cb_data_destroy(pa_mainloop_api*a, pa_io_event *e, void *userdata) {
+    pa_assert(userdata);
+
+    pa_xfree(userdata);
+}
+
 static void x11_kill_cb(pa_x11_wrapper *w, void *userdata) {
     struct userdata *u = userdata;
 
@@ -86,60 +105,6 @@ static void x11_kill_cb(pa_x11_wrapper *w, void *userdata) {
     }
 
     pa_module_unload_request(u->module, true);
-}
-
-static void die_cb(SmcConn connection, SmPointer client_data) {
-    struct userdata *u = client_data;
-=======
-typedef struct {
-    IceConn connection;
-    struct userdata *userdata;
-} ice_io_callback_data;
-
-static void* ice_io_cb_data_new(IceConn connection, struct userdata *userdata) {
-    ice_io_callback_data *data = pa_xnew(ice_io_callback_data, 1);
-
-    data->connection = connection;
-    data->userdata = userdata;
-
-    return data;
-}
-
-static void ice_io_cb_data_destroy(pa_mainloop_api*a, pa_io_event *e, void *userdata) {
-    pa_assert(userdata);
-
-    pa_xfree(userdata);
-}
-
-static void x11_kill_cb(pa_x11_wrapper *w, void *userdata) {
-    struct userdata *u = userdata;
-
-    pa_assert(w);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
-    pa_assert(u);
-    pa_assert(u->x11_wrapper == w);
-
-    pa_log_debug("X11 client kill callback called");
-
-    if (u->connection) {
-        SmcCloseConnection(u->connection, 0, NULL);
-        u->connection = NULL;
-    }
-<<<<<<< HEAD
-=======
-
-    if (u->x11_client) {
-        pa_x11_client_free(u->x11_client);
-        u->x11_client = NULL;
-    }
-
-    if (u->x11_wrapper) {
-        pa_x11_wrapper_unref(u->x11_wrapper);
-        u->x11_wrapper = NULL;
-    }
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
-
-    pa_x11_wrapper_kill_deferred(u->x11_wrapper);
 }
 
 static void close_xsmp_connection(struct userdata *userdata) {
@@ -184,15 +149,8 @@ static void ice_io_cb(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_event_fla
 
         IceSetShutdownNegotiation(io_data->connection, False);
 
-<<<<<<< HEAD
-    if (IceProcessMessages(connection, NULL, NULL) == IceProcessMessagesIOError) {
-        pa_log_debug("IceProcessMessages: I/O error, closing ICE connection");
-        IceSetShutdownNegotiation(connection, False);
-        IceCloseConnection(connection);
-=======
         /* SM owns this connection, close via SmcCloseConnection() */
         close_xsmp_connection(io_data->userdata);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 }
 
@@ -225,17 +183,6 @@ static void ice_io_error_handler(IceConn iceConn) {
       (*ice_installed_handler) (iceConn);
 }
 
-static IceIOErrorHandler ice_installed_handler;
-
-/* We call any handler installed before (or after) module is loaded but
-   avoid calling the default libICE handler which does an exit() */
-
-static void ice_io_error_handler(IceConn iceConn) {
-    pa_log_warn("ICE I/O error handler called");
-    if (ice_installed_handler)
-      (*ice_installed_handler) (iceConn);
-}
-
 int pa__init(pa_module*m) {
 
     pa_modargs *ma = NULL;
@@ -255,27 +202,14 @@ int pa__init(pa_module*m) {
         return -1;
     } else {
         IceIOErrorHandler default_handler;
-<<<<<<< HEAD
 
         ice_installed_handler = IceSetIOErrorHandler (NULL);
         default_handler = IceSetIOErrorHandler (ice_io_error_handler);
 
-=======
-
-        ice_installed_handler = IceSetIOErrorHandler (NULL);
-        default_handler = IceSetIOErrorHandler (ice_io_error_handler);
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         if (ice_installed_handler == default_handler)
             ice_installed_handler = NULL;
 
         IceSetIOErrorHandler(ice_io_error_handler);
-<<<<<<< HEAD
-
-        IceAddConnectionWatch(new_ice_connection, m->core);
-        ice_in_use = true;
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 
     m->userdata = u = pa_xnew(struct userdata, 1);
@@ -284,12 +218,9 @@ int pa__init(pa_module*m) {
     u->client = NULL;
     u->connection = NULL;
     u->x11_wrapper = NULL;
-<<<<<<< HEAD
-=======
 
     IceAddConnectionWatch(new_ice_connection, u);
     ice_in_use = true;
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
         pa_log("Failed to parse module arguments");
@@ -417,12 +348,6 @@ void pa__done(pa_module*m) {
 
         if (u->x11_client)
             pa_x11_client_free(u->x11_client);
-<<<<<<< HEAD
-
-        if (u->x11_wrapper)
-            pa_x11_wrapper_unref(u->x11_wrapper);
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
         if (u->x11_wrapper)
             pa_x11_wrapper_unref(u->x11_wrapper);

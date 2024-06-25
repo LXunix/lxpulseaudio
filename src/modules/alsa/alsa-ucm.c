@@ -1085,17 +1085,10 @@ static void probe_volumes(pa_hashmap *hash, bool is_sink, snd_pcm_t *pcm_handle,
         PA_HASHMAP_FOREACH_KV(verb_name, path, data->paths, state2) {
             if (pa_alsa_path_probe(path, NULL, mixer_handle, ignore_dB) < 0) {
                 pa_log_warn("Could not probe path: %s, using s/w volume", path->name);
-<<<<<<< HEAD
-                pa_hashmap_remove(data->paths, profile);
-            } else if (!path->has_volume) {
-                pa_log_warn("Path %s is not a volume control", path->name);
-                pa_hashmap_remove(data->paths, profile);
-=======
                 pa_hashmap_remove(data->paths, verb_name);
             } else if (!path->has_volume && !path->has_mute) {
                 pa_log_warn("Path %s is not a volume or mute control", path->name);
                 pa_hashmap_remove(data->paths, verb_name);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             } else
                 pa_log_debug("Set up h/w %s using '%s' for %s:%s", path->has_volume ? "volume" : "mute",
                                 path->name, verb_name, port->name);
@@ -1713,29 +1706,11 @@ static void alsa_mapping_add_ucm_modifier(pa_alsa_mapping *m, pa_alsa_ucm_modifi
         pa_channel_map_init(&m->channel_map);
 }
 
-<<<<<<< HEAD
-static pa_alsa_mapping* ucm_alsa_mapping_get(pa_alsa_ucm_config *ucm, pa_alsa_profile_set *ps, const char *verb_name, const char *device_str, bool is_sink) {
-    pa_alsa_mapping *m;
-    char *mapping_name;
-    size_t ucm_alibpref_len = 0;
-    const char *value;
-
-    /* find private alsa-lib's configuration device prefix */
-    if (snd_use_case_get(ucm->ucm_mgr, "_alibpref", &value) == 0) {
-        if (value[0] && pa_startswith(device_str, value))
-            ucm_alibpref_len = strlen(value);
-
-        free((void *)value);
-    }
-
-    mapping_name = pa_sprintf_malloc("Mapping %s: %s: %s", verb_name, device_str + ucm_alibpref_len, is_sink ? "sink" : "source");
-=======
 static pa_alsa_mapping* ucm_alsa_mapping_get(pa_alsa_ucm_config *ucm, pa_alsa_profile_set *ps, const char *verb_name, const char *ucm_name, bool is_sink) {
     pa_alsa_mapping *m;
     char *mapping_name;
 
     mapping_name = pa_sprintf_malloc("Mapping %s: %s: %s", verb_name, ucm_name, is_sink ? "sink" : "source");
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     m = pa_alsa_mapping_get(ps, mapping_name);
 
@@ -1759,11 +1734,7 @@ static int ucm_create_mapping_direction(
     pa_alsa_mapping *m;
     unsigned priority, rate, channels;
 
-<<<<<<< HEAD
-    m = ucm_alsa_mapping_get(ucm, ps, verb_name, device_str, is_sink);
-=======
     m = ucm_alsa_mapping_get(ucm, ps, verb_name, device_name, is_sink);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     if (!m)
         return -1;
@@ -1811,19 +1782,10 @@ static int ucm_create_mapping_for_modifier(
 
     pa_alsa_mapping *m;
 
-<<<<<<< HEAD
-    m = ucm_alsa_mapping_get(ucm, ps, verb_name, device_str, is_sink);
-
-    if (!m)
-        return -1;
-
-    pa_log_info("UCM mapping: %s modifier %s", m->name, mod_name);
-=======
     m = ucm_alsa_mapping_get(ucm, ps, verb_name, mod_name, is_sink);
 
     if (!m)
         return -1;
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     pa_log_info("UCM mapping: %s modifier %s", m->name, mod_name);
 
@@ -2234,16 +2196,10 @@ static void ucm_mapping_jack_probe(pa_alsa_mapping *m, pa_hashmap *mixers) {
     if (!dev->jack || !dev->jack->mixer_device_name)
         return;
 
-<<<<<<< HEAD
-        has_control = pa_alsa_mixer_find_card(mixer_handle, &dev->jack->alsa_id, 0) != NULL;
-        pa_alsa_jack_set_has_control(dev->jack, has_control);
-        pa_log_info("UCM jack %s has_control=%d", dev->jack->name, dev->jack->has_control);
-=======
     mixer_handle = pa_alsa_open_mixer_by_name(mixers, dev->jack->mixer_device_name, true);
     if (!mixer_handle) {
         pa_log_error("Unable to determine open mixer device '%s' for jack %s", dev->jack->mixer_device_name, dev->jack->name);
         return;
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 
     has_control = pa_alsa_mixer_find_card(mixer_handle, &dev->jack->alsa_id, 0) != NULL;

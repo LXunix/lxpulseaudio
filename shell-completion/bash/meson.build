@@ -1,24 +1,5 @@
 if bashcompletiondir != 'no'
   aliases = []
-<<<<<<< HEAD
-
-  if get_option('daemon')
-    aliases += [
-      'pacmd',
-      'pasuspender',
-    ]
-  endif
-
-  aliases += [
-    'pacat',
-    'pactl',
-    'padsp',
-    'paplay',
-    'parec',
-    'parecord',
-  ]
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
   if get_option('daemon')
     aliases += [

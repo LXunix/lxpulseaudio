@@ -30,13 +30,8 @@ executable('pulseaudio',
   install_rpath : privlibdir,
   include_directories : [configinc, topinc],
   link_args : ['-ffast-math'],
-<<<<<<< HEAD
-  link_with : [libpulsecore, libpulsecommon, libpulse],
-  dependencies : [ltdl_dep, cap_dep, dbus_dep, libsystemd_dep, dl_dep, libintl_dep, platform_dep, platform_socket_dep],
-=======
   link_with : [libpulsecore],
   dependencies : [ltdl_dep, cap_dep, dbus_dep, libsystemd_dep, dl_dep, libintl_dep, platform_dep, platform_socket_dep, libpulsecommon_dep, libpulse_dep],
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   c_args : pa_c_args,
 )
 

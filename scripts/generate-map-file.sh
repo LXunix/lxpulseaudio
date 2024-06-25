@@ -17,12 +17,6 @@ print_map_file() {
     echo "};"
 }
 
-<<<<<<< HEAD
-TARGET_FILE=$1
-shift
-
-cd "${MESON_SOURCE_ROOT}/${MESON_SUBDIR}" && print_map_file "$@" > ${TARGET_FILE}
-=======
 print_def_file() {
     echo "EXPORTS"
     ctags -I ${CTAGS_IDENTIFIER_LIST} -f - --c-kinds=p "$@" | awk '/^pa_/ && !/(^pa_glib_|^pa_simple_)/ { print $1 }' | sort
@@ -34,4 +28,3 @@ shift 2
 
 cd "${MESON_SOURCE_ROOT}/${MESON_SUBDIR}" && print_map_file "$@" > ${MAP_FILE}
 cd "${MESON_SOURCE_ROOT}/${MESON_SUBDIR}" && print_def_file "$@" > ${DEF_FILE}
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336

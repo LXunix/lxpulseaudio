@@ -1684,11 +1684,7 @@ static snd_mixer_elem_t *pa_alsa_mixer_find(snd_mixer_t *mixer,
 }
 
 snd_mixer_elem_t *pa_alsa_mixer_find_card(snd_mixer_t *mixer, struct pa_alsa_mixer_id *alsa_id, unsigned int device) {
-<<<<<<< HEAD
-    return pa_alsa_mixer_find(mixer, SND_CTL_ELEM_IFACE_CARD, alsa_id->name, alsa_id->index, device);
-=======
     return pa_alsa_mixer_find(mixer, SND_CTL_ELEM_IFACE_CARD, alsa_id->name, alsa_id->index, device, 0);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 }
 
 snd_mixer_elem_t *pa_alsa_mixer_find_pcm(snd_mixer_t *mixer, const char *name, unsigned int device) {
@@ -1856,29 +1852,6 @@ snd_mixer_t *pa_alsa_open_mixer_by_name(pa_hashmap *mixers, const char *dev, boo
     pa_assert(dev);
 
     pm = pa_hashmap_get(mixers, dev);
-<<<<<<< HEAD
-
-    /* The quick card number/index lookup (hw:#)
-     * We already know the card number/index, thus use the mixer
-     * from the cache at first.
-     */
-    if (!pm && pa_strneq(dev, "hw:", 3)) {
-        const char *s = dev + 3;
-        int card_index;
-        while (*s && *s >= '0' && *s <= '9') s++;
-        if (*s == '\0' && pa_atoi(dev + 3, &card_index) >= 0) {
-            PA_HASHMAP_FOREACH_KV(dev2, pm, mixers, state) {
-                if (pm->card_index == card_index) {
-                    dev = dev2;
-                    pm = pa_hashmap_get(mixers, dev);
-                    break;
-                }
-            }
-        }
-    }
-
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     if (pm) {
         if (!probe)
             pm->used_for_probe_only = false;

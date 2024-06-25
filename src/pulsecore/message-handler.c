@@ -131,10 +131,6 @@ int pa_message_handler_send_message(pa_core *c, const char *object_path, const c
     if (message_parameters) {
         parameters = pa_json_parse(message_parameters);
 
-<<<<<<< HEAD
-        if (!parameters)
-            return -PA_ERR_INVALID;
-=======
         if (!parameters) {
             char *wrapped_message_parameters;
 
@@ -155,7 +151,6 @@ int pa_message_handler_send_message(pa_core *c, const char *object_path, const c
                 return -PA_ERR_INVALID;
             }
         }
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 
     /* The handler is expected to return an error code and may also

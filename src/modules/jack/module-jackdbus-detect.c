@@ -71,19 +71,13 @@ PA_MODULE_USAGE(
 
 static const char* const valid_modargs[] = {
     "channels",
-<<<<<<< HEAD
-=======
     "sink_enabled",
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     "sink_name",
     "sink_properties",
     "sink_client_name",
     "sink_channels",
     "sink_channel_map",
-<<<<<<< HEAD
-=======
     "source_enabled",
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     "source_name",
     "source_properties",
     "source_client_name",
@@ -108,10 +102,7 @@ static const char* const modtypes[JACK_SS_COUNT] = {
 };
 
 struct moddata {
-<<<<<<< HEAD
-=======
     bool enabled;
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     char *name;
     pa_proplist *proplist;
     char *client_name;
@@ -190,11 +181,7 @@ static void ensure_ports_started(struct userdata* u) {
     pa_assert(u);
 
     for (i = 0; i < JACK_SS_COUNT; i++)
-<<<<<<< HEAD
-        if (!u->jack_module_index[i]) {
-=======
         if (u->mod_args[i].enabled && !u->jack_module_index[i]) {
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             pa_strbuf *args_buf = pa_strbuf_new();
             char *args;
             pa_module *m;
@@ -203,7 +190,6 @@ static void ensure_ports_started(struct userdata* u) {
                 escaped = pa_escape(u->mod_args[i].name, "'");
                 pa_strbuf_printf(args_buf, " %s_name='%s'", modtypes[i], escaped);
                 pa_xfree(escaped);
-<<<<<<< HEAD
             }
             if (!pa_proplist_isempty(u->mod_args[i].proplist)) {
                 escaped = proplist_to_arg(u->mod_args[i].proplist);
@@ -222,26 +208,6 @@ static void ensure_ports_started(struct userdata* u) {
                 pa_channel_map_snprint(cm, sizeof(cm), &u->mod_args[i].channel_map);
                 pa_strbuf_printf(args_buf, " channel_map='%s'", cm);
             }
-=======
-            }
-            if (!pa_proplist_isempty(u->mod_args[i].proplist)) {
-                escaped = proplist_to_arg(u->mod_args[i].proplist);
-                pa_strbuf_printf(args_buf, " %s_properties='%s'", modtypes[i], escaped);
-                pa_xfree(escaped);
-            }
-            if (u->mod_args[i].client_name) {
-                escaped = pa_escape(u->mod_args[i].client_name, "'");
-                pa_strbuf_printf(args_buf, " client_name='%s'", escaped);
-                pa_xfree(escaped);
-            }
-            if (u->mod_args[i].channels > 0)
-                pa_strbuf_printf(args_buf, " channels=%" PRIu32, u->mod_args[i].channels);
-            if (u->mod_args[i].channel_map.channels > 0) {
-                char cm[PA_CHANNEL_MAP_SNPRINT_MAX];
-                pa_channel_map_snprint(cm, sizeof(cm), &u->mod_args[i].channel_map);
-                pa_strbuf_printf(args_buf, " channel_map='%s'", cm);
-            }
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             args = pa_strbuf_to_string_free(args_buf);
             pa_module_load(&m, u->core, modnames[i], args);
             pa_xfree(args);
@@ -377,23 +343,6 @@ int pa__init(pa_module *m) {
     }
 
     for (i = 0; i < JACK_SS_COUNT; i++) {
-<<<<<<< HEAD
-        pa_snprintf(argname, sizeof(argname), "%s_name", modtypes[i]);
-        name = pa_modargs_get_value(ma, argname, NULL);
-        u->mod_args[i].name = pa_xstrdup(name);
-
-        u->mod_args[i].proplist = pa_proplist_new();
-        pa_snprintf(argname, sizeof(argname), "%s_properties", modtypes[i]);
-        if (pa_modargs_get_proplist(ma, argname, u->mod_args[i].proplist, PA_UPDATE_REPLACE) < 0) {
-            pa_log("Invalid %s properties", modtypes[i]);
-            goto fail;
-        }
-
-        pa_snprintf(argname, sizeof(argname), "%s_client_name", modtypes[i]);
-        name = pa_modargs_get_value(ma, argname, NULL);
-        u->mod_args[i].client_name = pa_xstrdup(name);
-
-=======
         u->mod_args[i].enabled = true;
         pa_snprintf(argname, sizeof(argname), "%s_enabled", modtypes[i]);
         if (pa_modargs_get_value_boolean(ma, argname, &u->mod_args[i].enabled) < 0) {
@@ -416,7 +365,6 @@ int pa__init(pa_module *m) {
         name = pa_modargs_get_value(ma, argname, NULL);
         u->mod_args[i].client_name = pa_xstrdup(name);
 
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         u->mod_args[i].channels = channels;
         pa_snprintf(argname, sizeof(argname), "%s_channels", modtypes[i]);
         if (pa_modargs_get_value_u32(ma, argname, &u->mod_args[i].channels) < 0

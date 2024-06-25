@@ -345,8 +345,6 @@ static void stream_overflow_callback(pa_stream *stream, void *userdata) {
     pa_log_info("Server signalled buffer overrun.");
 }
 
-<<<<<<< HEAD
-=======
 /* Do a reinit of the module.  Note that u will be freed as a result of this
  * call. */
 static void maybe_restart(struct module_restart_data *rd) {
@@ -428,7 +426,6 @@ static void on_sink_created(struct userdata *u) {
     u->connected = true;
 }
 
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 static void context_state_cb(pa_context *c, void *userdata) {
     struct userdata *u = userdata;
     pa_assert(u);
@@ -448,49 +445,8 @@ static void context_state_cb(pa_context *c, void *userdata) {
             pa_assert(!u->stream);
             pa_assert(!u->sink);
 
-<<<<<<< HEAD
-            proplist = tunnel_new_proplist(u);
-            u->stream = pa_stream_new_with_proplist(u->context,
-                                                    stream_name,
-                                                    &u->sink->sample_spec,
-                                                    &u->sink->channel_map,
-                                                    proplist);
-            pa_proplist_free(proplist);
-            pa_xfree(stream_name);
-
-            if (!u->stream) {
-                pa_log_error("Could not create a stream.");
-                u->thread_mainloop_api->quit(u->thread_mainloop_api, TUNNEL_THREAD_FAILED_MAINLOOP);
-                return;
-            }
-
-            requested_latency = pa_sink_get_requested_latency_within_thread(u->sink);
-            if (requested_latency == (pa_usec_t) -1)
-                requested_latency = u->sink->thread_info.max_latency;
-
-            reset_bufferattr(&bufferattr);
-            bufferattr.tlength = pa_usec_to_bytes(requested_latency, &u->sink->sample_spec);
-
-            pa_log_debug("tlength requested at %lu.", (unsigned long) bufferattr.tlength);
-
-            pa_stream_set_state_callback(u->stream, stream_state_cb, userdata);
-            pa_stream_set_buffer_attr_callback(u->stream, stream_changed_buffer_attr_cb, userdata);
-            pa_stream_set_underflow_callback(u->stream, stream_underflow_callback, userdata);
-            pa_stream_set_overflow_callback(u->stream, stream_overflow_callback, userdata);
-            if (pa_stream_connect_playback(u->stream,
-                                           u->remote_sink_name,
-                                           &bufferattr,
-                                           PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_DONT_MOVE | PA_STREAM_START_CORKED | PA_STREAM_AUTO_TIMING_UPDATE,
-                                           NULL,
-                                           NULL) < 0) {
-                pa_log_error("Could not connect stream.");
-                u->thread_mainloop_api->quit(u->thread_mainloop_api, TUNNEL_THREAD_FAILED_MAINLOOP);
-            }
-            u->connected = true;
-=======
             pa_log_debug("Asking ctl thread to create sink.");
             pa_asyncmsgq_post(u->thread_mq->outq, PA_MSGOBJECT(u->msg), TUNNEL_MESSAGE_CREATE_SINK_REQUEST, u, 0, NULL, NULL);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             break;
         case PA_CONTEXT_FAILED:
             pa_log_debug("Context failed: %s.", pa_strerror(pa_context_errno(u->context)));

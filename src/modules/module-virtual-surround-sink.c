@@ -449,7 +449,6 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes_input, pa_memchunk 
 
     pa_memzero(u->outspace[0], BLOCK_SIZE * 4);
     pa_memzero(u->outspace[1], BLOCK_SIZE * 4);
-<<<<<<< HEAD
 
     for (c = 0; c < u->inputs; c++) {
         fftwf_complex *f_in = u->f_in;
@@ -461,19 +460,6 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes_input, pa_memchunk 
             fftwf_complex *f_ir = u->f_ir[c * 2 + ear];
             float *outspace = u->outspace[ear];
 
-=======
-
-    for (c = 0; c < u->inputs; c++) {
-        fftwf_complex *f_in = u->f_in;
-        fftwf_complex *f_out = u->f_out;
-
-        fftwf_execute(u->p_fw[c]);
-
-        for (ear = 0; ear < 2; ear++) {
-            fftwf_complex *f_ir = u->f_ir[c * 2 + ear];
-            float *outspace = u->outspace[ear];
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             for (s = 0, fftlen = u->fftlen / 2 + 1; s < fftlen; s++) {
                 float re = f_ir[s][0] * f_in[s][0] - f_ir[s][1] * f_in[s][1];
                 float im = f_ir[s][1] * f_in[s][0] + f_ir[s][0] * f_in[s][1];
@@ -493,7 +479,6 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes_input, pa_memchunk 
     for (s = 0, fftlen = BLOCK_SIZE; s < fftlen; s++) {
         float output;
         float *outspace = u->outspace[0];
-<<<<<<< HEAD
 
         output = outspace[s];
         if (output < -1.0) output = -1.0;
@@ -502,16 +487,6 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes_input, pa_memchunk 
 
         outspace = u->outspace[1];
 
-=======
-
-        output = outspace[s];
-        if (output < -1.0) output = -1.0;
-        if (output > 1.0) output = 1.0;
-        dst[s * 2 + 0] = output;
-
-        outspace = u->outspace[1];
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         output = outspace[s];
         if (output < -1.0) output = -1.0;
         if (output > 1.0) output = 1.0;
@@ -749,7 +724,6 @@ int pa__init(pa_module*m) {
     size_t hrir_copied_length, hrir_total_length;
     int hrir_channels;
     int fftlen;
-<<<<<<< HEAD
 
     float *impulse_temp=NULL;
 
@@ -758,16 +732,6 @@ int pa__init(pa_module*m) {
 
     fftwf_plan p;
 
-=======
-
-    float *impulse_temp=NULL;
-
-    unsigned *mapping_left=NULL;
-    unsigned *mapping_right=NULL;
-
-    fftwf_plan p;
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     pa_channel_map hrir_map, hrir_right_map;
 
     pa_sample_spec hrir_left_temp_ss;
@@ -1186,17 +1150,10 @@ fail:
 
     if (mapping_right)
         pa_xfree(mapping_right);
-<<<<<<< HEAD
 
     if (hrir_data)
         pa_xfree(hrir_data);
 
-=======
-
-    if (hrir_data)
-        pa_xfree(hrir_data);
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     if (hrir_right_data)
         pa_xfree(hrir_right_data);
 
@@ -1255,7 +1212,6 @@ void pa__done(pa_module*m) {
 
     if (u->memblockq_sink)
         pa_memblockq_free(u->memblockq_sink);
-<<<<<<< HEAD
 
     if (u->p_fw) {
         for (i = 0, j = u->inputs; i < j; i++) {
@@ -1290,42 +1246,6 @@ void pa__done(pa_module*m) {
     if (u->outspace[1])
         fftwf_free(u->outspace[1]);
 
-=======
-
-    if (u->p_fw) {
-        for (i = 0, j = u->inputs; i < j; i++) {
-            if (u->p_fw[i])
-                fftwf_destroy_plan(u->p_fw[i]);
-        }
-        fftwf_free(u->p_fw);
-    }
-
-    if (u->p_bw)
-        fftwf_destroy_plan(u->p_bw);
-
-    if (u->f_ir) {
-        for (i = 0, j = u->inputs * 2; i < j; i++) {
-            if (u->f_ir[i])
-                fftwf_free(u->f_ir[i]);
-        }
-        fftwf_free(u->f_ir);
-    }
-
-    if (u->f_out)
-        fftwf_free(u->f_out);
-
-    if (u->f_in)
-        fftwf_free(u->f_in);
-
-    if (u->revspace)
-        fftwf_free(u->revspace);
-
-    if (u->outspace[0])
-        fftwf_free(u->outspace[0]);
-    if (u->outspace[1])
-        fftwf_free(u->outspace[1]);
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     if (u->inspace) {
         for (i = 0, j = u->inputs; i < j; i++) {
             if (u->inspace[i])

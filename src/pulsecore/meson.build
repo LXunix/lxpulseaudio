@@ -224,11 +224,7 @@ libpulsecore = shared_library('pulsecore-' + pa_version_major_minor,
   install_rpath : privlibdir,
   install_dir : privlibdir,
   link_with : libpulsecore_simd_lib,
-<<<<<<< HEAD
-  dependencies : [libm_dep, libpulsecommon_dep, ltdl_dep, shm_dep, sndfile_dep, database_dep, dbus_dep, libatomic_ops_dep, orc_dep, samplerate_dep, soxr_dep, speex_dep, x11_dep, libintl_dep, platform_dep, platform_socket_dep,],
-=======
   dependencies : [libm_dep, libpulsecommon_dep, ltdl_dep, shm_dep, sndfile_dep, database_dep, dbus_dep, libatomic_ops_dep, orc_dep, samplerate_dep, soxr_dep, speex_dep, x11_dep, libsystemd_dep, libintl_dep, platform_dep, tcpwrap_dep, platform_socket_dep,],
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   implicit_include_directories : false)
 
 libpulsecore_dep = declare_dependency(link_with: libpulsecore)

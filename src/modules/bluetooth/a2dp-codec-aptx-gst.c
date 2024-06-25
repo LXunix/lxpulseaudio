@@ -490,11 +490,7 @@ static size_t reduce_encoder_bitrate(void *codec_info, size_t write_link_mtu) {
 static size_t encode_buffer(void *codec_info, uint32_t timestamp, const uint8_t *input_buffer, size_t input_size, uint8_t *output_buffer, size_t output_size, size_t *processed) {
     size_t written;
 
-<<<<<<< HEAD
-    written = gst_transcode_buffer(codec_info, input_buffer, input_size, output_buffer, output_size, processed);
-=======
     written = gst_transcode_buffer(codec_info, timestamp, input_buffer, input_size, output_buffer, output_size, processed);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     if (PA_UNLIKELY(*processed == 0 || *processed != input_size))
         pa_log_error("aptX encoding error");
 
@@ -530,11 +526,7 @@ static size_t encode_buffer_hd(void *codec_info, uint32_t timestamp, const uint8
 static size_t decode_buffer(void *codec_info, const uint8_t *input_buffer, size_t input_size, uint8_t *output_buffer, size_t output_size, size_t *processed) {
     size_t written;
 
-<<<<<<< HEAD
-    written = gst_transcode_buffer(codec_info, input_buffer, input_size, output_buffer, output_size, processed);
-=======
     written = gst_transcode_buffer(codec_info, -1, input_buffer, input_size, output_buffer, output_size, processed);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     /* Due to aptX latency, aptx_decode starts filling output buffer after 90 input samples.
      * If input buffer contains less than 90 samples, aptx_decode returns zero (=no output)
@@ -564,10 +556,6 @@ static size_t decode_buffer_hd(void *codec_info, const uint8_t *input_buffer, si
 
 const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_aptx = {
     .id = { A2DP_CODEC_VENDOR, APTX_VENDOR_ID, APTX_CODEC_ID },
-<<<<<<< HEAD
-    .support_backchannel = false,
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     .can_be_supported = can_be_supported,
     .can_accept_capabilities = can_accept_capabilities,
     .choose_remote_endpoint = choose_remote_endpoint,
@@ -591,10 +579,6 @@ const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_aptx = {
 
 const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_aptx_hd = {
     .id = { A2DP_CODEC_VENDOR, APTX_HD_VENDOR_ID, APTX_HD_CODEC_ID },
-<<<<<<< HEAD
-    .support_backchannel = false,
-=======
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     .can_be_supported = can_be_supported,
     .can_accept_capabilities = can_accept_capabilities_hd,
     .choose_remote_endpoint = choose_remote_endpoint_hd,

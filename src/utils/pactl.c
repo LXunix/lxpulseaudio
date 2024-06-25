@@ -210,7 +210,6 @@ static void stat_callback(pa_context *c, const pa_stat_info *i, void *userdata) 
         pa_bytes_snprint(s, sizeof(s), i->scache_size);
         printf(_("Sample cache size: %s\n"), s);
     }
-<<<<<<< HEAD
 
     complete_action();
 }
@@ -234,31 +233,6 @@ static void get_default_source(pa_context *c, const pa_server_info *i, void *use
         return;
     }
 
-=======
-
-    complete_action();
-}
-
-static void get_default_sink(pa_context *c, const pa_server_info *i, void *userdata) {
-    if (!i) {
-        pa_log(_("Failed to get server information: %s"), pa_strerror(pa_context_errno(c)));
-        quit(1);
-        return;
-    }
-
-    printf(_("%s\n"), i->default_sink_name);
-
-    complete_action();
-}
-
-static void get_default_source(pa_context *c, const pa_server_info *i, void *userdata) {
-    if (!i) {
-        pa_log(_("Failed to get server information: %s"), pa_strerror(pa_context_errno(c)));
-        quit(1);
-        return;
-    }
-
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     printf(_("%s\n"), i->default_source_name);
 
     complete_action();
@@ -1939,24 +1913,6 @@ static void get_source_mute_callback(pa_context *c, const pa_source_info *i, int
     complete_action();
 }
 
-static void get_source_mute_callback(pa_context *c, const pa_source_info *i, int is_last, void *userdata) {
-    if (is_last < 0) {
-        pa_log(_("Failed to get source information: %s"), pa_strerror(pa_context_errno(c)));
-        quit(1);
-        return;
-    }
-
-    if (is_last)
-        return;
-
-    pa_assert(i);
-
-    printf(("Mute: %s\n"),
-           pa_yes_no_localised(i->mute));
-
-    complete_action();
-}
-
 static void get_source_volume_callback(pa_context *c, const pa_source_info *i, int is_last, void *userdata) {
     if (is_last < 0) {
         pa_log(_("Failed to get source information: %s"), pa_strerror(pa_context_errno(c)));
@@ -2258,11 +2214,7 @@ static void context_subscribe_callback(pa_context *c, pa_subscription_event_type
         pa_json_encoder_end_object(encoder);
 
         char* json_str = pa_json_encoder_to_string_free(encoder);
-<<<<<<< HEAD
-        printf("%s", json_str);
-=======
         printf("%s\n", json_str);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         pa_xfree(json_str);
     } else {
         printf(_("Event '%s' on %s #%u\n"),
@@ -2808,10 +2760,7 @@ int main(int argc, char *argv[]) {
         format = TEXT;
     } else if (pa_streq(opt_format, "json")) {
         format = JSON;
-<<<<<<< HEAD
-=======
         setlocale(LC_NUMERIC, "C");
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     } else {
         pa_log(_("Invalid format value '%s'"), opt_format);
         goto quit;

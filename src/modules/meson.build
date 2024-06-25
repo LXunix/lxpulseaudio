@@ -70,17 +70,11 @@ endif
 
 if host_machine.system() != 'windows'
   all_modules += [
-<<<<<<< HEAD
-    [ 'module-rtp-recv', 'rtp/module-rtp-recv.c', [], [], [], librtp ],
-=======
     [ 'module-rtp-recv', 'rtp/module-rtp-recv.c', [], [], [libatomic_ops_dep], librtp ],
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     [ 'module-rtp-send', 'rtp/module-rtp-send.c' , [], [], [], librtp ],
   ]
 endif
 
-<<<<<<< HEAD
-=======
 if host_machine.system() == 'darwin'
   bonjour_dep = dependency('appleframeworks', modules : ['CoreFoundation'])
   coreaudio_dep = dependency('appleframeworks', modules : ['CoreAudio'])
@@ -91,7 +85,6 @@ if host_machine.system() == 'darwin'
   ]
 endif
 
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 # Modules enabled by headers
 
 if cc.has_header('linux/input.h')
@@ -174,23 +167,13 @@ if fftw_dep.found()
   ]
 endif
 
-if fftw_dep.found()
-  all_modules += [
-    [ 'module-virtual-surround-sink', 'module-virtual-surround-sink.c', [], [], [fftw_dep, libm_dep] ],
-  ]
-endif
-
 if dbus_dep.found() and fftw_dep.found()
   all_modules += [
     [ 'module-equalizer-sink', 'module-equalizer-sink.c', [], [], [dbus_dep, fftw_dep, libm_dep] ],
   ]
 endif
 
-<<<<<<< HEAD
-if get_option('gsettings').enabled() and gio_dep.found()
-=======
 if get_option('gsettings').enabled() and glib_dep.found() and gio_dep.found()
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   subdir('gsettings')
   all_modules += [
     [ 'module-gsettings',
@@ -351,11 +334,7 @@ foreach m : all_modules
     install_rpath : rpath_dirs,
     install_dir : modlibexecdir,
     dependencies : [thread_dep, libpulse_dep, libpulsecommon_dep, libpulsecore_dep, libintl_dep, platform_dep, platform_socket_dep] + extra_deps,
-<<<<<<< HEAD
-    link_args : [nodelete_link_args, '-Wl,--no-undefined' ],
-=======
     link_args : [nodelete_link_args, no_undefined_args],
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     link_with : extra_libs,
     name_prefix : '',
     name_suffix : module_suffix,

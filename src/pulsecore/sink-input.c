@@ -2061,8 +2061,6 @@ static void set_preferred_sink(pa_sink_input *i, const char *sink_name) {
     pa_hook_fire(&i->core->hooks[PA_CORE_HOOK_SINK_INPUT_PREFERRED_SINK_CHANGED], i);
 }
 
-<<<<<<< HEAD
-=======
 /* Restores the render memblockq from the history memblockq during a move.
  * Called from main context while the sink input is detached. */
 static void restore_render_memblockq(pa_sink_input *i) {
@@ -2146,7 +2144,6 @@ static void restore_render_memblockq(pa_sink_input *i) {
     i->thread_info.dont_rewrite = true;
 }
 
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 /* Called from main context */
 int pa_sink_input_finish_move(pa_sink_input *i, pa_sink *dest, bool save) {
     struct volume_factor_entry *v;

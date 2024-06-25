@@ -467,17 +467,10 @@ int pa_card_suspend(pa_card *c, bool suspend, pa_suspend_cause_t cause) {
 }
 
 static int card_message_handler(const char *object_path, const char *message, const pa_json_object *parameters, char **response, void *userdata) {
-<<<<<<< HEAD
-    pa_card *c;
-    char *message_handler_path;
-
-    pa_assert(c = (pa_card *) userdata);
-=======
     pa_card *c = userdata;
     char *message_handler_path;
 
     pa_assert(c);
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     pa_assert(message);
     pa_assert(response);
 

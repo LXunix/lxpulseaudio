@@ -37,11 +37,7 @@ libbluez5_util = shared_library('bluez5-util',
   c_args : [pa_c_args, server_c_args],
   link_args : [nodelete_link_args],
   include_directories : [configinc, topinc],
-<<<<<<< HEAD
-  dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep, bluez_dep, dbus_dep, sbc_dep, libintl_dep, bluez5_gst_dep, bluez5_gstapp_dep],
-=======
   dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep, bluez_dep, dbus_dep, sbc_dep, libintl_dep, bluez5_gst_dep, bluez5_gstapp_dep, libm_dep],
->>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   install : true,
   install_rpath : privlibdir,
   install_dir : modlibexecdir,
