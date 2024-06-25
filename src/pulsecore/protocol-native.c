@@ -1260,7 +1260,7 @@ static void native_connection_send_memblock(pa_native_connection *c) {
             if (schunk.length > r->buffer_attr.fragsize)
                 schunk.length = r->buffer_attr.fragsize;
 
-            pa_pstream_send_memblock(c->pstream, r->index, 0, PA_SEEK_RELATIVE, &schunk);
+            pa_pstream_send_memblock(c->pstream, r->index, 0, PA_SEEK_RELATIVE, &schunk, pa_memblockq_get_base(r->memblockq));
 
             pa_memblockq_drop(r->memblockq, schunk.length);
             pa_memblock_unref(schunk.memblock);
@@ -1422,6 +1422,8 @@ static int sink_input_process_msg(pa_msgobject *o, int code, void *userdata, int
             s->write_index = pa_memblockq_get_write_index(s->memblockq);
             s->render_memblockq_length = pa_memblockq_get_length(s->sink_input->thread_info.render_memblockq);
             s->current_sink_latency = pa_sink_get_latency_within_thread(s->sink_input->sink, false);
+            /* Add resampler latency */
+            s->current_sink_latency += pa_resampler_get_delay_usec(i->thread_info.resampler);
             s->underrun_for = s->sink_input->thread_info.underrun_for;
             s->playing_for = s->sink_input->thread_info.playing_for;
 
@@ -1700,6 +1702,8 @@ static int source_output_process_msg(pa_msgobject *_o, int code, void *userdata,
             /* Atomically get a snapshot of all timing parameters... */
             s->current_monitor_latency = o->source->monitor_of ? pa_sink_get_latency_within_thread(o->source->monitor_of, false) : 0;
             s->current_source_latency = pa_source_get_latency_within_thread(o->source, false);
+            /* Add resampler latency */
+            s->current_source_latency += pa_resampler_get_delay_usec(o->thread_info.resampler);
             s->on_the_fly_snapshot = pa_atomic_load(&s->on_the_fly);
             return 0;
     }
@@ -2531,7 +2535,7 @@ static void setup_srbchannel(pa_native_connection *c, pa_mem_type_t shm_type) {
     mc.memblock = srbt.memblock;
     mc.index = 0;
     mc.length = pa_memblock_get_length(srbt.memblock);
-    pa_pstream_send_memblock(c->pstream, 0, 0, 0, &mc);
+    pa_pstream_send_memblock(c->pstream, 0, 0, 0, &mc, 0);
 
     c->srbpending = srb;
     return;
@@ -4375,23 +4379,33 @@ static void command_set_default_sink_or_source(pa_pdispatch *pd, uint32_t comman
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !s || pa_namereg_is_valid_name(s), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !s || pa_namereg_is_valid_name(s) || pa_safe_streq(s,"@NONE@"), tag, PA_ERR_INVALID);
 
     if (command == PA_COMMAND_SET_DEFAULT_SOURCE) {
-        pa_source *source;
+        char *source_name = NULL;
 
-        source = pa_namereg_get(c->protocol->core, s, PA_NAMEREG_SOURCE);
-        CHECK_VALIDITY(c->pstream, source, tag, PA_ERR_NOENTITY);
+        if (!pa_safe_streq(s,"@NONE@")) {
+            pa_source *source;
 
-        pa_core_set_configured_default_source(c->protocol->core, source->name);
+            source = pa_namereg_get(c->protocol->core, s, PA_NAMEREG_SOURCE);
+            CHECK_VALIDITY(c->pstream, source, tag, PA_ERR_NOENTITY);
+            source_name = source->name;
+        }
+
+        pa_core_set_configured_default_source(c->protocol->core, source_name);
     } else {
-        pa_sink *sink;
+        char *sink_name = NULL;
         pa_assert(command == PA_COMMAND_SET_DEFAULT_SINK);
 
-        sink = pa_namereg_get(c->protocol->core, s, PA_NAMEREG_SINK);
-        CHECK_VALIDITY(c->pstream, sink, tag, PA_ERR_NOENTITY);
+        if (!pa_safe_streq(s,"@NONE@")) {
+            pa_sink *sink;
 
-        pa_core_set_configured_default_sink(c->protocol->core, sink->name);
+            sink = pa_namereg_get(c->protocol->core, s, PA_NAMEREG_SINK);
+            CHECK_VALIDITY(c->pstream, sink, tag, PA_ERR_NOENTITY);
+            sink_name = sink->name;
+        }
+
+        pa_core_set_configured_default_sink(c->protocol->core, sink_name);
     }
 
     pa_pstream_send_simple_ack(c->pstream, tag);
@@ -4715,7 +4729,7 @@ static void command_extension(pa_pdispatch *pd, uint32_t command, uint32_t tag, 
     CHECK_VALIDITY(c->pstream, m, tag, PA_ERR_NOEXTENSION);
     CHECK_VALIDITY(c->pstream, m->load_once || idx != PA_INVALID_INDEX, tag, PA_ERR_INVALID);
 
-    cb = (pa_native_protocol_ext_cb_t) (unsigned long) pa_hashmap_get(c->protocol->extensions, m);
+    cb = pa_hashmap_get(c->protocol->extensions, m);
     CHECK_VALIDITY(c->pstream, cb, tag, PA_ERR_NOEXTENSION);
 
     if (cb(c->protocol, m, c, tag, t) < 0)
@@ -5064,9 +5078,9 @@ static void pstream_memblock_callback(pa_pstream *p, uint32_t channel, int64_t o
         playback_stream *ps = PLAYBACK_STREAM(stream);
 
         size_t frame_size = pa_frame_size(&ps->sink_input->sample_spec);
-        if (chunk->index % frame_size != 0 || chunk->length % frame_size != 0) {
-            pa_log_warn("Client sent non-aligned memblock: index %d, length %d, frame size: %d",
-                        (int) chunk->index, (int) chunk->length, (int) frame_size);
+        if (chunk->length % frame_size != 0) {
+            pa_log_warn("Client sent non-aligned memblock: length %d, frame size: %d",
+                        (int) chunk->length, (int) frame_size);
             return;
         }
 
@@ -5414,7 +5428,7 @@ int pa_native_protocol_install_ext(pa_native_protocol *p, pa_module *m, pa_nativ
     pa_assert(cb);
     pa_assert(!pa_hashmap_get(p->extensions, m));
 
-    pa_assert_se(pa_hashmap_put(p->extensions, m, (void*) (unsigned long) cb) == 0);
+    pa_assert_se(pa_hashmap_put(p->extensions, m, cb) == 0);
     return 0;
 }
 

@@ -26,6 +26,12 @@ typedef struct pa_bt_codec {
     /* Human readable codec description */
     const char *description;
 
+<<<<<<< HEAD
+=======
+    /* True if codec is bi-directional and supports backchannel */
+    bool support_backchannel;
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     /* Initialize codec, returns codec info data and set sample_spec,
      * for_encoding is true when codec_info is used for encoding,
      * for_backchannel is true when codec_info is used for backchannel */
@@ -64,4 +70,10 @@ typedef struct pa_bt_codec {
      * returns size of filled ouput_buffer and set processed to size of
      * processed input_buffer */
     size_t (*decode_buffer)(void *codec_info, const uint8_t *input_buffer, size_t input_size, uint8_t *output_buffer, size_t output_size, size_t *processed);
+<<<<<<< HEAD
+=======
+
+    /* Get volume factor which needs to be applied to output samples */
+    double (*get_source_output_volume_factor_dB)(void *codec_info);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 } pa_bt_codec;

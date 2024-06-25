@@ -210,6 +210,7 @@ static void stat_callback(pa_context *c, const pa_stat_info *i, void *userdata) 
         pa_bytes_snprint(s, sizeof(s), i->scache_size);
         printf(_("Sample cache size: %s\n"), s);
     }
+<<<<<<< HEAD
 
     complete_action();
 }
@@ -233,6 +234,31 @@ static void get_default_source(pa_context *c, const pa_server_info *i, void *use
         return;
     }
 
+=======
+
+    complete_action();
+}
+
+static void get_default_sink(pa_context *c, const pa_server_info *i, void *userdata) {
+    if (!i) {
+        pa_log(_("Failed to get server information: %s"), pa_strerror(pa_context_errno(c)));
+        quit(1);
+        return;
+    }
+
+    printf(_("%s\n"), i->default_sink_name);
+
+    complete_action();
+}
+
+static void get_default_source(pa_context *c, const pa_server_info *i, void *userdata) {
+    if (!i) {
+        pa_log(_("Failed to get server information: %s"), pa_strerror(pa_context_errno(c)));
+        quit(1);
+        return;
+    }
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     printf(_("%s\n"), i->default_source_name);
 
     complete_action();
@@ -1870,6 +1896,7 @@ static void get_sink_volume_callback(pa_context *c, const pa_sink_info *i, int i
 
 static void set_sink_volume_callback(pa_context *c, const pa_sink_info *i, int is_last, void *userdata) {
     pa_cvolume cv;
+    pa_operation *o;
 
     if (is_last < 0) {
         pa_log(_("Failed to get sink information: %s"), pa_strerror(pa_context_errno(c)));
@@ -1885,7 +1912,31 @@ static void set_sink_volume_callback(pa_context *c, const pa_sink_info *i, int i
     cv = i->volume;
     fill_volume(&cv, i->channel_map.channels);
 
-    pa_operation_unref(pa_context_set_sink_volume_by_name(c, sink_name, &cv, simple_callback, NULL));
+    o = pa_context_set_sink_volume_by_name(c, sink_name, &cv, simple_callback, NULL);
+    if (o)
+        pa_operation_unref(o);
+    else {
+        pa_log(_("Failed to set sink volume: %s"), pa_strerror(pa_context_errno(c)));
+        complete_action();
+    }
+}
+
+static void get_source_mute_callback(pa_context *c, const pa_source_info *i, int is_last, void *userdata) {
+    if (is_last < 0) {
+        pa_log(_("Failed to get source information: %s"), pa_strerror(pa_context_errno(c)));
+        quit(1);
+        return;
+    }
+
+    if (is_last)
+        return;
+
+    pa_assert(i);
+
+    printf(("Mute: %s\n"),
+           pa_yes_no_localised(i->mute));
+
+    complete_action();
 }
 
 static void get_source_mute_callback(pa_context *c, const pa_source_info *i, int is_last, void *userdata) {
@@ -1929,6 +1980,7 @@ static void get_source_volume_callback(pa_context *c, const pa_source_info *i, i
 
 static void set_source_volume_callback(pa_context *c, const pa_source_info *i, int is_last, void *userdata) {
     pa_cvolume cv;
+    pa_operation *o;
 
     if (is_last < 0) {
         pa_log(_("Failed to get source information: %s"), pa_strerror(pa_context_errno(c)));
@@ -1944,7 +1996,13 @@ static void set_source_volume_callback(pa_context *c, const pa_source_info *i, i
     cv = i->volume;
     fill_volume(&cv, i->channel_map.channels);
 
-    pa_operation_unref(pa_context_set_source_volume_by_name(c, source_name, &cv, simple_callback, NULL));
+    o = pa_context_set_source_volume_by_name(c, source_name, &cv, simple_callback, NULL);
+    if (o)
+        pa_operation_unref(o);
+    else {
+        pa_log(_("Failed to set source volume: %s"), pa_strerror(pa_context_errno(c)));
+        complete_action();
+    }
 }
 
 static void get_sink_input_volume_callback(pa_context *c, const pa_sink_input_info *i, int is_last, void *userdata) {
@@ -2200,7 +2258,11 @@ static void context_subscribe_callback(pa_context *c, pa_subscription_event_type
         pa_json_encoder_end_object(encoder);
 
         char* json_str = pa_json_encoder_to_string_free(encoder);
+<<<<<<< HEAD
         printf("%s", json_str);
+=======
+        printf("%s\n", json_str);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         pa_xfree(json_str);
     } else {
         printf(_("Event '%s' on %s #%u\n"),
@@ -2527,16 +2589,16 @@ static int parse_volume(const char *vol_spec, pa_volume_t *vol, enum volume_flag
     vs = pa_xstrdup(vol_spec);
 
     *vol_flags = (pa_startswith(vs, "+") || pa_startswith(vs, "-")) ? VOL_RELATIVE : VOL_ABSOLUTE;
-    if (strchr(vs, '.'))
-        *vol_flags |= VOL_LINEAR;
     if (pa_endswith(vs, "%")) {
         *vol_flags |= VOL_PERCENT;
         vs[strlen(vs)-1] = 0;
     }
-    if (pa_endswith(vs, "db") || pa_endswith(vs, "dB")) {
+    else if (pa_endswith(vs, "db") || pa_endswith(vs, "dB")) {
         *vol_flags |= VOL_DECIBEL;
         vs[strlen(vs)-2] = 0;
     }
+    else if (strchr(vs, '.'))
+        *vol_flags |= VOL_LINEAR;
 
     atod_input = vs;
 
@@ -2552,19 +2614,30 @@ static int parse_volume(const char *vol_spec, pa_volume_t *vol, enum volume_flag
     pa_xfree(vs);
 
     if (*vol_flags & VOL_RELATIVE) {
-        if ((*vol_flags & 0x0F) == VOL_UINT)
-            v += (double) PA_VOLUME_NORM;
-        if ((*vol_flags & 0x0F) == VOL_PERCENT)
-            v += 100.0;
-        if ((*vol_flags & 0x0F) == VOL_LINEAR)
-            v += 1.0;
+	switch (*vol_flags & 0x0F) {
+	    case VOL_UINT:
+		v += (double) PA_VOLUME_NORM;
+		break;
+	    case VOL_PERCENT:
+		v += 100.0;
+		break;
+	    case VOL_LINEAR:
+		v += 1.0;
+		break;
+	}
     }
-    if ((*vol_flags & 0x0F) == VOL_PERCENT)
-        v = v * (double) PA_VOLUME_NORM / 100;
-    if ((*vol_flags & 0x0F) == VOL_LINEAR)
-        v = pa_sw_volume_from_linear(v);
-    if ((*vol_flags & 0x0F) == VOL_DECIBEL)
-        v = pa_sw_volume_from_dB(v);
+
+    switch (*vol_flags & 0x0F) {
+	case VOL_PERCENT:
+	    v = v * (double) PA_VOLUME_NORM / 100;
+	    break;
+	case VOL_LINEAR:
+	    v = pa_sw_volume_from_linear(v);
+	    break;
+	case VOL_DECIBEL:
+	    v = pa_sw_volume_from_dB(v);
+	    break;
+    }
 
     if (!PA_VOLUME_IS_VALID((pa_volume_t) v)) {
         pa_log(_("Volume outside permissible range.\n"));
@@ -2586,7 +2659,7 @@ static int parse_volumes(char *args[], unsigned n) {
 
     volume.channels = n;
     for (i = 0; i < volume.channels; i++) {
-        enum volume_flags flags;
+        enum volume_flags flags = 0;
 
         if (parse_volume(args[i], &volume.values[i], &flags) < 0)
             return -1;
@@ -2735,6 +2808,10 @@ int main(int argc, char *argv[]) {
         format = TEXT;
     } else if (pa_streq(opt_format, "json")) {
         format = JSON;
+<<<<<<< HEAD
+=======
+        setlocale(LC_NUMERIC, "C");
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     } else {
         pa_log(_("Invalid format value '%s'"), opt_format);
         goto quit;

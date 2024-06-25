@@ -2838,7 +2838,7 @@ static int path_verify(pa_alsa_path *p) {
         if (p->device_port_type == PA_DEVICE_PORT_TYPE_UNKNOWN)
             p->device_port_type = map->type;
         if (!p->description)
-            p->description = pa_xstrdup(map->description);
+            p->description = pa_xstrdup(_(map->description));
     }
 
     if (!p->description) {
@@ -2851,31 +2851,57 @@ static int path_verify(pa_alsa_path *p) {
     return 0;
 }
 
+<<<<<<< HEAD
 static char *get_path_config_path(const char *paths_dir, const char *fname) {
     char *path_config_path;
+=======
+static char *get_data_path(const char *data_dir, const char *data_type, const char *fname) {
+    char *result;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     char *dir;
     char *data_home;
     pa_dynarray *data_dirs;
 
+<<<<<<< HEAD
     if (paths_dir) {
         path_config_path = pa_maybe_prefix_path(fname, paths_dir);
         if (access(path_config_path, R_OK) == 0)
             return path_config_path;
         else
             pa_xfree(path_config_path);
+=======
+    if (data_dir) {
+        result = pa_maybe_prefix_path(fname, data_dir);
+        if (access(result, R_OK) == 0)
+            return result;
+        else
+            pa_xfree(result);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 
 #ifdef HAVE_RUNNING_FROM_BUILD_TREE
     if (pa_run_from_build_tree()) {
+<<<<<<< HEAD
         path_config_path = pa_maybe_prefix_path(fname, PA_SRCDIR "/modules/alsa/mixer/paths/");
         if (access(path_config_path, R_OK) == 0)
             return path_config_path;
         else
             pa_xfree(path_config_path);
+=======
+        dir = pa_sprintf_malloc(PA_SRCDIR "/modules/alsa/mixer/%s/", data_type);
+        result = pa_maybe_prefix_path(fname, dir);
+        pa_xfree(dir);
+
+        if (access(result, R_OK) == 0)
+            return result;
+        else
+            pa_xfree(result);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 #endif
 
     if (pa_get_data_home_dir(&data_home) == 0) {
+<<<<<<< HEAD
         dir = pa_sprintf_malloc("%s" PA_PATH_SEP "alsa-mixer" PA_PATH_SEP "paths", data_home);
         pa_xfree(data_home);
 
@@ -2886,6 +2912,18 @@ static char *get_path_config_path(const char *paths_dir, const char *fname) {
             return path_config_path;
         else
             pa_xfree(path_config_path);
+=======
+        dir = pa_sprintf_malloc("%s" PA_PATH_SEP "alsa-mixer" PA_PATH_SEP "%s", data_home, data_type);
+        pa_xfree(data_home);
+
+        result = pa_maybe_prefix_path(fname, dir);
+        pa_xfree(dir);
+
+        if (access(result, R_OK) == 0)
+            return result;
+        else
+            pa_xfree(result);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 
     if (pa_get_data_dirs(&data_dirs) == 0) {
@@ -2893,6 +2931,7 @@ static char *get_path_config_path(const char *paths_dir, const char *fname) {
         const char *n;
 
         PA_DYNARRAY_FOREACH(n, data_dirs, idx) {
+<<<<<<< HEAD
             dir = pa_sprintf_malloc("%s" PA_PATH_SEP "alsa-mixer" PA_PATH_SEP "paths", n);
             path_config_path = pa_maybe_prefix_path(fname, dir);
             pa_xfree(dir);
@@ -2903,14 +2942,34 @@ static char *get_path_config_path(const char *paths_dir, const char *fname) {
             }
             else {
                 pa_xfree(path_config_path);
+=======
+            dir = pa_sprintf_malloc("%s" PA_PATH_SEP "alsa-mixer" PA_PATH_SEP "%s", n, data_type);
+            result = pa_maybe_prefix_path(fname, dir);
+            pa_xfree(dir);
+
+            if (access(result, R_OK) == 0) {
+                pa_dynarray_free(data_dirs);
+                return result;
+            }
+            else {
+                pa_xfree(result);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             }
         }
 
         pa_dynarray_free(data_dirs);
     }
 
+<<<<<<< HEAD
     path_config_path = pa_maybe_prefix_path(fname, PA_ALSA_PATHS_DIR);
     return path_config_path;
+=======
+    dir = pa_sprintf_malloc(PA_ALSA_DATA_DIR PA_PATH_SEP "%s", data_type);
+    result = pa_maybe_prefix_path(fname, dir);
+    pa_xfree(dir);
+
+    return result;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 }
 
 pa_alsa_path* pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa_direction_t direction) {
@@ -2977,7 +3036,11 @@ pa_alsa_path* pa_alsa_path_new(const char *paths_dir, const char *fname, pa_alsa
     items[2].data = &p->description;
     items[3].data = &mute_during_activation;
 
+<<<<<<< HEAD
     fn = get_path_config_path(paths_dir, fname);
+=======
+    fn = get_data_path(paths_dir, "paths", fname);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     pa_log_info("Loading path config: %s", fn);
 
@@ -4971,11 +5034,9 @@ pa_alsa_profile_set* pa_alsa_profile_set_new(const char *fname, const pa_channel
     if (!fname)
         fname = "default.conf";
 
-    fn = pa_maybe_prefix_path(fname,
-#ifdef HAVE_RUNNING_FROM_BUILD_TREE
-                              pa_run_from_build_tree() ? PA_SRCDIR "/modules/alsa/mixer/profile-sets/" :
-#endif
-                              PA_ALSA_PROFILE_SETS_DIR);
+    fn = get_data_path(NULL, "profile-sets", fname);
+
+    pa_log_info("Loading profile set: %s", fn);
 
     r = pa_config_parse(fn, NULL, items, NULL, false, ps);
     pa_xfree(fn);
@@ -5074,7 +5135,7 @@ static snd_pcm_t* mapping_open_pcm(pa_alsa_mapping *m,
     handle = pa_alsa_open_by_template(
                               m->device_strings, dev_id, NULL, &try_ss,
                               &try_map, mode, &try_period_size,
-                              &try_buffer_size, 0, NULL, NULL, exact_channels);
+                              &try_buffer_size, 0, NULL, NULL, NULL, NULL, exact_channels);
     if (handle && !exact_channels && m->channel_map.channels != try_map.channels) {
         char buf[PA_CHANNEL_MAP_SNPRINT_MAX];
         pa_log_debug("Channel map for mapping '%s' permanently changed to '%s'", m->name,

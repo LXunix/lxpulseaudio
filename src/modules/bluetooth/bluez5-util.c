@@ -254,8 +254,24 @@ static const char *transport_state_to_string(pa_bluetooth_transport_state_t stat
     return "invalid";
 }
 
+<<<<<<< HEAD
 static bool device_supports_profile(pa_bluetooth_device *device, pa_bluetooth_profile_t profile) {
     bool show_hfp, show_hsp;
+=======
+bool pa_bluetooth_device_supports_profile(const pa_bluetooth_device *device, pa_bluetooth_profile_t profile) {
+    bool show_hfp, show_hsp, r;
+
+    pa_assert(device);
+
+    /* While discovery is being released adapters will be removed from devices,
+     * and there are no profiles to support without adapter.
+     */
+    if (!device->adapter) {
+        pa_log_debug("Device %s (%s) has no adapter to support profile %s",
+                device->alias, device->address, pa_bluetooth_profile_to_string(profile));
+        return false;
+    }
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     if (device->enable_hfp_hf) {
         show_hfp = pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HFP_HF);
@@ -267,8 +283,11 @@ static bool device_supports_profile(pa_bluetooth_device *device, pa_bluetooth_pr
 
     switch (profile) {
         case PA_BLUETOOTH_PROFILE_A2DP_SINK:
-            return !!pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_A2DP_SINK);
+            r = !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_A2DP_SINK) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_A2DP_SOURCE));
+            break;
         case PA_BLUETOOTH_PROFILE_A2DP_SOURCE:
+<<<<<<< HEAD
             return !!pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_A2DP_SOURCE);
         case PA_BLUETOOTH_PROFILE_HSP_HS:
             return show_hsp
@@ -280,11 +299,43 @@ static bool device_supports_profile(pa_bluetooth_device *device, pa_bluetooth_pr
             return show_hfp && !!pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HFP_HF);
         case PA_BLUETOOTH_PROFILE_HFP_AG:
             return !!pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HFP_AG);
+=======
+            r = !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_A2DP_SOURCE) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_A2DP_SINK));
+            break;
+        case PA_BLUETOOTH_PROFILE_HSP_HS:
+            r = show_hsp
+                && ( !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HSP_HS) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_HSP_AG)) ||
+                   !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HSP_HS_ALT) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_HSP_AG)) );
+            break;
+        case PA_BLUETOOTH_PROFILE_HSP_AG:
+            r = !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HSP_AG) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_HSP_HS)) ||
+                   !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HSP_AG) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_HSP_HS_ALT));
+            break;
+        case PA_BLUETOOTH_PROFILE_HFP_HF:
+            r = show_hfp
+                && !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HFP_HF) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_HFP_AG));
+            break;
+        case PA_BLUETOOTH_PROFILE_HFP_AG:
+            r = !!(pa_hashmap_get(device->uuids, PA_BLUETOOTH_UUID_HFP_AG) &&
+                      pa_hashmap_get(device->adapter->uuids, PA_BLUETOOTH_UUID_HFP_HF));
+            break;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         case PA_BLUETOOTH_PROFILE_OFF:
+        default:
             pa_assert_not_reached();
+            break;
     }
 
-    pa_assert_not_reached();
+    pa_log_debug("Checking if device %s (%s) supports profile %s: %s",
+                 device->alias, device->address, pa_bluetooth_profile_to_string(profile), r ? "true" : "false");
+
+    return r;
 }
 
 static bool device_is_profile_connected(pa_bluetooth_device *device, pa_bluetooth_profile_t profile) {
@@ -299,7 +350,7 @@ static unsigned device_count_disconnected_profiles(pa_bluetooth_device *device) 
     unsigned count = 0;
 
     for (profile = 0; profile < PA_BLUETOOTH_PROFILE_COUNT; profile++) {
-        if (!device_supports_profile(device, profile))
+        if (!pa_bluetooth_device_supports_profile(device, profile))
             continue;
 
         if (!device_is_profile_connected(device, profile))
@@ -332,7 +383,7 @@ static void wait_for_profiles_cb(pa_mainloop_api *api, pa_time_event* event, con
         if (device_is_profile_connected(device, profile))
             continue;
 
-        if (!device_supports_profile(device, profile))
+        if (!pa_bluetooth_device_supports_profile(device, profile))
             continue;
 
         if (first)
@@ -756,6 +807,10 @@ static void get_volume_reply(DBusPendingCall *pending, void *userdata) {
     pa_bluetooth_transport *t;
     uint16_t gain;
     pa_volume_t volume;
+<<<<<<< HEAD
+=======
+    const char *error_name, *error_message;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     pa_assert(pending);
     pa_assert_se(p = userdata);
@@ -764,10 +819,25 @@ static void get_volume_reply(DBusPendingCall *pending, void *userdata) {
     pa_assert_se(r = dbus_pending_call_steal_reply(pending));
 
     if (dbus_message_get_type(r) == DBUS_MESSAGE_TYPE_ERROR) {
+<<<<<<< HEAD
         pa_log_error(DBUS_INTERFACE_PROPERTIES ".Get %s Volume failed: %s: %s",
                      dbus_message_get_path(p->message),
                      dbus_message_get_error_name(r),
                      pa_dbus_get_error_message(r));
+=======
+        error_name = dbus_message_get_error_name(r);
+        error_message = pa_dbus_get_error_message(r);
+
+        if (pa_streq(error_name, DBUS_ERROR_INVALID_ARGS) && pa_streq(error_message, "No such property 'Volume'")) {
+            pa_log_warn(DBUS_INTERFACE_PROPERTIES ".Get %s Volume property not (yet) available",
+                        dbus_message_get_path(p->message));
+        } else {
+            pa_log_error(DBUS_INTERFACE_PROPERTIES ".Get %s Volume failed: %s: %s",
+                         dbus_message_get_path(p->message),
+                         error_name,
+                         error_message);
+        }
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         goto finish;
     }
     dbus_message_iter_init(r, &iter);
@@ -1161,6 +1231,16 @@ bool pa_bluetooth_discovery_get_enable_msbc(pa_bluetooth_discovery *y)
     return y->enable_msbc;
 }
 
+<<<<<<< HEAD
+=======
+pa_hashmap* pa_bluetooth_discovery_get_transports(pa_bluetooth_discovery *y) {
+    pa_assert(y);
+    pa_assert(PA_REFCNT_VALUE(y) > 0);
+
+    return y->transports;
+}
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 pa_bluetooth_device* pa_bluetooth_discovery_get_device_by_address(pa_bluetooth_discovery *y, const char *remote, const char *local) {
     pa_bluetooth_device *d;
     void *state = NULL;
@@ -1470,6 +1550,7 @@ static void adapter_free(pa_bluetooth_adapter *a) {
         if (d->adapter == a)
             device_set_adapter(d, NULL);
 
+    pa_hashmap_free(a->uuids);
     pa_xfree(a->path);
     pa_xfree(a->address);
     pa_xfree(a);
@@ -2081,7 +2162,11 @@ void pa_bluetooth_discovery_set_ofono_running(pa_bluetooth_discovery *y, bool is
         pa_bluetooth_device *d;
 
         PA_HASHMAP_FOREACH(d, y->devices, state) {
+<<<<<<< HEAD
             if (device_supports_profile(d, PA_BLUETOOTH_PROFILE_HFP_AG) || device_supports_profile(d, PA_BLUETOOTH_PROFILE_HFP_HF)) {
+=======
+            if (pa_bluetooth_device_supports_profile(d, PA_BLUETOOTH_PROFILE_HFP_AG) || pa_bluetooth_device_supports_profile(d, PA_BLUETOOTH_PROFILE_HFP_HF)) {
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
                 DBusMessage *m;
 
                 pa_assert_se(m = dbus_message_new_method_call(BLUEZ_SERVICE, d->path, BLUEZ_DEVICE_INTERFACE, "Disconnect"));

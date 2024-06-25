@@ -1,6 +1,12 @@
 option('daemon',
        type : 'boolean', value : true,
        description : 'Enable building and installation of pulseaudio daemon and supporting configuration files')
+<<<<<<< HEAD
+=======
+option('client',
+       type : 'boolean', value : true,
+       description : 'Build and install pulseaudio client libraries and utilities')
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 option('doxygen',
        type : 'boolean', value : true,
        description : 'Enable building and installation of documentation generated with doxygen')
@@ -96,6 +102,9 @@ option('bluez5-native-headset',
 option('bluez5-ofono-headset',
        type : 'boolean',
        description : 'Optional oFono headset backend support (BlueZ 5)')
+option('consolekit',
+       type : 'feature', value : 'auto',
+       description : 'Optional ConsoleKit support')
 option('dbus',
        type : 'feature', value : 'auto',
        description : 'Optional D-Bus support')
@@ -162,6 +171,9 @@ option('valgrind',
 option('x11',
        type : 'feature', value : 'auto',
        description : 'Optional X11 support')
+option('enable-smoother-2',
+       type : 'boolean', value : true,
+       description : 'Use alternative time smoother implementation')
 
 # Echo cancellation
 

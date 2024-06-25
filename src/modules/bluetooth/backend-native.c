@@ -21,6 +21,8 @@
 #include <config.h>
 #endif
 
+#include <pulse/util.h>
+
 #include <pulsecore/shared.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/core-util.h>
@@ -36,15 +38,34 @@
 
 #include "bluez5-util.h"
 #include "bt-codec-msbc.h"
+<<<<<<< HEAD
+=======
+#include "upower.h"
+
+#define MANDATORY_CALL_INDICATORS \
+        "(\"call\",(0-1))," \
+        "(\"callsetup\",(0-3))," \
+        "(\"callheld\",(0-2))" \
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 struct pa_bluetooth_backend {
   pa_core *core;
   pa_dbus_connection *connection;
   pa_bluetooth_discovery *discovery;
   pa_hook_slot *adapter_uuids_changed_slot;
+<<<<<<< HEAD
   bool enable_shared_profiles;
   bool enable_hsp_hs;
   bool enable_hfp_hf;
+=======
+  pa_hook_slot *host_battery_level_changed_slot;
+  pa_upower_backend *upower;
+  bool enable_shared_profiles;
+  bool enable_hsp_hs;
+  bool enable_hfp_hf;
+  bool cmer_indicator_reporting_enabled;
+  uint32_t cind_enabled_indicators;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
   PA_LLIST_HEAD(pa_dbus_pending, pending);
 };
@@ -55,6 +76,7 @@ struct transport_data {
     int sco_fd;
     pa_io_event *sco_io;
     pa_mainloop_api *mainloop;
+    pa_bluetooth_backend *backend;
 };
 
 struct hfp_config {
@@ -65,6 +87,37 @@ struct hfp_config {
     bool supports_indicators;
     int selected_codec;
 };
+<<<<<<< HEAD
+
+/*
+ * the separate hansfree headset (HF) and Audio Gateway (AG) features
+ */
+enum hfp_hf_features {
+    HFP_HF_EC_NR = 0,
+    HFP_HF_CALL_WAITING = 1,
+    HFP_HF_CLI = 2,
+    HFP_HF_VR = 3,
+    HFP_HF_RVOL = 4,
+    HFP_HF_ESTATUS = 5,
+    HFP_HF_ECALL = 6,
+    HFP_HF_CODECS = 7,
+    HFP_HF_INDICATORS = 8,
+};
+
+enum hfp_ag_features {
+    HFP_AG_THREE_WAY = 0,
+    HFP_AG_EC_NR = 1,
+    HFP_AG_VR = 2,
+    HFP_AG_RING = 3,
+    HFP_AG_NUM_TAG = 4,
+    HFP_AG_REJECT = 5,
+    HFP_AG_ESTATUS = 6,
+    HFP_AG_ECALL = 7,
+    HFP_AG_EERR = 8,
+    HFP_AG_CODECS = 9,
+    HFP_AG_INDICATORS = 10,
+};
+=======
 
 /*
  * the separate hansfree headset (HF) and Audio Gateway (AG) features
@@ -95,6 +148,21 @@ enum hfp_ag_features {
     HFP_AG_INDICATORS = 10,
 };
 
+/*
+ * Always keep this struct in sync with indicator discovery of AT+CIND=?
+ * These indicators are used in bitflags and intentionally start at 1
+ * since AT+CIND indicators start at index 1.
+ */
+typedef enum pa_bluetooth_ag_to_hf_indicators {
+    CIND_CALL_INDICATOR = 1,
+    CIND_CALL_SETUP_INDICATOR = 2,
+    CIND_CALL_HELD_INDICATOR = 3,
+    CIND_SERVICE_INDICATOR = 4,
+    CIND_BATT_CHG_INDICATOR = 5,
+    CIND_INDICATOR_MAX = 6
+} pa_bluetooth_ag_to_hf_indicators_t;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
+
 /* gateway features we support, which is as little as we can get away with */
 static uint32_t hfp_features =
     /* HFP 1.6 requires this */
@@ -107,6 +175,9 @@ static uint32_t hfp_features =
 /* RFCOMM channel for HSP headset role
  * The choice seems to be a bit arbitrary -- it looks like at least channels 2, 4 and 5 also work*/
 #define HSP_HS_DEFAULT_CHANNEL  3
+
+/* Total number of trying to reconnect */
+#define SCO_RECONNECTION_COUNT 3
 
 #define PROFILE_INTROSPECT_XML                                          \
     DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE                           \
@@ -320,17 +391,43 @@ fail:
 static int sco_acquire_cb(pa_bluetooth_transport *t, bool optional, size_t *imtu, size_t *omtu) {
     int sock;
     socklen_t len;
+    int i;
 
     if (optional)
         sock = sco_do_accept(t);
-    else
-        sock = sco_do_connect(t);
+    else {
+        for (i = 0; i < SCO_RECONNECTION_COUNT; i++) {
+            sock = sco_do_connect(t);
+
+            if (sock < 0) {
+                pa_log_debug("err is %s and reconnection count is %d", pa_cstrerror(errno), i);
+                pa_msleep(300);
+                continue;
+            } else
+                break;
+        }
+    }
 
     if (sock < 0)
         goto fail;
 
+<<<<<<< HEAD
     if (imtu) *imtu = 60;
     if (omtu) *omtu = 60;
+=======
+    /* The correct block size should take into account the SCO MTU from
+     * the Bluetooth adapter and (for adapters in the USB bus) the MxPS
+     * value from the Isoc USB endpoint in use by btusb and should be
+     * made available to userspace by the Bluetooth kernel subsystem.
+     *
+     * Set initial MTU to max known payload length of HCI packet
+     * in USB Alternate Setting 5 (144 bytes)
+     * See also pa_bluetooth_transport::last_read_size handling
+     * and comment about MTU size in bt_prepare_encoder_buffer()
+     */
+    if (imtu) *imtu = 144;
+    if (omtu) *omtu = 144;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     if (t->device->autodetect_mtu) {
         struct sco_options sco_opt;
@@ -568,11 +665,21 @@ static pa_volume_t set_source_volume(pa_bluetooth_transport *t, pa_volume_t volu
 static bool hfp_rfcomm_handle(int fd, pa_bluetooth_transport *t, const char *buf)
 {
     struct hfp_config *c = t->config;
+<<<<<<< HEAD
     int indicator, val;
     char str[5];
     const char *r;
     size_t len;
     const char *state;
+=======
+    struct transport_data *trd = t->userdata;
+    pa_bluetooth_backend *b = trd->backend;
+    int indicator, mode, val;
+    char *str;
+    const char *r;
+    size_t len;
+    const char *state = NULL;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     /* first-time initialize selected codec to CVSD */
     if (c->selected_codec == 0)
@@ -587,6 +694,7 @@ static bool hfp_rfcomm_handle(int fd, pa_bluetooth_transport *t, const char *buf
         c->state = 1;
 
         return true;
+<<<<<<< HEAD
     } else if (sscanf(buf, "AT+BAC=%3s", str) == 1) {
         c->support_msbc = false;
 
@@ -594,11 +702,52 @@ static bool hfp_rfcomm_handle(int fd, pa_bluetooth_transport *t, const char *buf
 
         /* check if codec id 2 (mSBC) is in the list of supported codecs */
         while ((r = pa_split_in_place(str, ",", &len, &state))) {
+=======
+    } else if (pa_startswith(buf, "AT+BIA=")) {
+        /* Indicators start with index 1 and follow the order of the AT+CIND=? response */
+
+        str = pa_xstrdup(buf + 7);
+        for (indicator = 1; (r = pa_split_in_place(str, ",\r\n", &len, &state)); indicator++) {
+            /* Ignore updates to mandatory indicators which are always ON */
+            if (indicator == CIND_CALL_INDICATOR
+                || indicator == CIND_CALL_SETUP_INDICATOR
+                || indicator == CIND_CALL_HELD_INDICATOR)
+                continue;
+
+            /* Indicators may have no value and should be skipped */
+            if (len == 0)
+                continue;
+
+            if (len == 1 && r[0] == '1')
+                b->cind_enabled_indicators |= (1 << indicator);
+            else if (len == 1 && r[0] == '0')
+                b->cind_enabled_indicators &= ~(1 << indicator);
+            else {
+                pa_log_error("Unable to parse indicator of AT+BIA command: %s", buf);
+                rfcomm_write_response(fd, "ERROR");
+                pa_xfree(str);
+                return false;
+            }
+        }
+        pa_xfree(str);
+
+        return true;
+    } else if (pa_startswith(buf, "AT+BAC=")) {
+        c->support_msbc = false;
+
+        /* check if codec id 2 (mSBC) is in the list of supported codecs */
+        str = pa_xstrdup(buf + 7);
+        while ((r = pa_split_in_place(str, ",\r\n", &len, &state))) {
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             if (len == 1 && r[0] == '2') {
                 c->support_msbc = true;
                 break;
             }
         }
+<<<<<<< HEAD
+=======
+        pa_xfree(str);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
         c->support_codec_negotiation = true;
 
@@ -612,6 +761,7 @@ static bool hfp_rfcomm_handle(int fd, pa_bluetooth_transport *t, const char *buf
 
         return true;
     } else if (c->state == 1 && pa_startswith(buf, "AT+CIND=?")) {
+<<<<<<< HEAD
         /* we declare minimal no indicators */
         rfcomm_write_response(fd, "+CIND: "
                      /* many indicators can be supported, only call and
@@ -620,16 +770,58 @@ static bool hfp_rfcomm_handle(int fd, pa_bluetooth_transport *t, const char *buf
                      "(\"call\",(0-1)),"
                      "(\"callsetup\",(0-3)),"
                      "(\"callheld\",(0-2))");
+=======
+        /* UPower backend available, declare support for more indicators */
+        if (b->upower) {
+            rfcomm_write_response(fd, "+CIND: "
+                    MANDATORY_CALL_INDICATORS ","
+                    "(\"service\",(0-1)),"
+                    "(\"battchg\",(0-5))");
+
+        /* Minimal indicators supported without any additional backend */
+        } else {
+            rfcomm_write_response(fd, "+CIND: "
+                    MANDATORY_CALL_INDICATORS ","
+                    "(\"service\",(0-1))");
+        }
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         c->state = 2;
 
         return true;
     } else if (c->state == 2 && pa_startswith(buf, "AT+CIND?")) {
+<<<<<<< HEAD
         rfcomm_write_response(fd, "+CIND: 0,0,0,0");
+=======
+        if (b->upower)
+            rfcomm_write_response(fd, "+CIND: 0,0,0,0,%u", pa_upower_get_battery_level(b->upower));
+        else
+            rfcomm_write_response(fd, "+CIND: 0,0,0,0");
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         c->state = 3;
 
         return true;
     } else if ((c->state == 2 || c->state == 3) && pa_startswith(buf, "AT+CMER=")) {
+<<<<<<< HEAD
         rfcomm_write_response(fd, "OK");
+=======
+        if (sscanf(buf, "AT+CMER=%d,%*d,%*d,%d", &mode, &val) == 2) {
+            /* Bluetooth HFP spec only defines mode == 3 */
+            if (mode != 3)
+                pa_log_warn("Unexpected mode for AT+CMER: %d", mode);
+
+            /* Configure CMER event reporting */
+            b->cmer_indicator_reporting_enabled = !!val;
+
+            pa_log_debug("Event indications enabled? %s", pa_yes_no(val));
+
+            rfcomm_write_response(fd, "OK");
+        }
+        else {
+            pa_log_error("Unable to parse AT+CMER command: %s", buf);
+            rfcomm_write_response(fd, "ERROR");
+            return false;
+        }
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
         if (c->support_codec_negotiation) {
             if (c->support_msbc && pa_bluetooth_discovery_get_enable_msbc(t->device->discovery)) {
@@ -715,10 +907,67 @@ static bool hfp_rfcomm_handle(int fd, pa_bluetooth_transport *t, const char *buf
      * update, but we process only the ones we care about
      */
     return true;
+<<<<<<< HEAD
+=======
+}
+
+static int get_rfcomm_fd(pa_bluetooth_discovery *discovery) {
+    struct pa_bluetooth_transport *t;
+    struct transport_data *trd = NULL;
+    void *state = NULL;
+
+    /* Find RFCOMM transport by checking if a HSP or HFP profile transport is available */
+    while ((t = pa_hashmap_iterate(pa_bluetooth_discovery_get_transports(discovery), &state, NULL))) {
+        /* Skip non-connected transports */
+        if (!t || t->state == PA_BLUETOOTH_TRANSPORT_STATE_DISCONNECTED) {
+            continue;
+        }
+
+        /* Break when an RFCOMM capable transport profile is available */
+        if (t->profile == PA_BLUETOOTH_PROFILE_HFP_HF) {
+            trd = t->userdata;
+            break;
+        }
+    }
+
+    /* Skip if RFCOMM channel is not available yet */
+    if (!trd) {
+        pa_log_info("RFCOMM not available yet, skipping notification");
+        return -1;
+    }
+
+    return trd->rfcomm_fd;
+}
+
+static pa_hook_result_t host_battery_level_changed_cb(pa_bluetooth_discovery *y, const pa_upower_backend *u, pa_bluetooth_backend *b) {
+    int rfcomm_fd;
+
+    pa_assert(y);
+    pa_assert(u);
+    pa_assert(b);
+
+    /* Get RFCOMM channel if available */
+    rfcomm_fd = get_rfcomm_fd(y);
+    if (rfcomm_fd < 0)
+        return PA_HOOK_OK;
+
+    /* Notify HF about AG battery level change over RFCOMM */
+    if (b->cmer_indicator_reporting_enabled && (b->cind_enabled_indicators & (1 << CIND_BATT_CHG_INDICATOR))) {
+        rfcomm_write_response(rfcomm_fd, "+CIEV: %d,%d", CIND_BATT_CHG_INDICATOR, u->battery_level);
+        pa_log_debug("HG notified of AG's battery level change");
+    /* Skip notification if indicator is disabled or event reporting is completely disabled */
+    } else
+        pa_log_debug("Battery level change indicator disabled, skipping notification");
+
+    return PA_HOOK_OK;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 }
 
 static void rfcomm_io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_io_event_flags_t events, void *userdata) {
     pa_bluetooth_transport *t = userdata;
+    struct transport_data *trd = t->userdata;
+    pa_bluetooth_backend *b = trd->backend;
+    int i;
 
     pa_assert(io);
     pa_assert(t);
@@ -734,18 +983,23 @@ static void rfcomm_io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_i
     }
 
     if (events & PA_IO_EVENT_INPUT) {
-        char buf[512];
+        char rbuf[512];
         ssize_t len;
         int gain, dummy;
         bool do_reply = false;
         int vendor, product, version, features;
+<<<<<<< HEAD
+=======
+        char *buf = rbuf;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
         int num;
 
-        len = pa_read(fd, buf, 511, NULL);
+        len = pa_read(fd, rbuf, 511, NULL);
         if (len < 0) {
             pa_log_error("RFCOMM read error: %s", pa_cstrerror(errno));
             goto fail;
         }
+<<<<<<< HEAD
         buf[len] = 0;
         pa_log_debug("RFCOMM << %s", buf);
 
@@ -834,11 +1088,119 @@ static void rfcomm_io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_i
 
         if (do_reply)
             rfcomm_write_response(fd, "OK");
+=======
+        rbuf[len] = 0;
+        pa_log_debug("RFCOMM << %s", rbuf);
+
+        while (buf[0]) {
+            /* There are only four HSP AT commands:
+             * AT+VGS=value: value between 0 and 15, sent by the HS to AG to set the speaker gain.
+             * +VGS=value is sent by AG to HS as a response to an AT+VGS command or when the gain
+             * is changed on the AG side.
+             * AT+VGM=value: value between 0 and 15, sent by the HS to AG to set the microphone gain.
+             * +VGM=value is sent by AG to HS as a response to an AT+VGM command or when the gain
+             * is changed on the AG side.
+             * AT+CKPD=200: Sent by HS when headset button is pressed.
+             * RING: Sent by AG to HS to notify of an incoming call. It can safely be ignored because
+             * it does not expect a reply. */
+            if (sscanf(buf, "AT+VGS=%d", &gain) == 1 || sscanf(buf, "\r\n+VGM%*[=:]%d\r\n", &gain) == 1) {
+                if (!t->set_sink_volume) {
+                    pa_log_debug("HS/HF peer supports speaker gain control");
+                    t->set_sink_volume = set_sink_volume;
+                }
+
+                t->sink_volume = hsp_gain_to_volume(gain);
+                pa_hook_fire(pa_bluetooth_discovery_hook(t->device->discovery, PA_BLUETOOTH_HOOK_TRANSPORT_SINK_VOLUME_CHANGED), t);
+                do_reply = true;
+
+            } else if (sscanf(buf, "AT+VGM=%d", &gain) == 1 || sscanf(buf, "\r\n+VGS%*[=:]%d\r\n", &gain) == 1) {
+                if (!t->set_source_volume) {
+                    pa_log_debug("HS/HF peer supports microphone gain control");
+                    t->set_source_volume = set_source_volume;
+                }
+
+                t->source_volume = hsp_gain_to_volume(gain);
+                pa_hook_fire(pa_bluetooth_discovery_hook(t->device->discovery, PA_BLUETOOTH_HOOK_TRANSPORT_SOURCE_VOLUME_CHANGED), t);
+                do_reply = true;
+            } else if (sscanf(buf, "AT+CKPD=%d", &dummy) == 1) {
+                do_reply = true;
+            } else if (sscanf(buf, "AT+XAPL=%04x-%04x-%04x,%d", &vendor, &product, &version, &features) == 4) {
+                if (features & 0x2)
+                    /* claim, that we support battery status reports */
+                    rfcomm_write_response(fd, "+XAPL=iPhone,6");
+                do_reply = true;
+            } else if (sscanf(buf, "AT+IPHONEACCEV=%d", &num) == 1) {
+                char *substr = buf, *keystr;
+                int key, val, i;
+
+                do_reply = true;
+
+                for (i = 0; i < num; ++i) {
+                    keystr = strchr(substr, ',');
+                    if (!keystr) {
+                        pa_log_warn("%s misses key for argument #%d", buf, i);
+                        do_reply = false;
+                        break;
+                    }
+                    keystr++;
+                    substr = strchr(keystr, ',');
+                    if (!substr) {
+                        pa_log_warn("%s misses value for argument #%d", buf, i);
+                        do_reply = false;
+                        break;
+                    }
+                    substr++;
+
+                    key = atoi(keystr);
+                    val = atoi(substr);
+
+                    switch (key) {
+                        case 1:
+                            pa_log_debug("Battery Level: %d0%%", val + 1);
+                            pa_bluetooth_device_report_battery_level(t->device, (val + 1) * 10, "Apple accessory indication");
+                            break;
+                        case 2:
+                            pa_log_debug("Dock Status: %s", val ? "docked" : "undocked");
+                            break;
+                        default:
+                            pa_log_debug("Unexpected IPHONEACCEV key %#x", key);
+                            break;
+                    }
+                }
+                if (!do_reply)
+                    rfcomm_write_response(fd, "ERROR");
+            } else if (t->config) { /* t->config is only non-null for hfp profile */
+                do_reply = hfp_rfcomm_handle(fd, t, buf);
+            } else {
+                rfcomm_write_response(fd, "ERROR");
+                do_reply = false;
+            }
+
+            if (do_reply)
+                rfcomm_write_response(fd, "OK");
+
+            if (buf[0] == '\r') /* in case it is the command with format \r\nCOMMAND\r\n, skip the starting \r */
+                buf = buf + 1;
+
+            buf = strstr(buf, "\r"); /* try to find the next AT command in the buf */
+            if (!buf)
+                break;
+            else if (buf[1] == '\n')
+                buf = buf + 2; /* skip \r\n */
+            else
+                buf = buf + 1; /* skip \r */
+        }
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     }
 
     return;
 
 fail:
+    /* Service Connection lost, reset indicators and event reporting to default values */
+    b->cmer_indicator_reporting_enabled = false;
+    for (i = 1; i < CIND_INDICATOR_MAX; i++)
+        b->cind_enabled_indicators |= (1 << i);
+
     pa_bluetooth_transport_unlink(t);
     pa_bluetooth_transport_free(t);
 }
@@ -862,6 +1224,7 @@ static void transport_destroy(pa_bluetooth_transport *t) {
 static pa_volume_t set_sink_volume(pa_bluetooth_transport *t, pa_volume_t volume) {
     struct transport_data *trd = t->userdata;
     uint16_t gain = volume_to_hsp_gain(volume);
+<<<<<<< HEAD
 
     /* Propagate rounding and bound checks */
     volume = hsp_gain_to_volume(gain);
@@ -871,6 +1234,17 @@ static pa_volume_t set_sink_volume(pa_bluetooth_transport *t, pa_volume_t volume
 
     t->sink_volume = volume;
 
+=======
+
+    /* Propagate rounding and bound checks */
+    volume = hsp_gain_to_volume(gain);
+
+    if (t->sink_volume == volume)
+        return volume;
+
+    t->sink_volume = volume;
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     /* If we are in the AG role, we send an unsolicited result-code to the headset
      * to change the speaker gain. In the HS role, source and sink are swapped,
      * so in this case we notify the AG that the microphone gain has changed
@@ -887,6 +1261,7 @@ static pa_volume_t set_sink_volume(pa_bluetooth_transport *t, pa_volume_t volume
 static pa_volume_t set_source_volume(pa_bluetooth_transport *t, pa_volume_t volume) {
     struct transport_data *trd = t->userdata;
     uint16_t gain = volume_to_hsp_gain(volume);
+<<<<<<< HEAD
 
     /* Propagate rounding and bound checks */
     volume = hsp_gain_to_volume(gain);
@@ -896,6 +1271,17 @@ static pa_volume_t set_source_volume(pa_bluetooth_transport *t, pa_volume_t volu
 
     t->source_volume = volume;
 
+=======
+
+    /* Propagate rounding and bound checks */
+    volume = hsp_gain_to_volume(gain);
+
+    if (t->source_volume == volume)
+        return volume;
+
+    t->source_volume = volume;
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     /* If we are in the AG role, we send an unsolicited result-code to the headset
      * to change the microphone gain. In the HS role, source and sink are swapped,
      * so in this case we notify the AG that the speaker gain has changed
@@ -1001,6 +1387,7 @@ static DBusMessage *profile_new_connection(DBusConnection *conn, DBusMessage *m,
     trd = pa_xnew0(struct transport_data, 1);
     trd->rfcomm_fd = fd;
     trd->mainloop = b->core->mainloop;
+    trd->backend = b;
     trd->rfcomm_io = trd->mainloop->io_new(b->core->mainloop, fd, PA_IO_EVENT_INPUT,
         rfcomm_io_callback, t);
     t->userdata =  trd;
@@ -1153,9 +1540,15 @@ static void native_backend_apply_profile_registration_change(pa_bluetooth_backen
             profile_done(native_backend, PA_BLUETOOTH_PROFILE_HFP_HF);
     }
 }
+<<<<<<< HEAD
 
 void pa_bluetooth_native_backend_enable_shared_profiles(pa_bluetooth_backend *native_backend, bool enable) {
 
+=======
+
+void pa_bluetooth_native_backend_enable_shared_profiles(pa_bluetooth_backend *native_backend, bool enable) {
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
    if (enable == native_backend->enable_shared_profiles)
        return;
 
@@ -1167,6 +1560,7 @@ void pa_bluetooth_native_backend_enable_shared_profiles(pa_bluetooth_backend *na
 pa_bluetooth_backend *pa_bluetooth_native_backend_new(pa_core *c, pa_bluetooth_discovery *y, bool enable_shared_profiles) {
     pa_bluetooth_backend *backend;
     DBusError err;
+    int i;
 
     pa_log_debug("Bluetooth Headset Backend API support using the native backend");
 
@@ -1189,6 +1583,7 @@ pa_bluetooth_backend *pa_bluetooth_native_backend_new(pa_core *c, pa_bluetooth_d
     backend->adapter_uuids_changed_slot =
         pa_hook_connect(pa_bluetooth_discovery_hook(y, PA_BLUETOOTH_HOOK_ADAPTER_UUIDS_CHANGED), PA_HOOK_NORMAL,
                         (pa_hook_cb_t) adapter_uuids_changed_cb, backend);
+<<<<<<< HEAD
 
     if (!backend->enable_hsp_hs && !backend->enable_hfp_hf)
         pa_log_warn("Both HSP HS and HFP HF bluetooth profiles disabled in native backend. Native backend will not register for headset connections.");
@@ -1198,6 +1593,31 @@ pa_bluetooth_backend *pa_bluetooth_native_backend_new(pa_core *c, pa_bluetooth_d
 
     if (backend->enable_shared_profiles)
         native_backend_apply_profile_registration_change(backend, true);
+=======
+
+    backend->host_battery_level_changed_slot =
+        pa_hook_connect(pa_bluetooth_discovery_hook(y, PA_BLUETOOTH_HOOK_HOST_BATTERY_LEVEL_CHANGED), PA_HOOK_NORMAL,
+                        (pa_hook_cb_t) host_battery_level_changed_cb, backend);
+
+    if (!backend->enable_hsp_hs && !backend->enable_hfp_hf)
+        pa_log_warn("Both HSP HS and HFP HF bluetooth profiles disabled in native backend. Native backend will not register for headset connections.");
+
+    if (backend->enable_hsp_hs)
+        profile_init(backend, PA_BLUETOOTH_PROFILE_HSP_HS);
+
+    if (backend->enable_shared_profiles)
+        native_backend_apply_profile_registration_change(backend, true);
+
+    backend->upower = pa_upower_backend_new(c, y);
+
+    /* All CIND indicators are enabled by default until overriden by AT+BIA */
+    for (i = 1; i < CIND_INDICATOR_MAX; i++)
+        backend->cind_enabled_indicators |= (1 << i);
+
+    /* While all CIND indicators are enabled, event reporting is not enabled by default */
+    backend->cmer_indicator_reporting_enabled = false;
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     return backend;
 }
@@ -1210,11 +1630,23 @@ void pa_bluetooth_native_backend_free(pa_bluetooth_backend *backend) {
     if (backend->adapter_uuids_changed_slot)
         pa_hook_slot_free(backend->adapter_uuids_changed_slot);
 
+<<<<<<< HEAD
+=======
+    if (backend->host_battery_level_changed_slot)
+        pa_hook_slot_free(backend->host_battery_level_changed_slot);
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     if (backend->enable_shared_profiles)
         native_backend_apply_profile_registration_change(backend, false);
 
     if (backend->enable_hsp_hs)
         profile_done(backend, PA_BLUETOOTH_PROFILE_HSP_HS);
+<<<<<<< HEAD
+=======
+
+    if (backend->upower)
+        pa_upower_backend_free(backend->upower);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     pa_dbus_connection_unref(backend->connection);
 

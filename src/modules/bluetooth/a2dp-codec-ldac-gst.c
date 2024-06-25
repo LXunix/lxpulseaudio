@@ -46,6 +46,7 @@ static bool can_be_supported(bool for_encoding) {
     }
     gst_object_unref(element_factory);
 
+<<<<<<< HEAD
     element_factory = gst_element_factory_find("rtpldacpay");
     if (element_factory == NULL) {
         pa_log_info("LDAC RTP payloader element `rtpldacpay` not found");
@@ -53,6 +54,8 @@ static bool can_be_supported(bool for_encoding) {
     }
     gst_object_unref(element_factory);
 
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     return true;
 }
 
@@ -206,7 +209,10 @@ static uint8_t fill_preferred_configuration(const pa_sample_spec *default_sample
 
 GstElement *gst_init_ldac(struct gst_info *info, pa_sample_spec *ss, bool for_encoding) {
     GstElement *bin;
+<<<<<<< HEAD
     GstElement *rtpldacpay;
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     GstElement *enc;
     GstPad *pad;
 
@@ -270,6 +276,7 @@ GstElement *gst_init_ldac(struct gst_info *info, pa_sample_spec *ss, bool for_en
             goto fail;
     }
 
+<<<<<<< HEAD
     rtpldacpay = gst_element_factory_make("rtpldacpay", "rtp_ldac_pay");
     if (!rtpldacpay) {
         pa_log_error("Could not create RTP LDAC payloader element");
@@ -286,12 +293,22 @@ GstElement *gst_init_ldac(struct gst_info *info, pa_sample_spec *ss, bool for_en
         gst_object_unref(bin);
         return NULL;
     }
+=======
+    bin = gst_bin_new("ldac_enc_bin");
+    pa_assert(bin);
+
+    gst_bin_add_many(GST_BIN(bin), enc, NULL);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
     pad = gst_element_get_static_pad(enc, "sink");
     pa_assert_se(gst_element_add_pad(bin, gst_ghost_pad_new("sink", pad)));
     gst_object_unref(GST_OBJECT(pad));
 
+<<<<<<< HEAD
     pad = gst_element_get_static_pad(rtpldacpay, "src");
+=======
+    pad = gst_element_get_static_pad(enc, "src");
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     pa_assert_se(gst_element_add_pad(bin, gst_ghost_pad_new("src", pad)));
     gst_object_unref(GST_OBJECT(pad));
 
@@ -421,18 +438,51 @@ static size_t reduce_encoder_bitrate(void *codec_info, size_t write_link_mtu) {
 }
 
 static size_t encode_buffer(void *codec_info, uint32_t timestamp, const uint8_t *input_buffer, size_t input_size, uint8_t *output_buffer, size_t output_size, size_t *processed) {
+<<<<<<< HEAD
     size_t written;
 
     written = gst_transcode_buffer(codec_info, input_buffer, input_size, output_buffer, output_size, processed);
     if (PA_UNLIKELY(*processed != input_size))
         pa_log_error("LDAC encoding error");
 
+=======
+    struct gst_info *info = (struct gst_info *) codec_info;
+    struct rtp_header *header;
+    struct rtp_payload *payload;
+    size_t written;
+
+    if (PA_UNLIKELY(output_size < sizeof(*header) + sizeof(*payload))) {
+        *processed = 0;
+        return 0;
+    }
+
+    written = gst_transcode_buffer(codec_info, timestamp, input_buffer, input_size, output_buffer + sizeof(*header) + sizeof(*payload), output_size - sizeof(*header) - sizeof(*payload), processed);
+    if (PA_UNLIKELY(*processed != input_size))
+        pa_log_error("LDAC encoding error");
+
+    if (PA_LIKELY(written > 0)) {
+        header = (struct rtp_header *) output_buffer;
+        pa_zero(*header);
+        header->v = 2;
+        header->pt = 96;
+        header->sequence_number = htons(info->seq_num++);
+        header->timestamp = htonl(timestamp);
+        header->ssrc = htonl(1);
+        payload = (struct rtp_payload*) (output_buffer + sizeof(*header));
+        payload->frame_count = get_ldac_num_frames(codec_info, info->codec_type);
+        written += sizeof(*header) + sizeof(*payload);
+    }
+
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     return written;
 }
 
 const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_ldac_eqmid_hq = {
     .id = { A2DP_CODEC_VENDOR, LDAC_VENDOR_ID, LDAC_CODEC_ID },
+<<<<<<< HEAD
     .support_backchannel = false,
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     .can_be_supported = can_be_supported,
     .can_accept_capabilities = can_accept_capabilities,
     .choose_remote_endpoint = choose_remote_endpoint,
@@ -455,7 +505,10 @@ const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_ldac_eqmid_hq = {
 
 const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_ldac_eqmid_sq = {
     .id = { A2DP_CODEC_VENDOR, LDAC_VENDOR_ID, LDAC_CODEC_ID },
+<<<<<<< HEAD
     .support_backchannel = false,
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     .can_be_supported = can_be_supported,
     .can_accept_capabilities = can_accept_capabilities,
     .choose_remote_endpoint = choose_remote_endpoint,
@@ -478,7 +531,10 @@ const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_ldac_eqmid_sq = {
 
 const pa_a2dp_endpoint_conf pa_a2dp_endpoint_conf_ldac_eqmid_mq = {
     .id = { A2DP_CODEC_VENDOR, LDAC_VENDOR_ID, LDAC_CODEC_ID },
+<<<<<<< HEAD
     .support_backchannel = false,
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     .can_be_supported = can_be_supported,
     .can_accept_capabilities = can_accept_capabilities,
     .choose_remote_endpoint = choose_remote_endpoint,

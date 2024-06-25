@@ -1,10 +1,16 @@
-project('pulseaudio', 'c', 'cpp',
-        version : run_command(find_program('git-version-gen'), join_paths(meson.current_source_dir(), '.tarball-version')).stdout().strip(),
+project('pulseaudio', 'c',
+        version : run_command(find_program('git-version-gen'), join_paths(meson.current_source_dir(), '.tarball-version'), check : false).stdout().strip(),
         meson_version : '>= 0.50.0',
-        default_options : [ 'c_std=gnu11', 'cpp_std=c++11' ]
+        default_options : [ 'c_std=gnu11', 'cpp_std=c++17' ]
         )
 
+<<<<<<< HEAD
 meson.add_dist_script('scripts/save-tarball-version.sh', meson.project_version())
+=======
+if not meson.is_subproject()
+  meson.add_dist_script('scripts/save-tarball-version.sh', meson.project_version())
+endif
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 pa_version_str = meson.project_version()
 # For tarballs, the first split will do nothing, but for builds in git, we
@@ -25,7 +31,11 @@ pa_protocol_version = 35
 
 # The stable ABI for client applications, for the version info x:y:z
 # always will hold x=z
+<<<<<<< HEAD
 libpulse_version_info = [24, 0, 24]
+=======
+libpulse_version_info = [24, 3, 24]
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 # A simplified, synchronous, ABI-stable interface for client
 # applications, for the version info x:y:z always will hold x=z
@@ -53,6 +63,8 @@ libpulse_mainloop_glib_version = '@0@.@1@.@2@'.format(
   libpulse_mainloop_glib_version_info[1],
 )
 
+i18n = import('i18n')
+
 # Paths
 
 prefix = get_option('prefix')
@@ -68,6 +80,10 @@ localedir = join_paths(prefix, get_option('localedir'))
 localstatedir = join_paths(prefix, get_option('localstatedir'))
 sysconfdir = join_paths(prefix, get_option('sysconfdir'))
 privlibdir = join_paths(libdir, 'pulseaudio')
+<<<<<<< HEAD
+=======
+po_dir = join_paths(meson.current_source_dir(), 'po')
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 if host_machine.system() == 'windows'
   # Windows only supports loading libraries from the same dir as the executable
@@ -85,7 +101,12 @@ pulsesysconfdir = join_paths(sysconfdir, 'pulse')
 
 modlibexecdir = get_option('modlibexecdir')
 if modlibexecdir == ''
-  modlibexecdir = join_paths(libdir, 'pulse-' + pa_version_major_minor, 'modules')
+  modlibexecdir = join_paths(libdir, 'pulseaudio', 'modules')
+endif
+
+if host_machine.system() == 'windows'
+  # Windows only supports loading libraries from the same dir as the executable
+  modlibexecdir = bindir
 endif
 
 padsplibdir = get_option('padsplibdir')
@@ -140,7 +161,11 @@ cdata.set_quoted('PA_MACHINE_ID', join_paths(sysconfdir, 'machine-id'))
 cdata.set_quoted('PA_MACHINE_ID_FALLBACK', join_paths(localstatedir, 'lib', 'dbus', 'machine-id'))
 cdata.set_quoted('PA_SRCDIR', join_paths(meson.current_source_dir(), 'src'))
 cdata.set_quoted('PA_BUILDDIR', meson.current_build_dir())
-cdata.set_quoted('PA_SOEXT', '.so')
+if host_machine.system() == 'windows'
+  cdata.set_quoted('PA_SOEXT', '.dll')
+else
+  cdata.set_quoted('PA_SOEXT', '.so')
+endif
 cdata.set_quoted('PA_DEFAULT_CONFIG_DIR', pulsesysconfdir)
 cdata.set('PA_DEFAULT_CONFIG_DIR_UNQUOTED', pulsesysconfdir)
 cdata.set_quoted('PA_BINARY', join_paths(bindir, 'pulseaudio'))
@@ -152,8 +177,7 @@ cdata.set_quoted('PA_SYSTEM_USER', get_option('system_user'))
 cdata.set_quoted('PA_SYSTEM_GROUP', get_option('system_group'))
 cdata.set_quoted('PA_ACCESS_GROUP', get_option('access_group'))
 cdata.set_quoted('PA_CFLAGS', 'Not yet supported on meson')
-cdata.set_quoted('PA_ALSA_PATHS_DIR', join_paths(alsadatadir, 'paths'))
-cdata.set_quoted('PA_ALSA_PROFILE_SETS_DIR', join_paths(alsadatadir, 'profile-sets'))
+cdata.set_quoted('PA_ALSA_DATA_DIR', alsadatadir)
 cdata.set_quoted('DESKTOPFILEDIR', join_paths(datadir, 'applications'))
 cdata.set_quoted('PULSE_LOCALEDIR', localedir)
 cdata.set_quoted('GETTEXT_PACKAGE', 'pulseaudio')
@@ -177,6 +201,7 @@ endif
 # rather than ending up in the config.h file?
 if host_machine.system() == 'darwin'
   cdata.set('OS_IS_DARWIN', 1)
+  cdata.set('HAVE_COREAUDIO', 1)
   cdata.set('_DARWIN_C_SOURCE', '200112L') # Needed to get NSIG on Mac OS
 elif host_machine.system() == 'windows'
   cdata.set('OS_IS_WIN32', 1)
@@ -416,7 +441,11 @@ cdata.set('MESON_BUILD', 1)
 # so we request the nodelete flag to be enabled.
 # On other systems, we don't really know how to do that, but it's welcome if somebody can tell.
 # Windows doesn't support this flag.
+<<<<<<< HEAD
 if host_machine.system() != 'windows'
+=======
+if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   nodelete_link_args = ['-Wl,-z,nodelete']
 else
   nodelete_link_args = []
@@ -425,6 +454,7 @@ endif
 # Code coverage
 
 if get_option('gcov')
+  add_languages('cpp')
   add_project_arguments('--coverage', language: ['c', 'cpp'])
   add_project_link_arguments('--coverage', language: ['c', 'cpp'])
 endif
@@ -490,22 +520,24 @@ endif
 
 need_libatomic_ops = false
 
-atomictest = '''void func() {
+atomictest = '''int main() {
   volatile int atomic = 2;
   __sync_bool_compare_and_swap (&atomic, 2, 3);
+  return 0;
 }
 '''
 
-if cc.compiles(atomictest)
+if cc.links(atomictest)
   cdata.set('HAVE_ATOMIC_BUILTINS', 1)
 
-  newatomictest = '''void func() {
+  newatomictest = '''int main() {
     int c = 0;
     __atomic_store_n(&c, 4, __ATOMIC_SEQ_CST);
+    return 0;
   }
   '''
 
-  if(cc.compiles(newatomictest))
+  if(cc.links(newatomictest))
     cdata.set('HAVE_ATOMIC_BUILTINS_MEMORY_MODEL', 1)
   endif
 
@@ -577,6 +609,7 @@ if host_machine.cpu_family() == 'arm'
 endif
 # NEON checks are automatically done by the unstable-simd module
 
+<<<<<<< HEAD
 if get_option('daemon')
   # FIXME: make sure it's >= 2.2
   ltdl_dep = cc.find_library('ltdl', required : true)
@@ -593,32 +626,12 @@ elif get_option('database') == 'gdbm'
 else
   database_dep = dependency('', required: false)
 endif
+=======
+# Dependencies common to client, daemon and modules
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 if get_option('ipv6')
   cdata.set('HAVE_IPV6', 1)
-endif
-
-if get_option('legacy-database-entry-format')
-  cdata.set('ENABLE_LEGACY_DATABASE_ENTRY_FORMAT', 1)
-endif
-
-if get_option('stream-restore-clear-old-devices')
-  cdata.set('STREAM_RESTORE_CLEAR_OLD_DEVICES', 1)
-endif
-
-if get_option('running-from-build-tree')
-  cdata.set('HAVE_RUNNING_FROM_BUILD_TREE', 1)
-endif
-
-alsa_dep = dependency('alsa', version : '>= 1.0.24', required : get_option('alsa'))
-if alsa_dep.found()
-  cdata.set('HAVE_ALSA', 1)
-  cdata.set('HAVE_ALSA_UCM', 1)
-endif
-
-asyncns_dep = dependency('libasyncns', version : '>= 0.1', required : get_option('asyncns'))
-if asyncns_dep.found()
-  cdata.set('HAVE_LIBASYNCNS', 1)
 endif
 
 dbus_dep = dependency('dbus-1', version : '>= 1.4.12', required : get_option('dbus'))
@@ -626,6 +639,7 @@ if dbus_dep.found()
   cdata.set('HAVE_DBUS', 1)
 endif
 
+<<<<<<< HEAD
 gio_dep = dependency('gio-2.0', version : '>= 2.26.0')
 if get_option('gsettings').enabled()
   assert(gio_dep.found(), 'GSettings support needs glib I/O library (GIO)')
@@ -634,50 +648,21 @@ else
   cdata.set('HAVE_GSETTINGS', 0)
 endif
 
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 glib_dep = dependency('glib-2.0', version : '>= 2.28.0', required: get_option('glib'))
 if glib_dep.found()
   cdata.set('HAVE_GLIB', 1)
-endif
-
-gtk_dep = dependency('gtk+-3.0', required : get_option('gtk'))
-if gtk_dep.found()
-  cdata.set('HAVE_GTK', 1)
-endif
-
-have_orcc = false
-orcc_args = []
-orc_dep = dependency('orc-0.4', version : '>= 0.4.11', required : get_option('orc'))
-orcc = find_program('orcc', required : get_option('orc'))
-if orc_dep.found() and orcc.found()
-  have_orcc = true
-  orcc_args = [orcc]
-  #orcc_args = [orcc, '--include', 'glib.h']
-  cdata.set('HAVE_ORC', 1)
-else
-  cdata.set('DISABLE_ORC', 1)
-endif
-
-samplerate_dep = dependency('samplerate', version : '>= 0.1.0', required : get_option('samplerate'))
-if samplerate_dep.found()
-  cdata.set('HAVE_LIBSAMPLERATE', 1)
+  cdata.set('HAVE_GLIB20', 1) # to match the AM_CONDITIONAL for CMake file generation
 endif
 
 sndfile_dep = dependency('sndfile', version : '>= 1.0.20')
-
-soxr_dep = dependency('soxr', version : '>= 0.1.1', required : get_option('soxr'))
-if soxr_dep.found()
-  cdata.set('HAVE_SOXR', 1)
-endif
 
 libsystemd_dep = dependency('libsystemd', required : get_option('systemd'))
 if libsystemd_dep.found()
   cdata.set('HAVE_SYSTEMD_DAEMON', 1)
   cdata.set('HAVE_SYSTEMD_LOGIN', 1)
   cdata.set('HAVE_SYSTEMD_JOURNAL', 1)
-endif
-systemd_dep = dependency('systemd', required : get_option('systemd'))
-if systemd_dep.found() and systemduserunitdir == ''
-  systemduserunitdir = systemd_dep.get_pkgconfig_variable('systemduserunitdir')
 endif
 
 libelogind_dep = dependency('libelogind', required : get_option('elogind'))
@@ -691,6 +676,7 @@ if cc.has_header('tcpd.h') and cc.has_function('hosts_access', dependencies : tc
 endif
 
 x11_dep = dependency('x11-xcb', required : get_option('x11'))
+<<<<<<< HEAD
 if x11_dep.found()
   xcb_dep  = dependency('xcb',  required : true, version : '>= 1.6')
   ice_dep  = dependency('ice',  required : get_option('daemon'))
@@ -704,15 +690,24 @@ endif
 
 # Module dependencies
 if cc.has_header('sys/soundcard.h', required: get_option('oss-output'))
+=======
+
+# OSS support
+if cc.has_header('sys/soundcard.h', required: get_option('oss-output'))
+  # OSS output via daemon module-detect
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   cdata.set('HAVE_OSS_OUTPUT', 1)
+  # OSS wrapper
   cdata.set('HAVE_OSS_WRAPPER', 1)
   cdata.set('PULSEDSP_LOCATION', pulsedsp_location)
 endif
 
-if get_option('hal-compat')
-  cdata.set('HAVE_HAL_COMPAT', 1)
+fftw_dep = dependency('fftw3f', required : get_option('fftw'))
+if fftw_dep.found()
+  cdata.set('HAVE_FFTW', 1)
 endif
 
+<<<<<<< HEAD
 avahi_dep = dependency('avahi-client', version : '>= 0.6.0', required : get_option('avahi'), disabler : true)
 if avahi_dep.found()
   cdata.set('HAVE_AVAHI', 1)
@@ -732,47 +727,179 @@ if bluez_dep.found()
   cdata.set('HAVE_BLUEZ_5', 1)
   if get_option('bluez5-native-headset')
     cdata.set('HAVE_BLUEZ_5_NATIVE_HEADSET', 1)
+=======
+# Client library dependencies
+
+if get_option('client')
+  asyncns_dep = dependency('libasyncns', version : '>= 0.1', required : get_option('asyncns'))
+  if asyncns_dep.found()
+    cdata.set('HAVE_LIBASYNCNS', 1)
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   endif
-  if get_option('bluez5-ofono-headset')
-    cdata.set('HAVE_BLUEZ_5_OFONO_HEADSET', 1)
+
+  gtk_dep = dependency('gtk+-3.0', required : get_option('gtk'))
+  if gtk_dep.found()
+    cdata.set('HAVE_GTK', 1)
   endif
 endif
 
-fftw_dep = dependency('fftw3f', required : get_option('fftw'))
-if fftw_dep.found()
-  cdata.set('HAVE_FFTW', 1)
-endif
+# Daemon and module dependencies
 
-jack_dep = dependency('jack', version : '>= 0.117.0', required : get_option('jack'))
-if jack_dep.found()
-  cdata.set('HAVE_JACK', 1)
-endif
+if get_option('daemon')
+  # FIXME: make sure it's >= 2.2
+  ltdl_dep = cc.find_library('ltdl', required : true)
 
-lirc_dep = dependency('lirc', required : get_option('lirc'))
-if lirc_dep.found()
-  cdata.set('HAVE_LIRC', 1)
-endif
+  # FIXME: can meson support libtool -dlopen/-dlpreopen things?
+  #        and do we still want to support this at all?
+  cdata.set('DISABLE_LIBTOOL_PRELOAD', 1)
 
-openssl_dep = dependency('openssl', version : '>= 0.9', required : get_option('openssl'))
-if openssl_dep.found()
-  cdata.set('HAVE_OPENSSL', 1)
-endif
+  if get_option('database') == 'tdb'
+    database_dep = dependency('tdb')
+  elif get_option('database') == 'gdbm'
+    database_dep = cc.find_library('gdbm', required : true)
+  else
+    database_dep = dependency('', required: false)
+  endif
 
-speex_dep = dependency('speexdsp', version : '>= 1.2', required : get_option('speex'))
-if speex_dep.found()
-  cdata.set('HAVE_SPEEX', 1)
-endif
+  if get_option('legacy-database-entry-format')
+    cdata.set('ENABLE_LEGACY_DATABASE_ENTRY_FORMAT', 1)
+  endif
 
-udev_dep = dependency('libudev', version : '>= 143', required : get_option('udev'))
-if udev_dep.found()
-  cdata.set('HAVE_UDEV', 1)
-endif
+  if get_option('stream-restore-clear-old-devices')
+    cdata.set('STREAM_RESTORE_CLEAR_OLD_DEVICES', 1)
+  endif
 
-webrtc_dep = dependency('webrtc-audio-processing', version : '>= 0.2', required : get_option('webrtc-aec'))
-if webrtc_dep.found()
-  cdata.set('HAVE_WEBRTC', 1)
-endif
+  if get_option('running-from-build-tree')
+    cdata.set('HAVE_RUNNING_FROM_BUILD_TREE', 1)
+  endif
 
+  if get_option('enable-smoother-2')
+    cdata.set('USE_SMOOTHER_2', 1)
+  endif
+
+  alsa_dep = dependency('alsa', version : '>= 1.0.24', required : get_option('alsa'))
+  if alsa_dep.found()
+    cdata.set('HAVE_ALSA', 1)
+    cdata.set('HAVE_ALSA_UCM', 1)
+  endif
+
+  gio_dep = dependency('gio-2.0', version : '>= 2.26.0', required : false)
+  if get_option('gsettings').enabled()
+    assert(gio_dep.found(), 'GSettings support needs glib I/O library (GIO)')
+    cdata.set('HAVE_GSETTINGS', 1)
+  else
+    cdata.set('HAVE_GSETTINGS', 0)
+  endif
+
+  have_orcc = false
+  orcc_args = []
+  orc_dep = dependency('orc-0.4', version : '>= 0.4.11', required : get_option('orc'))
+  orcc = find_program('orcc', required : get_option('orc'))
+  if orc_dep.found() and orcc.found()
+    have_orcc = true
+    orcc_args = [orcc]
+    #orcc_args = [orcc, '--include', 'glib.h']
+    cdata.set('HAVE_ORC', 1)
+  else
+    cdata.set('DISABLE_ORC', 1)
+  endif
+
+  samplerate_dep = dependency('samplerate', version : '>= 0.1.0', required : get_option('samplerate'))
+  if samplerate_dep.found()
+    cdata.set('HAVE_LIBSAMPLERATE', 1)
+  endif
+
+  speex_dep = dependency('speexdsp', version : '>= 1.2', required : get_option('speex'))
+  if speex_dep.found()
+    cdata.set('HAVE_SPEEX', 1)
+  endif
+
+  soxr_dep = dependency('soxr', version : '>= 0.1.1', required : get_option('soxr'))
+  if soxr_dep.found()
+    cdata.set('HAVE_SOXR', 1)
+  endif
+
+  webrtc_dep = dependency('webrtc-audio-processing-1', version : '>= 1.0', required : get_option('webrtc-aec'))
+  if webrtc_dep.found()
+    cdata.set('HAVE_WEBRTC', 1)
+  endif
+
+  systemd_dep = dependency('systemd', required : get_option('systemd'))
+  if systemd_dep.found() and systemduserunitdir == ''
+    systemduserunitdir = systemd_dep.get_pkgconfig_variable('systemduserunitdir')
+  endif
+
+  libelogind_dep = dependency('libelogind', required : get_option('elogind'))
+  if libelogind_dep.found()
+    cdata.set('HAVE_SYSTEMD_LOGIN', 1)
+  endif
+
+  if get_option('consolekit').enabled()
+    assert(dbus_dep.found(), 'ConsoleKit requires D-Bus support')
+  endif
+
+  tcpwrap_dep = cc.find_library('wrap', required: get_option('tcpwrap'))
+  if cc.has_header('tcpd.h') and cc.has_function('hosts_access', dependencies : tcpwrap_dep)
+    cdata.set('HAVE_LIBWRAP', 1)
+  endif
+
+  if x11_dep.found()
+    xcb_dep  = dependency('xcb',  required : true, version : '>= 1.6')
+    ice_dep  = dependency('ice',  required : true)
+    sm_dep   = dependency('sm',   required : true)
+    xtst_dep = dependency('xtst', required : true)
+    cdata.set('HAVE_X11', 1)
+    if cc.has_function('XSetIOErrorExitHandler', dependencies: x11_dep)
+      cdata.set('HAVE_XSETIOERROREXITHANDLER', 1)
+    endif
+  endif
+
+  avahi_dep = dependency('avahi-client', version : '>= 0.6.0', required : get_option('avahi'), disabler : true)
+  if avahi_dep.found()
+    cdata.set('HAVE_AVAHI', 1)
+  else
+    cdata.set('HAVE_AVAHI', 0)
+  endif
+
+  sbc_dep = dependency('sbc', version : '>= 1.0', required : false)
+
+  bluez_dep = dependency('bluez', required : get_option('bluez5'))
+
+  if bluez_dep.found()
+    assert(dbus_dep.found(), 'BlueZ requires D-Bus support')
+    assert(sbc_dep.found(), 'BlueZ requires SBC support')
+    cdata.set('HAVE_SBC', 1)
+    cdata.set('HAVE_BLUEZ', 1)
+    cdata.set('HAVE_BLUEZ_5', 1)
+    if get_option('bluez5-native-headset')
+      cdata.set('HAVE_BLUEZ_5_NATIVE_HEADSET', 1)
+    endif
+    if get_option('bluez5-ofono-headset')
+      cdata.set('HAVE_BLUEZ_5_OFONO_HEADSET', 1)
+    endif
+  endif
+
+  jack_dep = dependency('jack', version : '>= 0.117.0', required : get_option('jack'))
+  if jack_dep.found()
+    cdata.set('HAVE_JACK', 1)
+  endif
+
+  lirc_dep = dependency('lirc', required : get_option('lirc'))
+  if lirc_dep.found()
+    cdata.set('HAVE_LIRC', 1)
+  endif
+
+  openssl_dep = dependency('openssl', version : '>= 0.9', required : get_option('openssl'))
+  if openssl_dep.found()
+    cdata.set('HAVE_OPENSSL', 1)
+  endif
+
+  udev_dep = dependency('libudev', version : '>= 143', required : get_option('udev'))
+  if udev_dep.found()
+    cdata.set('HAVE_UDEV', 1)
+  endif
+
+<<<<<<< HEAD
 gst_dep = dependency('gstreamer-1.0', version : '>= 1.14', required : get_option('gstreamer'))
 gstapp_dep = dependency('gstreamer-app-1.0', required : get_option('gstreamer'))
 gstrtp_dep = dependency('gstreamer-rtp-1.0', required : get_option('gstreamer'))
@@ -781,6 +908,30 @@ have_gstreamer = false
 if gst_dep.found() and gstapp_dep.found() and gstrtp_dep.found()
   assert(gio_dep.found(), 'GStreamer-based RTP needs glib I/O library (GIO)')
   have_gstreamer = true
+=======
+  if get_option('hal-compat')
+    cdata.set('HAVE_HAL_COMPAT', 1)
+  endif
+
+  gst_dep = dependency('gstreamer-1.0', version : '>= 1.14', required : get_option('gstreamer'))
+  gstapp_dep = dependency('gstreamer-app-1.0', required : get_option('gstreamer'))
+  gstrtp_dep = dependency('gstreamer-rtp-1.0', required : get_option('gstreamer'))
+
+  have_gstreamer = false
+  if gst_dep.found() and gstapp_dep.found() and gstrtp_dep.found()
+    assert(gio_dep.found(), 'GStreamer-based RTP needs glib I/O library (GIO)')
+    have_gstreamer = true
+  endif
+
+  bluez5_gst_dep = dependency('gstreamer-1.0', version : '>= 1.14', required : get_option('bluez5-gstreamer'))
+  bluez5_gstapp_dep = dependency('gstreamer-app-1.0', required : get_option('bluez5-gstreamer'))
+  have_bluez5_gstreamer = false
+  if bluez5_gst_dep.found() and bluez5_gstapp_dep.found()
+    have_bluez5_gstreamer = true
+    cdata.set('HAVE_GSTLDAC', 1)
+    cdata.set('HAVE_GSTAPTX', 1)
+  endif
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 endif
 
 bluez5_gst_dep = dependency('gstreamer-1.0', version : '>= 1.14', required : get_option('bluez5-gstreamer'))
@@ -795,9 +946,6 @@ endif
 # These are required for the CMake file generation
 cdata.set('PA_LIBDIR', libdir)
 cdata.set('PA_INCDIR', includedir)
-if glib_dep.found()
-  cdata.set('HAVE_GLIB20', 1) # to match the AM_CONDITIONAL for CMake file generation
-endif
 
 # Test dependencies
 
@@ -808,81 +956,93 @@ check_dep = dependency('check', version : '>= 0.9.10', required : get_option('te
 if get_option('doxygen')
   subdir('doxygen')
 endif
+<<<<<<< HEAD
 subdir('po')
+=======
+if get_option('client')
+  subdir('po')
+endif
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 if get_option('man')
   subdir('man')
 endif
 subdir('shell-completion/bash')
 subdir('shell-completion/zsh')
 subdir('src')
-subdir('vala')
+if get_option('client')
+ subdir('vala')
+endif
 
 # Now generate config.h from everything above
 configure_file(output : 'config.h', configuration : cdata)
 
-# pkg-config files
+if get_option('client')
 
-pc_cdata = configuration_data()
+  # pkg-config files
 
-pc_cdata.set('prefix', prefix)
-pc_cdata.set('exec_prefix', prefix)
-pc_cdata.set('libdir', libdir)
-pc_cdata.set('includedir', includedir)
-pc_cdata.set('modlibexecdir', modlibexecdir)
-pc_cdata.set('PACKAGE_VERSION', pa_version_str)
-pc_cdata.set('PA_MAJORMINOR', pa_version_major_minor)
-# FIXME: the line below is wrong. Currently the meson thread dep lacks documentation,
-# and doesn't allow introspection, ie. none of get_pkgconfig_variable() or
-# get_configtool_variable() work with it, so we have no way to get this flag right,
-# unless we do all the work ourselves. See current work in glib, also meson #553.
-pc_cdata.set('PTHREAD_LIBS', '-pthread')
+  pc_cdata = configuration_data()
 
-pc_files = [
-  'libpulse.pc',
-  'libpulse-simple.pc',
-]
+  pc_cdata.set('prefix', prefix)
+  pc_cdata.set('exec_prefix', prefix)
+  pc_cdata.set('libdir', libdir)
+  pc_cdata.set('includedir', includedir)
+  pc_cdata.set('modlibexecdir', modlibexecdir)
+  pc_cdata.set('PACKAGE_VERSION', pa_version_str)
+  pc_cdata.set('PA_MAJORMINOR', pa_version_major_minor)
+  # FIXME: the line below is wrong. Currently the meson thread dep lacks documentation,
+  # and doesn't allow introspection, ie. none of get_pkgconfig_variable() or
+  # get_configtool_variable() work with it, so we have no way to get this flag right,
+  # unless we do all the work ourselves. See current work in glib, also meson #553.
+  pc_cdata.set('PTHREAD_LIBS', '-pthread')
 
-if glib_dep.found()
-  pc_files += 'libpulse-mainloop-glib.pc'
-endif
+  pc_files = [
+    'libpulse.pc',
+    'libpulse-simple.pc',
+  ]
 
-foreach file : pc_files
+  if glib_dep.found()
+    pc_files += 'libpulse-mainloop-glib.pc'
+  endif
+
+  foreach file : pc_files
+    configure_file(
+      input : file + '.in',
+      output : file,
+      configuration : pc_cdata,
+      install_dir : pkgconfigdir)
+  endforeach
+
+  # CMake files
+
+  m4 = find_program('m4', required: true)
+
+  cmakedir = join_paths(libdir, 'cmake', 'PulseAudio')
+
+  cmake_template_file = configure_file(
+    input : 'PulseAudioConfig.cmake.in',
+    output : 'PulseAudioConfig.cmake.tmp',
+    configuration: cdata,
+  )
+
+  custom_target('PulseAudioConfig.cmake',
+    input : cmake_template_file,
+    output : 'PulseAudioConfig.cmake',
+    capture : true,
+    command : [m4, '@INPUT@'],
+    build_by_default : true,
+    install : true,
+    install_dir : cmakedir,
+  )
+
   configure_file(
-    input : file + '.in',
-    output : file,
-    configuration : pc_cdata,
-    install_dir : pkgconfigdir)
-endforeach
+    input : 'PulseAudioConfigVersion.cmake.in',
+    output : 'PulseAudioConfigVersion.cmake',
+    configuration: cdata,
+    install : true,
+    install_dir : cmakedir,
+  )
 
-# CMake files
-
-m4 = find_program('m4', required: true)
-
-cmakedir = join_paths(libdir, 'cmake', 'PulseAudio')
-
-cmake_template_file = configure_file(
-  input : 'PulseAudioConfig.cmake.in',
-  output : 'PulseAudioConfig.cmake.tmp',
-  configuration: cdata,
-)
-
-custom_target('PulseAudioConfig.cmake',
-  input : cmake_template_file,
-  output : 'PulseAudioConfig.cmake',
-  capture : true,
-  command : [m4, '@INPUT@'],
-  build_by_default : true,
-  install : true,
-  install_dir : cmakedir,
-)
-
-configure_file(
-  input : 'PulseAudioConfigVersion.cmake.in',
-  output : 'PulseAudioConfigVersion.cmake',
-  configuration: cdata,
-  install : true,
-  install_dir : cmakedir,
-)
+endif # client
 
 ############################################################
 
@@ -913,17 +1073,57 @@ summary = [
 #  'LIBS:                          @0@'.format(${LIBS}),
   '',
   'Enable pulseaudio daemon:      @0@'.format(get_option('daemon')),
+<<<<<<< HEAD
   '',
   'Enable memfd shared memory:    @0@'.format(cdata.has('HAVE_MEMFD')),
   'Enable X11:                    @0@'.format(x11_dep.found()),
   '  Safe X11 I/O errors:         @0@'.format(cdata.has('HAVE_XSETIOERROREXITHANDLER')),
   'Enable OSS Output:             @0@'.format(cdata.has('HAVE_OSS_OUTPUT')),
   'Enable OSS Wrapper:            @0@'.format(cdata.has('HAVE_OSS_WRAPPER')),
+=======
+  'Enable pulseaudio client:      @0@'.format(get_option('client')),
+  '',
+  'Enable memfd shared memory:    @0@'.format(cdata.has('HAVE_MEMFD')),
+  'Enable X11:                    @0@'.format(x11_dep.found()),
+  'Enable D-Bus:                  @0@'.format(dbus_dep.found()),
+  'Enable GLib 2:                 @0@'.format(glib_dep.found()),
+  'Enable systemd integration:    @0@'.format(libsystemd_dep.found()),
+  'Enable FFTW:                   @0@'.format(fftw_dep.found()),
+  'Enable IPv6:                   @0@'.format(get_option('ipv6')),
+  'Enable Gcov coverage:          @0@'.format(get_option('gcov')),
+  'Enable Valgrind:               @0@'.format(cdata.has('HAVE_VALGRIND_MEMCHECK_H')),
+  'Enable man pages:              @0@'.format(get_option('man')),
+  'Enable unit tests:             @0@'.format(get_option('tests')),
+]
+
+if get_option('client')
+summary += [
+  '',
+  '--- Pulseaudio client features ---',
+  '',
+  'Enable Gtk+ 3:                 @0@'.format(gtk_dep.found()),
+  'Enable Async DNS:              @0@'.format(asyncns_dep.found()),
+  'Enable OSS Wrapper:            @0@'.format(cdata.has('HAVE_OSS_WRAPPER')),
+]
+endif
+
+if get_option('daemon')
+summary += [
+  '',
+  '--- Pulseaudio daemon features ---',
+  '',
+  'Safe X11 I/O errors:           @0@'.format(cdata.has('HAVE_XSETIOERROREXITHANDLER')),
+  'Enable Avahi:                  @0@'.format(avahi_dep.found()),
+  'Enable OSS Output:             @0@'.format(cdata.has('HAVE_OSS_OUTPUT')),
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 #  'Enable EsounD:                 @0@'.format(${ENABLE_ESOUND}),
   'Enable Alsa:                   @0@'.format(alsa_dep.found()),
+  'Enable Jack:                   @0@'.format(jack_dep.found()),
+  'Enable LIRC:                   @0@'.format(lirc_dep.found()),
 #  'Enable CoreAudio:              @0@'.format(${ENABLE_COREAUDIO}),
 #  'Enable Solaris:                @0@'.format(${ENABLE_SOLARIS}),
 #  'Enable WaveOut:                @0@'.format(${ENABLE_WAVEOUT}),
+<<<<<<< HEAD
   'Enable GLib 2:                 @0@'.format(glib_dep.found()),
   'Enable GSettings:              @0@'.format(gio_dep.found()),
   'Enable Gtk+ 3:                 @0@'.format(gtk_dep.found()),
@@ -941,21 +1141,35 @@ summary = [
   'Enable systemd:                @0@'.format(libsystemd_dep.found()),
   'Enable elogind:                @0@'.format(libelogind_dep.found()),
   'Enable TCP Wrappers:           @0@'.format(tcpwrap_dep.found()),
-  'Enable libsamplerate:          @0@'.format(samplerate_dep.found()),
-  'Enable IPv6:                   @0@'.format(get_option('ipv6')),
-  'Enable OpenSSL (for Airtunes): @0@'.format(openssl_dep.found()),
-  'Enable FFTW:                   @0@'.format(fftw_dep.found()),
-  'Enable ORC:                    @0@'.format(have_orcc),
+=======
+  'Enable GSettings:              @0@'.format(gio_dep.found()),
+  'Enable BlueZ 5:              @0@'.format(cdata.has('HAVE_BLUEZ_5')),
+  '  Enable native headsets:    @0@'.format(cdata.has('HAVE_BLUEZ_5_NATIVE_HEADSET')),
+  '  Enable  ofono headsets:    @0@'.format(cdata.has('HAVE_BLUEZ_5_OFONO_HEADSET')),
+  '  Enable GStreamer based codecs: @0@'.format(have_bluez5_gstreamer),
   'Enable GStreamer:              @0@'.format(have_gstreamer),
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
+  'Enable libsamplerate:          @0@'.format(samplerate_dep.found()),
+  'Enable ORC:                    @0@'.format(have_orcc),
   'Enable Adrian echo canceller:  @0@'.format(get_option('adrian-aec')),
   'Enable Speex (resampler, AEC): @0@'.format(speex_dep.found()),
   'Enable SoXR (resampler):       @0@'.format(soxr_dep.found()),
   'Enable WebRTC echo canceller:  @0@'.format(webrtc_dep.found()),
+<<<<<<< HEAD
   'Enable Gcov coverage:          @0@'.format(get_option('gcov')),
   'Enable Valgrind:               @0@'.format(cdata.has('HAVE_VALGRIND_MEMCHECK_H')),
   'Enable man pages:              @0@'.format(get_option('man')),
   'Enable unit tests:             @0@'.format(get_option('tests')),
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   '',
+  'Enable udev:                   @0@'.format(udev_dep.found()),
+  '  Enable HAL->udev compat:     @0@'.format(get_option('hal-compat')),
+  'Enable systemd units:          @0@'.format(systemd_dep.found()),
+  'Enable elogind:                @0@'.format(libelogind_dep.found()),
+  'Enable ConsoleKit:             @0@'.format(not get_option('consolekit').disabled() and dbus_dep.found()),
+  'Enable TCP Wrappers:           @0@'.format(tcpwrap_dep.found()),
+  'Enable OpenSSL (for Airtunes): @0@'.format(openssl_dep.found()),
   'Database:                      @0@'.format(get_option('database')),
   'Legacy Database Entry Support: @0@'.format(get_option('legacy-database-entry-format')),
   'module-stream-restore:',
@@ -968,19 +1182,21 @@ summary = [
 #  'Force preopen:                 @0@'.format(${FORCE_PREOPEN}),
 #  'Preopened modules:             @0@'.format(${PREOPEN_MODS}),
 ]
+endif
 
 message('\n    '.join(summary))
 
 # Sanity checks
 
-if not speex_dep.found() and not webrtc_dep.found() and not get_option('adrian-aec')
+if get_option('daemon') and not speex_dep.found() and not webrtc_dep.found() and not get_option('adrian-aec')
   error('At least one echo canceller implementation must be available!')
 endif
 
-if samplerate_dep.found()
+if get_option('daemon') and samplerate_dep.found()
   warning('Support for libsamplerate is DEPRECATED')
 endif
 
+<<<<<<< HEAD
 if host_machine.system() != 'windows'
   if not dbus_dep.found()
     message = [
@@ -1011,4 +1227,36 @@ if host_machine.system() != 'windows'
     ]
     warning('\n' + '\n'.join(message))
   endif
+=======
+if host_machine.system() != 'windows' and not dbus_dep.found()
+  message = [
+    'You do not have D-Bus support enabled. It is strongly recommended',
+    'that you enable D-Bus support if your platform supports it.',
+    'Many parts of PulseAudio use D-Bus, from ConsoleKit interaction',
+    'to the Device Reservation Protocol to speak to JACK, Bluetooth',
+    'support and even a native control protocol for communicating and',
+    'controlling the PulseAudio daemon itself.',
+  ]
+  warning('\n' + '\n'.join(message))
+endif
+
+if get_option('daemon') and host_machine.system() == 'linux' and not udev_dep.found()
+  message = [
+    'You do not have udev support enabled. It is strongly recommended',
+    'that you enable udev support if your platform supports it as it is',
+    'the primary method used to detect hardware audio devices (on Linux)',
+    'and is thus a critical part of PulseAudio on that platform.',
+  ]
+  warning('\n' + '\n'.join(message))
+endif
+
+if get_option('daemon') and host_machine.system() != 'windows' and not speex_dep.found()
+  message = [
+    'You do not have speex support enabled. It is strongly recommended',
+    'that you enable speex support if your platform supports it as it is',
+    'the primary method used for audio resampling and is thus a critical',
+    'part of PulseAudio on that platform.',
+  ]
+  warning('\n' + '\n'.join(message))
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 endif

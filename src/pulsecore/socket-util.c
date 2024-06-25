@@ -50,9 +50,6 @@
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef HAVE_SYSTEMD_DAEMON
-#include <systemd/sd-daemon.h>
-#endif
 
 #include <pulsecore/core-error.h>
 #include <pulsecore/core-util.h>
@@ -221,6 +218,7 @@ int pa_socket_set_sndbuf(int fd, size_t l) {
     return 0;
 }
 
+<<<<<<< HEAD
 #ifdef HAVE_SYS_UN_H
 
 int pa_unix_socket_is_stale(const char *fn) {
@@ -301,6 +299,8 @@ int pa_unix_socket_remove_stale(const char *fn) {
 
 #endif /* HAVE_SYS_UN_H */
 
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 bool pa_socket_address_is_local(const struct sockaddr *sa) {
     pa_assert(sa);
 

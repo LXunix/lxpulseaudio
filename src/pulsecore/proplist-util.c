@@ -51,9 +51,15 @@ static const gchar* _g_get_application_name(void) PA_GCC_WEAKREF(g_get_applicati
 #if defined(HAVE_GTK) && defined(PA_GCC_WEAKREF)
 #pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <gtk/gtk.h>
-#include <gdk/gdkx.h>
 static const gchar* _gtk_window_get_default_icon_name(void) PA_GCC_WEAKREF(gtk_window_get_default_icon_name);
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>
+<<<<<<< HEAD
+static const gchar* _gtk_window_get_default_icon_name(void) PA_GCC_WEAKREF(gtk_window_get_default_icon_name);
+=======
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 static Display *_gdk_display PA_GCC_WEAKREF(gdk_display);
+#endif
 #endif
 
 #include "proplist-util.h"
@@ -89,6 +95,7 @@ static void add_gtk_properties(pa_proplist *p) {
                 pa_proplist_sets(p, PA_PROP_APPLICATION_ICON_NAME, t);
         }
 
+#ifdef GDK_WINDOWING_X11
     if (!pa_proplist_contains(p, PA_PROP_WINDOW_X11_DISPLAY))
         if (&_gdk_display && _gdk_display) {
             const char *t;
@@ -99,6 +106,7 @@ static void add_gtk_properties(pa_proplist *p) {
                 pa_proplist_sets(p, PA_PROP_WINDOW_X11_DISPLAY, t);
         }
 
+#endif
 #endif
 }
 

@@ -103,8 +103,8 @@ struct pa_alsa_setting {
 
 /* An entry for one ALSA mixer */
 struct pa_alsa_mixer {
+    struct pa_alsa_mixer *alias;
     snd_mixer_t *mixer_handle;
-    int card_index;
     pa_alsa_fdlist *fdl;
     bool used_for_probe_only:1;
 };
@@ -318,7 +318,7 @@ struct pa_alsa_mapping {
     pa_sink *sink;
     pa_source *source;
 
-    /* ucm device context*/
+    /* ucm device context */
     pa_alsa_ucm_mapping_context ucm_context;
 };
 
@@ -342,6 +342,9 @@ struct pa_alsa_profile {
 
     pa_idxset *input_mappings;
     pa_idxset *output_mappings;
+
+    /* ucm device context */
+    pa_alsa_ucm_profile_context ucm_context;
 };
 
 struct pa_alsa_decibel_fix {

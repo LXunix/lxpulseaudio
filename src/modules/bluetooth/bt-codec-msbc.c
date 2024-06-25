@@ -112,7 +112,19 @@ static size_t get_read_block_size(void *codec_info, size_t link_mtu) {
         block_size = pa_frame_align(block_size, &info->sample_spec);
     }
 
+<<<<<<< HEAD
     return block_size;
+=======
+    /* If MTU exceeds mSBC frame size there could be up to 1 + MTU / (mSBC frame size)
+     * frames decoded for single incoming packet.
+     * See also pa_bluetooth_transport::last_read_size handling
+     * and comment about MTU size in bt_prepare_encoder_buffer()
+     */
+    if (link_mtu <= MSBC_PACKET_SIZE)
+        return block_size;
+
+    return block_size * (1 + link_mtu / MSBC_PACKET_SIZE);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 }
 
 static size_t get_write_block_size(void *codec_info, size_t link_mtu) {
@@ -204,10 +216,17 @@ static inline bool is_all_zero(const uint8_t *ptr, size_t len) {
 /*
  * We build a msbc frame up in the sbc_info buffer until we have a whole one
  */
+<<<<<<< HEAD
 static struct msbc_frame *msbc_find_frame(struct sbc_info *si, ssize_t *len,
                                           const uint8_t *buf, int *pseq)
 {
     int i;
+=======
+static struct msbc_frame *msbc_find_frame(struct sbc_info *si, size_t *len,
+                                          const uint8_t *buf, int *pseq)
+{
+    size_t i;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     uint8_t *p = si->input_buffer;
 
     /* skip input if it has all zero bytes
@@ -241,7 +260,11 @@ static struct msbc_frame *msbc_find_frame(struct sbc_info *si, ssize_t *len,
             id1.b = p[1];
             *pseq = (id1.s.sn0 & 0x1) | (id1.s.sn1 & 0x2);
             si->msbc_push_offset = 0;
+<<<<<<< HEAD
             *len = *len - i;
+=======
+            *len -= i + 1;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
             return (struct msbc_frame *)p;
         }
         continue;
@@ -255,6 +278,7 @@ static struct msbc_frame *msbc_find_frame(struct sbc_info *si, ssize_t *len,
 
 static size_t decode_buffer(void *codec_info, const uint8_t *input_buffer, size_t input_size, uint8_t *output_buffer, size_t output_size, size_t *processed) {
     struct sbc_info *sbc_info = (struct sbc_info *) codec_info;
+<<<<<<< HEAD
     ssize_t remaining;
     ssize_t decoded;
     size_t written = 0;
@@ -298,6 +322,57 @@ static size_t decode_buffer(void *codec_info, const uint8_t *input_buffer, size_
 
     *processed = input_size - remaining;
     return written;
+=======
+    size_t save_input_size;
+    ssize_t decoded;
+    size_t written = 0;
+    size_t total_written = 0;
+    size_t total_processed = 0;
+    struct msbc_frame *frame;
+    int seq;
+
+    while (input_size > 0) {
+
+        save_input_size = input_size;
+        frame = msbc_find_frame(sbc_info, &input_size, input_buffer + total_processed, &seq);
+
+        total_processed += save_input_size - input_size;
+
+        /* Only full mSBC frame should be decoded */
+        if (!frame)
+            break;
+
+        uint8_t lost_packets = (4 + seq - sbc_info->msbc_seq++) % 4;
+
+        if (lost_packets) {
+            pa_log_debug("Lost %d input audio packet(s)", lost_packets);
+            sbc_info->msbc_seq = seq + 1;
+        }
+
+        /* pa_bt_codec::get_read_block_size must provide space for all decoded frames */
+        pa_assert_fp(output_size >= sbc_info->codesize);
+
+        decoded = sbc_decode(&sbc_info->sbc, frame->payload, MSBC_FRAME_SIZE, output_buffer, output_size, &written);
+
+        if (PA_UNLIKELY(decoded <= 0)) {
+            pa_log_error("mSBC decoding error (%li)", (long) decoded);
+            pa_silence_memory(output_buffer, sbc_info->codesize, &sbc_info->sample_spec);
+            decoded = sbc_info->frame_length;
+            written = sbc_info->codesize;
+        }
+
+        pa_assert_fp((size_t)decoded == sbc_info->frame_length);
+        pa_assert_fp((size_t)written == sbc_info->codesize);
+
+        output_buffer += written;
+        output_size -= written;
+
+        total_written += written;
+    }
+
+    *processed = total_processed;
+    return total_written;
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 }
 
 /* Modified SBC codec for HFP Wideband Speech*/
