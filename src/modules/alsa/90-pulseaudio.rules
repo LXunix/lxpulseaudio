@@ -107,15 +107,22 @@ ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1011", ENV{PULSE_PROFILE_SET}="nativ
 
 
 ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1001", ENV{PULSE_PROFILE_SET}="native-instruments-komplete-audio6.conf"
+<<<<<<< HEAD
+=======
 # This entry is for the Komplete Audio 6 MK2, which has a different ID, but is functionally identical to the Komplete Audio 6.
 ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1870", ENV{PULSE_PROFILE_SET}="native-instruments-komplete-audio6.conf"
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio10.conf"
 ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
 ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02bb", ENV{PULSE_PROFILE_SET}="kinect-audio.conf"
 ATTRS{idVendor}=="041e", ATTRS{idProduct}=="322c", ENV{PULSE_PROFILE_SET}="sb-omni-surround-5.1.conf"
 ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="4014", ENV{PULSE_PROFILE_SET}="dell-dock-tb16-usb-audio.conf"
 ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="402e", ENV{PULSE_PROFILE_SET}="dell-dock-tb16-usb-audio.conf"
+<<<<<<< HEAD
+ATTRS{idVendor}=="08bb", ATTRS{idProduct}=="2902", ENV{PULSE_PROFILE_SET}="behringer-umc22.conf"
+=======
 ATTRS{idVendor}=="08bb", ATTRS{idProduct}=="2902", ENV{PULSE_PROFILE_SET}="texas-instruments-pcm2902.conf"
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 ATTRS{idVendor}=="03f0", ATTRS{idProduct}=="0269", ENV{PULSE_PROFILE_SET}="hp-tbt-dock-120w-g2.conf"
 ATTRS{idVendor}=="03f0", ATTRS{idProduct}=="0567", ENV{PULSE_PROFILE_SET}="hp-tbt-dock-audio-module.conf"
 
@@ -125,8 +132,11 @@ ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1260", ENV{PULSE_PROFILE_SET}="usb-g
 ATTRS{idVendor}=="1038", ATTRS{idProduct}=="12ad", ENV{PULSE_PROFILE_SET}="usb-gaming-headset.conf"
 ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1294", ENV{PULSE_PROFILE_SET}="usb-gaming-headset.conf"
 ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1730", ENV{PULSE_PROFILE_SET}="usb-gaming-headset.conf"
+<<<<<<< HEAD
+=======
 # ID 1038:1282 is for SteelSeries GameDAC
 ATTRS{idVendor}=="1038", ATTRS{idProduct}=="1282", ENV{PULSE_PROFILE_SET}="usb-gaming-headset.conf"
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 # ID 1038:12c4 is for Arctis 9
 ATTRS{idVendor}=="1038", ATTRS{idProduct}=="12c4", ENV{PULSE_PROFILE_SET}="usb-gaming-headset.conf"
 # Lucidsound LS31
@@ -168,6 +178,8 @@ ATTRS{idVendor}=="1395", ATTRS{idProduct}=="00a0", ENV{PULSE_PROFILE_SET}="sennh
 ATTRS{idVendor}=="1395", ATTRS{idProduct}=="005f", ENV{PULSE_PROFILE_SET}="sennheiser-gsx.conf"
 ATTRS{idVendor}=="1395", ATTRS{idProduct}=="00a1", ENV{PULSE_PROFILE_SET}="sennheiser-gsx.conf"
 
+<<<<<<< HEAD
+=======
 # Sennheiser GSA 70 wireless USB dongle for GSP 670
 ATTRS{idVendor}=="1395", ATTRS{idProduct}=="0089", ENV{PULSE_PROFILE_SET}="usb-gaming-headset.conf"
 # EPOS GSA 70 wireless USB dongle for GSP 670 (Sennheiser GSA 70 with updated firmware)
@@ -178,6 +190,7 @@ ATTRS{idVendor}=="1395", ATTRS{idProduct}=="008a", ENV{PULSE_PROFILE_SET}="usb-g
 # Asus Xonar SE
 ATTRS{idVendor}=="0b05", ATTRS{idProduct}=="189d", ENV{PULSE_PROFILE_SET}="asus-xonar-se.conf"
 
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 GOTO="pulseaudio_end"
 
 LABEL="pulseaudio_check_pci"

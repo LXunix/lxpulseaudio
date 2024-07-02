@@ -40,7 +40,10 @@
 #include <pulsecore/log.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/strbuf.h>
+<<<<<<< HEAD
+=======
 #include <pulsecore/namereg.h>
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
 
 #include "core.h"
 
@@ -87,9 +90,15 @@ static char *message_handler_list(pa_core *c) {
 }
 
 static int core_message_handler(const char *object_path, const char *message, const pa_json_object *parameters, char **response, void *userdata) {
+<<<<<<< HEAD
+    pa_core *c;
+
+    pa_assert(c = (pa_core *) userdata);
+=======
     pa_core *c = userdata;
 
     pa_assert(c);
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
     pa_assert(message);
     pa_assert(response);
     pa_assert(pa_safe_streq(object_path, "/core"));

@@ -1,6 +1,88 @@
+<<<<<<< HEAD
+pacat_sources = [
+  'pacat.c',
+]
+
+pacat_aliases = [
+  'pamon',
+  'paplay',
+  'parec',
+  'parecord',
+]
+
+executable('pacat',
+  pacat_sources,
+  install: true,
+  install_rpath : privlibdir,
+  include_directories : [configinc, topinc],
+  link_with : [libpulsecommon, libpulse],
+  dependencies : [sndfile_dep, libintl_dep],
+  c_args : pa_c_args,
+)
+
+# Windows doesn't support symbolic links.
+if host_machine.system() != 'windows'
+  foreach alias : pacat_aliases
+    dst = join_paths(bindir, alias)
+    cmd = 'ln -fs @0@ $DESTDIR@1@'.format('pacat', dst)
+    meson.add_install_script('sh', '-c', cmd)
+  endforeach
+endif
+
+pactl_sources = [
+  'pactl.c',
+]
+
+executable('pactl',
+  pactl_sources,
+  install: true,
+  install_rpath : privlibdir,
+  include_directories : [configinc, topinc],
+  link_with : [libpulsecommon, libpulse],
+  dependencies : [sndfile_dep, libintl_dep],
+  c_args : pa_c_args,
+)
+
+if get_option('daemon')
+  if host_machine.system() != 'windows'
+    pasuspender_sources = [
+      'pasuspender.c',
+    ]
+
+    executable('pasuspender',
+      pasuspender_sources,
+      install: true,
+      install_rpath : privlibdir,
+      include_directories : [configinc, topinc],
+      link_with : [libpulsecommon, libpulse],
+      dependencies: [libintl_dep],
+      c_args : pa_c_args,
+    )
+
+    pacmd_sources = [
+      'pacmd.c',
+    ]
+
+    executable('pacmd',
+      pacmd_sources,
+      install: true,
+      install_rpath : privlibdir,
+      include_directories : [configinc, topinc],
+      link_with : [libpulsecommon, libpulse],
+      dependencies: [libintl_dep],
+      c_args : pa_c_args,
+    )
+  endif
+endif
+
+if x11_dep.found()
+  pax11publish_sources = [
+    'pax11publish.c',
+=======
 if get_option('client')
   pacat_sources = [
     'pacat.c',
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   ]
 
   pacat_aliases = [
@@ -20,6 +102,11 @@ if get_option('client')
     c_args : pa_c_args,
   )
 
+<<<<<<< HEAD
+if cdata.has('HAVE_OSS_WRAPPER')
+  libpulsecommon_sources = [
+    'padsp.c',
+=======
   # Windows doesn't support symbolic links.
   if host_machine.system() != 'windows'
     foreach alias : pacat_aliases
@@ -31,6 +118,7 @@ if get_option('client')
 
   pactl_sources = [
     'pactl.c',
+>>>>>>> c1990dd02647405b0c13aab59f75d05cbb202336
   ]
 
   executable('pactl',
