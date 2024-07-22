@@ -25,6 +25,9 @@ void pa_cpu_init(pa_cpu_info *cpu_info) {
     cpu_info->cpu_type = PA_CPU_UNDEFINED;
     /* don't force generic code, used for testing only */
     cpu_info->force_generic_code = false;
+
+    pa_mix_func_init(cpu_info);
+
     if (!getenv("PULSE_NO_SIMD")) {
         if (pa_cpu_init_x86(&cpu_info->flags.x86))
             cpu_info->cpu_type = PA_CPU_X86;
@@ -34,5 +37,4 @@ void pa_cpu_init(pa_cpu_info *cpu_info) {
     }
 
     pa_remap_func_init(cpu_info);
-    pa_mix_func_init(cpu_info);
 }
