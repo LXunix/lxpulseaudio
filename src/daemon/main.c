@@ -683,7 +683,11 @@ int main(int argc, char *argv[]) {
             pa_assert_not_reached();
     }
 
+#ifdef HAVE_GETUID
     start_server = conf->local_server_type == PA_SERVER_TYPE_USER || (getuid() == 0 && conf->local_server_type == PA_SERVER_TYPE_SYSTEM);
+#else
+    start_server = conf->local_server_type == PA_SERVER_TYPE_USER || conf->local_server_type == PA_SERVER_TYPE_SYSTEM;
+#endif
 
     if (!start_server && conf->local_server_type == PA_SERVER_TYPE_SYSTEM) {
         pa_log_notice(_("System mode refused for non-root user. Only starting the D-Bus server lookup service."));

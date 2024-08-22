@@ -93,9 +93,11 @@ static void add_session(struct userdata *u, const char *id) {
         }
     }
 
+#ifdef HAVE_GETUID
     /* We only care about our own sessions */
     if ((uid_t) uid != getuid())
         goto fail;
+#endif
 
     session = pa_xnew(struct session, 1);
     session->id = pa_xstrdup(id);
@@ -221,11 +223,13 @@ static int get_session_list(struct userdata *u) {
         goto fail;
     }
 
+#ifdef HAVE_GETUID
     uid = (uint32_t) getuid();
     if (!(dbus_message_append_args(m, DBUS_TYPE_UINT32, &uid, DBUS_TYPE_INVALID))) {
         pa_log("Failed to append arguments to GetSessionsForUnixUser() method call.");
         goto fail;
     }
+#endif
 
     if (!(reply = dbus_connection_send_with_reply_and_block(pa_dbus_connection_get(u->connection), m, -1, &error))) {
         pa_log("GetSessionsForUnixUser() call failed: %s: %s", error.name, error.message);
