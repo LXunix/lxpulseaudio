@@ -917,7 +917,7 @@ static void rfcomm_io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_i
              * RING: Sent by AG to HS to notify of an incoming call. It can safely be ignored because
              * it does not expect a reply. */
             if (sscanf(buf, "AT+VGS=%d", &gain) == 1 || sscanf(buf, "\r\n+VGM%*[=:]%d\r\n", &gain) == 1) {
-                if (!t->set_sink_volume) {
+                if (!t->set_sink_volume && !(t->device->quirk & PA_BLUETOOTH_QUIRK_NO_VOLUME_CTL)) {
                     pa_log_debug("HS/HF peer supports speaker gain control");
                     t->set_sink_volume = set_sink_volume;
                 }
@@ -927,7 +927,7 @@ static void rfcomm_io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_i
                 do_reply = true;
 
             } else if (sscanf(buf, "AT+VGM=%d", &gain) == 1 || sscanf(buf, "\r\n+VGS%*[=:]%d\r\n", &gain) == 1) {
-                if (!t->set_source_volume) {
+                if (!t->set_source_volume && !(t->device->quirk & PA_BLUETOOTH_QUIRK_NO_VOLUME_CTL)) {
                     pa_log_debug("HS/HF peer supports microphone gain control");
                     t->set_source_volume = set_source_volume;
                 }

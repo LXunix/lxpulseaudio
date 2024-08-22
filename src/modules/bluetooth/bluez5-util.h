@@ -155,6 +155,7 @@ struct pa_bluetooth_device {
     char *alias;
     char *address;
     uint32_t class_of_device;
+    uint32_t quirk;
     pa_hashmap *uuids; /* char* -> char* (hashmap-as-a-set) */
     /* pa_a2dp_codec_id* -> pa_hashmap ( char* (remote endpoint) -> struct a2dp_codec_capabilities* ) */
     pa_hashmap *a2dp_sink_endpoints;
@@ -179,6 +180,10 @@ struct pa_bluetooth_adapter {
     bool application_registered;
     bool battery_provider_registered;
 };
+
+typedef enum pa_bluetooth_quirk_def {
+    PA_BLUETOOTH_QUIRK_NO_VOLUME_CTL = (1 << 0),
+} pa_bluetooth_quirk_def_t;
 
 #ifdef HAVE_BLUEZ_5_OFONO_HEADSET
 pa_bluetooth_backend *pa_bluetooth_ofono_backend_new(pa_core *c, pa_bluetooth_discovery *y);

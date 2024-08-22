@@ -183,6 +183,16 @@ typedef enum pa_bluetooth_form_factor {
     PA_BLUETOOTH_FORM_FACTOR_PHONE,
 } pa_bluetooth_form_factor_t;
 
+struct pa_bluetooth_quirk_table {
+    char *alias;
+    pa_bluetooth_quirk_def_t q;
+};
+
+static struct pa_bluetooth_quirk_table quirk_tbl[] = {
+    {.alias = "联想 thinkplus XT99", .q = PA_BLUETOOTH_QUIRK_NO_VOLUME_CTL},
+    {}
+};
+
 /* Run from main thread */
 static pa_bluetooth_form_factor_t form_factor_from_class(uint32_t class_of_device) {
     unsigned major, minor;
@@ -2787,6 +2797,18 @@ static pa_hook_result_t a2dp_source_output_fixate_hook_callback(pa_core *c, pa_s
     return PA_HOOK_OK;
 }
 
+static void apply_quirk (pa_bluetooth_device *d) {
+    int i = 0;
+
+    d->quirk = 0;
+
+    while (quirk_tbl[i].alias) {
+        if (pa_streq(d->alias, quirk_tbl[i].alias))
+            d->quirk = quirk_tbl[i].q;
+        i++;
+    }
+}
+
 int pa__init(pa_module* m) {
     struct userdata *u;
     const char *path;
@@ -2823,6 +2845,8 @@ int pa__init(pa_module* m) {
         pa_log_error("%s is unknown", path);
         goto fail_free_modargs;
     }
+
+    apply_quirk(u->device);
 
     autodetect_mtu = false;
     if (pa_modargs_get_value_boolean(ma, "autodetect_mtu", &autodetect_mtu) < 0) {
