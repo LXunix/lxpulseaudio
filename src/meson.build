@@ -65,7 +65,6 @@ libpulsecommon_sources = [
   'pulsecore/time-smoother_2.c',
   'pulsecore/tokenizer.c',
   'pulsecore/usergroup.c',
-  'pulsecore/sndfile-util.c',
 ]
 
 libpulsecommon_headers = [
@@ -145,7 +144,6 @@ libpulsecommon_headers = [
   'pulsecore/time-smoother_2.h',
   'pulsecore/tokenizer.h',
   'pulsecore/usergroup.h',
-  'pulsecore/sndfile-util.h',
   'pulsecore/socket.h',
 ]
 
@@ -157,6 +155,15 @@ if dbus_dep.found()
   libpulsecommon_headers += [
     'pulsecore/dbus-util.h',
     'pulsecore/rtkit.h',
+  ]
+endif
+
+if sndfile_dep.found()
+  libpulsecommon_sources += [
+    'pulsecore/sndfile-util.c',
+  ]
+  libpulsecommon_headers += [
+    'pulsecore/sndfile-util.h',
   ]
 endif
 
@@ -198,7 +205,7 @@ if not get_option('client')
   libpulse_dep = dependency('libpulse', required : true)
   libpulse_simple_dep = dependency('libpulse-simple', required : true)
 else
-  libpulsecommon = shared_library('pulsecommon-' + pa_version_major_minor,
+  libpulsecommon = library('pulsecommon-' + pa_version_major_minor,
     libpulsecommon_sources,
     libpulsecommon_headers,
     include_directories : [configinc, topinc],
@@ -227,4 +234,6 @@ endif
 if get_option('tests')
   subdir('tests')
 endif
-subdir('utils')
+if get_option('utils')
+  subdir('utils')
+endif

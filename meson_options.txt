@@ -4,6 +4,9 @@ option('daemon',
 option('client',
        type : 'boolean', value : true,
        description : 'Build and install pulseaudio client libraries and utilities')
+option('utils',
+       type : 'boolean', value : true,
+       description : 'Build and install pulseaudio cli utilities')
 option('doxygen',
        type : 'boolean', value : true,
        description : 'Enable building and installation of documentation generated with doxygen')
@@ -147,6 +150,9 @@ option('oss-output',
 option('samplerate',
        type : 'feature', value : 'disabled',
        description : 'Optional libsamplerate support (DEPRECATED)')
+option('sndfile',
+       type : 'feature', value : 'auto',
+       description : 'Optional libsndfile support')
 option('soxr',
        type : 'feature', value : 'auto',
        description : 'Optional SoXR support (resampling)')

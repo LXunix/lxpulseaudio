@@ -611,7 +611,7 @@ if glib_dep.found()
   cdata.set('HAVE_GLIB20', 1) # to match the AM_CONDITIONAL for CMake file generation
 endif
 
-sndfile_dep = dependency('sndfile', version : '>= 1.0.20')
+sndfile_dep = dependency('sndfile', version : '>= 1.0.20', required : get_option('sndfile'))
 
 libsystemd_dep = dependency('libsystemd', required : get_option('systemd'))
 if libsystemd_dep.found()
@@ -647,6 +647,14 @@ if get_option('client')
   gtk_dep = dependency('gtk+-3.0', required : get_option('gtk'))
   if gtk_dep.found()
     cdata.set('HAVE_GTK', 1)
+  endif
+endif
+
+# Utils dependencies
+
+if get_option('utils')
+  if not sndfile_dep.found()
+    error('Utils enabled but sndfile disabled or not found!')
   endif
 endif
 
@@ -828,6 +836,10 @@ if get_option('daemon')
     cdata.set('HAVE_GSTLDAC', 1)
     cdata.set('HAVE_GSTAPTX', 1)
   endif
+
+  if not sndfile_dep.found()
+    error('Daemon enabled but sndfile disabled or not found!')
+  endif
 endif
 
 # These are required for the CMake file generation
@@ -863,37 +875,43 @@ if get_option('client')
 
   # pkg-config files
 
-  pc_cdata = configuration_data()
-
-  pc_cdata.set('prefix', prefix)
-  pc_cdata.set('exec_prefix', prefix)
-  pc_cdata.set('libdir', libdir)
-  pc_cdata.set('includedir', includedir)
-  pc_cdata.set('modlibexecdir', modlibexecdir)
-  pc_cdata.set('PACKAGE_VERSION', pa_version_str)
-  pc_cdata.set('PA_MAJORMINOR', pa_version_major_minor)
   # FIXME: the line below is wrong. Currently the meson thread dep lacks documentation,
   # and doesn't allow introspection, ie. none of get_pkgconfig_variable() or
   # get_configtool_variable() work with it, so we have no way to get this flag right,
   # unless we do all the work ourselves. See current work in glib, also meson #553.
-  pc_cdata.set('PTHREAD_LIBS', '-pthread')
+  extra_libs = ['-pthread']
+  extra_cflags = ['-D_REENTRANT']
 
-  pc_files = [
-    'libpulse.pc',
-    'libpulse-simple.pc',
-  ]
-
+  pkg = import('pkgconfig')
+  pkg.generate(libpulse,
+    name : 'libpulse',
+    description : 'PulseAudio Client Interface',
+    version : pa_version_str,
+    install_dir : pkgconfigdir,
+    libraries : extra_libs,
+    extra_cflags : extra_cflags,
+    variables : [
+      'modlibexecdir=@0@'.format(modlibexecdir)
+    ],
+  )
+  pkg.generate(libpulse_simple,
+    name : 'libpulse-simple',
+    description : 'PulseAudio Simplified Synchronous Client Interface',
+    version : pa_version_str,
+    install_dir : pkgconfigdir,
+    libraries : extra_libs,
+    extra_cflags : extra_cflags,
+  )
   if glib_dep.found()
-    pc_files += 'libpulse-mainloop-glib.pc'
+    pkg.generate(libpulse_mainloop_glib,
+      name : 'libpulse-mainloop-glib',
+      description : 'PulseAudio GLib 2.0 Main Loop Wrapper',
+      version : pa_version_str,
+      install_dir : pkgconfigdir,
+      libraries : extra_libs,
+      extra_cflags : extra_cflags,
+    )
   endif
-
-  foreach file : pc_files
-    configure_file(
-      input : file + '.in',
-      output : file,
-      configuration : pc_cdata,
-      install_dir : pkgconfigdir)
-  endforeach
 
   # CMake files
 
@@ -962,6 +980,7 @@ summary = [
   'Enable X11:                    @0@'.format(x11_dep.found()),
   'Enable D-Bus:                  @0@'.format(dbus_dep.found()),
   'Enable GLib 2:                 @0@'.format(glib_dep.found()),
+  'Enable libsndfile:             @0@'.format(sndfile_dep.found()),
   'Enable systemd integration:    @0@'.format(libsystemd_dep.found()),
   'Enable FFTW:                   @0@'.format(fftw_dep.found()),
   'Enable IPv6:                   @0@'.format(get_option('ipv6')),
@@ -1034,6 +1053,10 @@ endif
 message('\n    '.join(summary))
 
 # Sanity checks
+
+if not get_option('daemon') and not get_option('client')
+  error('You disabled daemon and client. There is nothing to build!')
+endif
 
 if get_option('daemon') and not speex_dep.found() and not webrtc_dep.found() and not get_option('adrian-aec')
   error('At least one echo canceller implementation must be available!')
