@@ -87,7 +87,7 @@ static const char* const valid_modargs[] = {
     "format",
     "channels",
     "rate",
-    "destination", /* Compatbility */
+    "destination", /* Compatibility */
     "destination_ip",
     "source_ip",
     "port",

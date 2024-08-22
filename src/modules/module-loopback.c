@@ -121,7 +121,7 @@ struct userdata {
     int64_t next_latency_with_drift;
     int64_t next_latency_at_optimum_rate_with_drift;
 
-    /* Filter varables used for 2nd order filter */
+    /* Filter variables used for 2nd order filter */
     double drift_filter;
     double drift_compensation_rate;
 
@@ -945,7 +945,7 @@ static void source_output_moving_cb(pa_source_output *o, pa_source *dest) {
     u->log_counter = u->log_interval;
     u->latency_error = 0;
 
-    /* Send a mesage to the output thread that the source has changed.
+    /* Send a message to the output thread that the source has changed.
      * If the sink is invalid here during a profile switching situation
      * we can safely set push_called to false directly. */
     if (u->sink_input->sink)

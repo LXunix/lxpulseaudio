@@ -367,7 +367,7 @@ fail:
     return -1;
 }
 
-/* Return a newly allocated sting containing the parent directory of the specified file */
+/* Return a newly allocated string containing the parent directory of the specified file */
 char *pa_parent_dir(const char *fn) {
     char *slash, *dir = pa_xstrdup(fn);
 
@@ -2085,7 +2085,7 @@ char *pa_find_config_file(const char *global, const char *local, const char *env
     return NULL;
 }
 
-/* Format the specified data as a hexademical string */
+/* Format the specified data as a hexadecimal string */
 char *pa_hexstr(const uint8_t* d, size_t dlength, char *s, size_t slength) {
     size_t i = 0, j = 0;
     const char hex[] = "0123456789abcdef";
@@ -2317,7 +2317,7 @@ static int prepare_number_string(const char *s, enum numtype type, char **tmp, c
 
     /* The strtoul and strtoull functions allow a minus sign even though they
      * parse an unsigned number. In case of a minus sign the original negative
-     * number gets negated. We don't want that kind of behviour. */
+     * number gets negated. We don't want that kind of behaviour. */
     if (type == NUMTYPE_UINT && s[0] == '-')
         return -1;
 

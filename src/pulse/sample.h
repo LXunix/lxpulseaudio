@@ -171,7 +171,7 @@ typedef enum pa_sample_format {
     PA_SAMPLE_S24_32BE,
     /**< Signed 24 Bit PCM in LSB of 32 Bit words, big endian. \since 0.9.15 */
 
-    /* Remeber to update
+    /* Remember to update
      * https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/SupportedAudioFormats/
      * when adding new formats! */
 
@@ -337,12 +337,12 @@ char* pa_bytes_snprint(char *s, size_t l, unsigned v);
 
 /** Returns 1 when the specified format is little endian, 0 when
  * big endian. Returns -1 when endianness does not apply to the
- * specified format, or endianess is unknown. \since 0.9.16 */
+ * specified format, or endianness is unknown. \since 0.9.16 */
 int pa_sample_format_is_le(pa_sample_format_t f) PA_GCC_PURE;
 
 /** Returns 1 when the specified format is big endian, 0 when
  * little endian. Returns -1 when endianness does not apply to the
- * specified format, or endianess is unknown. \since 0.9.16 */
+ * specified format, or endianness is unknown. \since 0.9.16 */
 int pa_sample_format_is_be(pa_sample_format_t f) PA_GCC_PURE;
 
 #ifdef WORDS_BIGENDIAN
@@ -351,11 +351,11 @@ int pa_sample_format_is_be(pa_sample_format_t f) PA_GCC_PURE;
 #else
 /** Returns 1 when the specified format is native endian, 0 when
  * not. Returns -1 when endianness does not apply to the
- * specified format, or endianess is unknown. \since 0.9.16 */
+ * specified format, or endianness is unknown. \since 0.9.16 */
 #define pa_sample_format_is_ne(f) pa_sample_format_is_le(f)
 /** Returns 1 when the specified format is reverse endian, 0 when
  * native. Returns -1 when endianness does not apply to the
- * specified format, or endianess is unknown. \since 0.9.16 */
+ * specified format, or endianness is unknown. \since 0.9.16 */
 #define pa_sample_format_is_re(f) pa_sample_format_is_be(f)
 #endif
 

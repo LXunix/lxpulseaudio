@@ -562,7 +562,7 @@ size_t pa_resampler_result(pa_resampler *r, size_t in_length) {
     if (!r)
         return in_length;
 
-    /* Convert to intput frames */
+    /* Convert to input frames */
     in_length = in_length / r->i_fz;
 
      /* soxr processes samples in blocks, depending on the ratio.

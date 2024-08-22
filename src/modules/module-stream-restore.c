@@ -1579,7 +1579,7 @@ static void update_preferred_device(struct userdata *u, const char *name, const 
         send_new_entry_signal(de);
     } else {
         /* We send a D-Bus signal when the device changes, but not when the
-         * card changes. That's becaues the D-Bus interface doesn't expose the
+         * card changes. That's because the D-Bus interface doesn't expose the
          * card field to clients at all. */
         if (!created_new_entry && !pa_safe_streq(entry->device, old->device))
             send_device_updated_signal(de, entry);

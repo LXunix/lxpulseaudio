@@ -161,7 +161,7 @@
  * \li pa_stream_cork() - Start or stop the playback or recording.
  * \li pa_stream_trigger() - Start playback immediately and do not wait for
  *                           the buffer to fill up to the set trigger level.
- * \li pa_stream_prebuf() - Reenable the playback trigger level.
+ * \li pa_stream_prebuf() - Re-enable the playback trigger level.
  * \li pa_stream_drain() - Wait for the playback buffer to go empty. Will
  *                         return a pa_operation object that will indicate when
  *                         the buffer is completely drained.
@@ -664,7 +664,7 @@ pa_operation* pa_stream_cork(pa_stream *s, int b, pa_stream_success_cb_t cb, voi
  * \a seek of pa_stream_write() instead of this function. */
 pa_operation* pa_stream_flush(pa_stream *s, pa_stream_success_cb_t cb, void *userdata);
 
-/** Reenable prebuffering if specified in the pa_buffer_attr
+/** Re-enable prebuffering if specified in the pa_buffer_attr
  * structure. Available for playback streams only. */
 pa_operation* pa_stream_prebuf(pa_stream *s, pa_stream_success_cb_t cb, void *userdata);
 

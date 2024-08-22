@@ -845,7 +845,7 @@ typedef enum pa_sink_flags {
      * sinks). */
 
     PA_SINK_DEFERRED_VOLUME = 0x2000000U,
-    /**< The HW volume changes are syncronized with SW volume. */
+    /**< The HW volume changes are synchronized with SW volume. */
 /** \endcond */
 #endif
 
@@ -964,7 +964,7 @@ typedef enum pa_source_flags {
      * sources). */
 
     PA_SOURCE_DEFERRED_VOLUME = 0x2000000U,
-    /**< The HW volume changes are syncronized with SW volume. */
+    /**< The HW volume changes are synchronized with SW volume. */
 #endif
 } pa_source_flags_t;
 

@@ -275,7 +275,7 @@ int pa_rtp_send(pa_rtp_context *c, pa_memblockq *q) {
         return -1;
 
     /*
-     * While we check here for atleast MTU worth of data being available in
+     * While we check here for at least MTU worth of data being available in
      * memblockq, we might not have exact equivalent to MTU. Hence, we walk
      * over the memchunks in memblockq and accumulate MTU bytes next.
      */

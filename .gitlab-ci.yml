@@ -21,6 +21,7 @@ workflow:
 
 stages:
   - container
+  - lint
   - build
 
 variables:
@@ -117,3 +118,12 @@ build-meson:
   artifacts:
     paths:
       - build/
+
+lint-codespell:
+  stage: lint
+  image: $UBUNTU_IMAGE
+  before_script:
+    - apt-get update && apt-get install -y python3-pip
+    - pip3 install codespell
+  script:
+    - codespell

@@ -5,7 +5,7 @@
   This file is part of PulseAudio.
 
   Copyright 2008-2013 João Paulo Rechi Vita
-  Copyrigth 2018-2019 Pali Rohár <pali.rohar@gmail.com>
+  Copyright 2018-2019 Pali Rohár <pali.rohar@gmail.com>
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
