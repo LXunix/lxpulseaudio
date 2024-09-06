@@ -1154,7 +1154,7 @@ static pa_bluetooth_device* device_create(pa_bluetooth_discovery *y, const char 
 
     d = pa_xnew0(pa_bluetooth_device, 1);
     d->discovery = y;
-    d->enable_hfp_hf = pa_bluetooth_discovery_get_enable_native_hfp_hf(y);
+    d->enable_hfp_hf = y->enable_native_hfp_hf || y->headset_backend != HEADSET_BACKEND_NATIVE;
     d->path = pa_xstrdup(path);
     d->uuids = pa_hashmap_new_full(pa_idxset_string_hash_func, pa_idxset_string_compare_func, NULL, pa_xfree);
     d->a2dp_sink_endpoints = pa_hashmap_new_full(pa_a2dp_codec_id_hash_func, pa_a2dp_codec_id_compare_func, pa_xfree, (pa_free_cb_t)pa_hashmap_free);
