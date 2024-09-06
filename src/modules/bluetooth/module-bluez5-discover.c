@@ -147,9 +147,6 @@ int pa__init(pa_module *m) {
         goto fail;
     }
 
-    /* default value if no module parameter */
-    enable_native_hfp_hf = (headset_backend == HEADSET_BACKEND_NATIVE);
-
     autodetect_mtu = false;
     if (pa_modargs_get_value_boolean(ma, "autodetect_mtu", &autodetect_mtu) < 0) {
         pa_log("Invalid boolean value for autodetect_mtu parameter");
@@ -158,7 +155,7 @@ int pa__init(pa_module *m) {
     if (pa_modargs_get_value_boolean(ma, "enable_msbc", &enable_msbc) < 0) {
         pa_log("Invalid boolean value for enable_msbc parameter");
     }
-    enable_native_hfp_hf = true;
+    enable_native_hfp_hf = (headset_backend == HEADSET_BACKEND_NATIVE);
     if (pa_modargs_get_value_boolean(ma, "enable_native_hfp_hf", &enable_native_hfp_hf) < 0) {
         pa_log("enable_native_hfp_hf must be true or false");
         goto fail;
