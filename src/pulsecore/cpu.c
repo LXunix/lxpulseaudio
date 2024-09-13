@@ -30,6 +30,8 @@ void pa_cpu_init(pa_cpu_info *cpu_info) {
             cpu_info->cpu_type = PA_CPU_X86;
         else if (pa_cpu_init_arm(&cpu_info->flags.arm))
             cpu_info->cpu_type = PA_CPU_ARM;
+        else if (pa_cpu_init_riscv(&cpu_info->flags.riscv))
+            cpu_info->cpu_type = PA_CPU_RISCV;
         pa_cpu_init_orc(*cpu_info);
     }
 
