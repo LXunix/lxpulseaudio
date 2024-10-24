@@ -9,9 +9,15 @@
 
 add_languages('cpp')
 
-libwebrtc_util_sources = [
-  'webrtc.cc'
-]
+if cdata.has('HAVE_WEBRTC1')
+  libwebrtc_util_sources = [
+    'webrtc.cc'
+  ]
+else
+  libwebrtc_util_sources = [
+    'webrtc-old.cc'
+  ]
+endif
 
 if host_machine.system() == 'darwin'
   ignore_unresolved_symbols_link_args = ['-Wl,-undefined,dynamic_lookup']
