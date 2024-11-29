@@ -39,6 +39,24 @@
 
 #include "oss-util.h"
 
+#ifdef __FreeBSD__
+#ifndef DSP_CAP_COPROC
+#define DSP_CAP_COPROC 0x00000800
+#endif
+#ifndef DSP_CAP_TRIGGER
+#define DSP_CAP_TRIGGER 0x00001000
+#endif
+#ifndef DSP_CAP_MMAP
+#define DSP_CAP_MMAP 0x00002000
+#endif
+#ifndef DSP_CAP_MULTI
+#define DSP_CAP_MULTI 0x00004000
+#endif
+#ifndef DSP_CAP_BIND
+#define DSP_CAP_BIND  0x00008000
+#endif
+#endif
+
 int pa_oss_open(const char *device, int *mode, int* pcaps) {
     static const int nonblock_io = 1;
     int fd = -1;
