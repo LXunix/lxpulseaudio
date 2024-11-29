@@ -105,7 +105,11 @@ static inline size_t shm_marker_size(pa_mem_type_t type) {
 
 #ifdef HAVE_SHM_OPEN
 static char *segment_name(char *fn, size_t l, unsigned id) {
+#ifndef __FreeBSD__
     pa_snprintf(fn, l, "/pulse-shm-%u", id);
+#else
+    pa_snprintf(fn, l, "/tmp/pulse-shm-%u", id);
+#endif
     return fn;
 }
 #endif
