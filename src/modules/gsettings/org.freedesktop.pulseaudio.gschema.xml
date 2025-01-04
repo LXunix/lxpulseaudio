@@ -9,6 +9,7 @@
     <child name="rtp-recv" schema="org.freedesktop.pulseaudio.module-group"/>
     <child name="rtp-send" schema="org.freedesktop.pulseaudio.module-group"/>
     <child name="upnp-media-server" schema="org.freedesktop.pulseaudio.module-group"/>
+    <child name="loopback" schema="org.freedesktop.pulseaudio.module-group"/>
   </schema>
 
   <!-- Paprefs puts related modules into groups that are enabled or disabled as
