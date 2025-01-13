@@ -37,6 +37,12 @@
  * should be played, it is stored on the server and only the command to start
  * playing it needs to be sent.
  *
+ * \note The sample cache is generally not a good choice for anything except
+ * system notification sounds (the “event” media role). While sounds in other
+ * roles technically work, playback of cached samples is done via short-lived
+ * streams which, in non-system-notification roles, may provide a poor user
+ * experience in volume control software.
+ *
  * \section create_sec Creation
  *
  * To create a sample, the normal stream API is used (see \ref streams). The
