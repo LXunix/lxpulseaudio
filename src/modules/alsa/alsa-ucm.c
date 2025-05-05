@@ -2535,6 +2535,18 @@ static void ucm_port_data_free(pa_device_port *port) {
     pa_xfree(ucm_port->eld_mixer_device_name);
 }
 
+int pa_alsa_ucm_port_device_enable(pa_alsa_ucm_port_data *data) {
+    return ucm_device_enable(data->ucm, data->device);
+}
+
+int pa_alsa_ucm_port_device_disable(pa_alsa_ucm_port_data *data) {
+    return ucm_device_disable(data->ucm, data->device);
+}
+
+long pa_alsa_ucm_port_device_status(pa_alsa_ucm_port_data *data) {
+    return ucm_device_status(data->ucm, data->device);
+}
+
 #else /* HAVE_ALSA_UCM */
 
 /* Dummy functions for systems without UCM support */
@@ -2589,6 +2601,18 @@ void pa_alsa_ucm_roled_stream_begin(pa_alsa_ucm_config *ucm, const char *role, p
 }
 
 void pa_alsa_ucm_roled_stream_end(pa_alsa_ucm_config *ucm, const char *role, pa_direction_t dir) {
+}
+
+int pa_alsa_ucm_port_device_enable(pa_alsa_ucm_port_data *data) {
+    return -1;
+}
+
+int pa_alsa_ucm_port_device_disable(pa_alsa_ucm_port_data *data) {
+    return -1;
+}
+
+long pa_alsa_ucm_port_device_status(pa_alsa_ucm_port_data *data) {
+    return -1;
 }
 
 #endif

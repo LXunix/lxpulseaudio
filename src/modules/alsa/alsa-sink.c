@@ -195,6 +195,7 @@ enum {
 
 static void userdata_free(struct userdata *u);
 static int unsuspend(struct userdata *u, bool recovering);
+static void sync_mixer(struct userdata *u, pa_device_port *port);
 
 /* FIXME: Is there a better way to do this than device names? */
 static bool is_iec958(struct userdata *u) {
@@ -1087,6 +1088,12 @@ static void suspend(struct userdata *u) {
     pa_sink_set_max_rewind_within_thread(u->sink, 0);
     pa_sink_set_max_request_within_thread(u->sink, 0);
 
+    /* Disabling the UCM devices may save some power. */
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(u->sink->active_port);
+        pa_alsa_ucm_port_device_disable(data);
+    }
+
     pa_log_info("Device suspended...");
 }
 
@@ -1201,6 +1208,13 @@ static int unsuspend(struct userdata *u, bool recovering) {
     pa_assert(!u->pcm_handle);
 
     pa_log_info("Trying resume...");
+
+    /* We disable all UCM devices when suspending, so let's enable them again. */
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(u->sink->active_port);
+        pa_alsa_ucm_port_device_enable(data);
+        sync_mixer(u, u->sink->active_port);
+    }
 
     if ((is_iec958(u) || is_hdmi(u)) && pa_sink_is_passthrough(u->sink)) {
         /* Need to open device in NONAUDIO mode */
@@ -1508,6 +1522,12 @@ static void sink_get_volume_cb(pa_sink *s) {
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
 
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
+
     if (pa_alsa_path_get_volume(u->mixer_path, u->mixer_handle, &s->channel_map, &r) < 0)
         return;
 
@@ -1537,6 +1557,12 @@ static void sink_set_volume_cb(pa_sink *s) {
     pa_assert(u);
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
+
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
 
     /* Shift up by the base volume */
     pa_sw_cvolume_divide_scalar(&r, &s->real_volume, s->base_volume);
@@ -1601,6 +1627,12 @@ static void sink_write_volume_cb(pa_sink *s) {
     pa_assert(u->mixer_handle);
     pa_assert(s->flags & PA_SINK_DEFERRED_VOLUME);
 
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
+
     /* Shift up by the base volume */
     pa_sw_cvolume_divide_scalar(&hw_vol, &hw_vol, s->base_volume);
 
@@ -1639,6 +1671,14 @@ static int sink_get_mute_cb(pa_sink *s, bool *mute) {
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
 
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0) {
+            *mute = s->muted;
+            return 0;
+        }
+    }
+
     if (pa_alsa_path_get_mute(u->mixer_path, u->mixer_handle, mute) < 0)
         return -1;
 
@@ -1651,6 +1691,12 @@ static void sink_set_mute_cb(pa_sink *s) {
     pa_assert(u);
     pa_assert(u->mixer_path);
     pa_assert(u->mixer_handle);
+
+    if (u->ucm_context) {
+        pa_alsa_ucm_port_data *data = PA_DEVICE_PORT_DATA(s->active_port);
+        if (pa_alsa_ucm_port_device_status(data) <= 0)
+            return;
+    }
 
     pa_alsa_path_set_mute(u->mixer_path, u->mixer_handle, s->muted);
 }
