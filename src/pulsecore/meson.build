@@ -1,6 +1,5 @@
 libpulsecore_sources = [
   'asyncmsgq.c',
-  'asyncq.c',
   'auth-cookie.c',
   'card.c',
   'cli-command.c',
@@ -60,7 +59,6 @@ libpulsecore_sources = [
 
 libpulsecore_headers = [
   'asyncmsgq.h',
-  'asyncq.h',
   'auth-cookie.h',
   'card.h',
   'cli-command.h',
