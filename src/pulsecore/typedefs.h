@@ -32,6 +32,7 @@ typedef struct pa_sink_input pa_sink_input;
 typedef struct pa_source pa_source;
 typedef struct pa_source_volume_change pa_source_volume_change;
 typedef struct pa_source_output pa_source_output;
+typedef struct pa_vsource pa_vsource;
 
 
 #endif

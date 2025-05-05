@@ -422,6 +422,8 @@ int pa_sink_input_start_move(pa_sink_input *i);
 int pa_sink_input_finish_move(pa_sink_input *i, pa_sink *dest, bool save);
 void pa_sink_input_fail_move(pa_sink_input *i);
 
+bool pa_sink_input_is_filter_loop(pa_sink_input *target, pa_sink *s);
+
 pa_usec_t pa_sink_input_get_requested_latency(pa_sink_input *i);
 
 /* To be used exclusively by the sink driver IO thread */

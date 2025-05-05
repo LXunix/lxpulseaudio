@@ -2,6 +2,28 @@ if host_machine.system() != 'windows'
   subdir('rtp')
 endif
 
+libvirtual_sink = shared_library('virtual_sink',
+   'virtual-sink-common.c',
+   'virtual-sink-common.h',
+    c_args : [pa_c_args, server_c_args],
+    include_directories : [configinc, topinc],
+    dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep],
+    install_rpath : privlibdir,
+    install : true,
+    install_dir : modlibexecdir
+)
+
+libvirtual_source = shared_library('virtual_source',
+   'virtual-source-common.c',
+   'virtual-source-common.h',
+    c_args : [pa_c_args, server_c_args],
+    include_directories : [configinc, topinc],
+    dependencies : [libpulse_dep, libpulsecommon_dep, libpulsecore_dep],
+    install_rpath : privlibdir,
+    install : true,
+    install_dir : modlibexecdir
+)
+
 # module name, sources, [headers, extra flags, extra deps, extra libs]
 all_modules = [
   [ 'module-allow-passthrough', 'module-allow-passthrough.c' ],
@@ -28,7 +50,7 @@ all_modules = [
   [ 'module-http-protocol-tcp', 'module-protocol-stub.c', [], ['-DUSE_PROTOCOL_HTTP', '-DUSE_TCP_SOCKETS'], [], libprotocol_http ],
   [ 'module-http-protocol-unix', 'module-protocol-stub.c', [], ['-DUSE_PROTOCOL_HTTP', '-DUSE_UNIX_SOCKETS'], [], libprotocol_http ],
   [ 'module-intended-roles', 'module-intended-roles.c' ],
-  [ 'module-ladspa-sink', 'module-ladspa-sink.c', 'ladspa.h', ['-DLADSPA_PATH=' + join_paths(libdir, 'ladspa') + ':/usr/local/lib/ladspa:/usr/lib/ladspa:/usr/local/lib64/ladspa:/usr/lib64/ladspa'], [dbus_dep, libm_dep, ltdl_dep] ],
+  [ 'module-ladspa-sink', 'module-ladspa-sink.c', 'ladspa.h', ['-DLADSPA_PATH=' + join_paths(libdir, 'ladspa') + ':/usr/local/lib/ladspa:/usr/lib/ladspa:/usr/local/lib64/ladspa:/usr/lib64/ladspa'], [dbus_dep, libm_dep, ltdl_dep], libvirtual_sink ],
   [ 'module-loopback', 'module-loopback.c' ],
   [ 'module-match', 'module-match.c' ],
   [ 'module-native-protocol-fd', 'module-native-protocol-fd.c', [], [], [], libprotocol_native ],
@@ -37,8 +59,8 @@ all_modules = [
   [ 'module-null-sink', 'module-null-sink.c' ],
   [ 'module-null-source', 'module-null-source.c' ],
   [ 'module-position-event-sounds', 'module-position-event-sounds.c' ],
-  [ 'module-remap-sink', 'module-remap-sink.c' ],
-  [ 'module-remap-source', 'module-remap-source.c' ],
+  [ 'module-remap-sink', 'module-remap-sink.c', [], [], [], libvirtual_sink ],
+  [ 'module-remap-source', 'module-remap-source.c', [], [], [], libvirtual_source ],
   [ 'module-rescue-streams', 'module-rescue-streams.c' ],
   [ 'module-role-cork', ['module-role-cork.c', 'stream-interaction.c'], 'stream-interaction.h' ],
   [ 'module-role-ducking', ['module-role-ducking.c', 'stream-interaction.c'], 'stream-interaction.h' ],
@@ -55,8 +77,8 @@ all_modules = [
   [ 'module-tunnel-sink-new', ['module-tunnel-sink-new.c', 'restart-module.c'] ],
   [ 'module-tunnel-source', ['module-tunnel.c', 'restart-module.c'], [], [], [x11_dep] ],
   [ 'module-tunnel-source-new', ['module-tunnel-source-new.c', 'restart-module.c'] ],
-  [ 'module-virtual-sink', 'module-virtual-sink.c' ],
-  [ 'module-virtual-source', 'module-virtual-source.c' ],
+  [ 'module-virtual-sink', 'module-virtual-sink.c', [], [], [], libvirtual_sink ],
+  [ 'module-virtual-source', 'module-virtual-source.c', [], [], [], libvirtual_source ],
   [ 'module-volume-restore', 'module-volume-restore.c' ],
 ]
 
@@ -163,13 +185,13 @@ endif
 
 if fftw_dep.found()
   all_modules += [
-    [ 'module-virtual-surround-sink', 'module-virtual-surround-sink.c', [], [], [fftw_dep, libm_dep] ],
+    [ 'module-virtual-surround-sink', 'module-virtual-surround-sink.c', [], [], [fftw_dep, libm_dep], libvirtual_sink ],
   ]
 endif
 
 if dbus_dep.found() and fftw_dep.found()
   all_modules += [
-    [ 'module-equalizer-sink', 'module-equalizer-sink.c', [], [], [dbus_dep, fftw_dep, libm_dep] ],
+    [ 'module-equalizer-sink', 'module-equalizer-sink.c', [], [], [dbus_dep, fftw_dep, libm_dep], libvirtual_sink ],
   ]
 endif
 
@@ -251,7 +273,7 @@ module_echo_cancel_sources = [
 module_echo_cancel_orc_sources = []
 module_echo_cancel_flags = []
 module_echo_cancel_deps = [libatomic_ops_dep]
-module_echo_cancel_libs = []
+module_echo_cancel_libs = [libvirtual_sink, libvirtual_source]
 
 if get_option('adrian-aec')
   module_echo_cancel_sources += [

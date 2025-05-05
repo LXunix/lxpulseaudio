@@ -286,7 +286,8 @@ pa_sink* pa_sink_new(
 
     s->inputs = pa_idxset_new(NULL, NULL);
     s->n_corked = 0;
-    s->input_to_master = NULL;
+    s->vsink = NULL;
+    s->uplink_of = NULL;
 
     s->reference_volume = s->real_volume = data->volume;
     pa_cvolume_reset(&s->soft_volume, s->sample_spec.channels);
@@ -1693,10 +1694,10 @@ pa_sink *pa_sink_get_master(pa_sink *s) {
     pa_sink_assert_ref(s);
 
     while (s && (s->flags & PA_SINK_SHARE_VOLUME_WITH_MASTER)) {
-        if (PA_UNLIKELY(!s->input_to_master))
+        if (PA_UNLIKELY(!s->vsink || (s->vsink && !s->vsink->input_to_master)))
             return NULL;
 
-        s = s->input_to_master->sink;
+        s = s->vsink->input_to_master->sink;
     }
 
     return s;
@@ -1706,7 +1707,7 @@ pa_sink *pa_sink_get_master(pa_sink *s) {
 bool pa_sink_is_filter(pa_sink *s) {
     pa_sink_assert_ref(s);
 
-    return (s->input_to_master != NULL);
+    return ((s->vsink != NULL) && (s->vsink->input_to_master != NULL));
 }
 
 /* Called from main context */
@@ -2552,7 +2553,7 @@ unsigned pa_sink_check_suspend(pa_sink *s, pa_sink_input *ignore_input, pa_sourc
     }
 
     if (s->monitor_source)
-        ret += pa_source_check_suspend(s->monitor_source, ignore_output);
+        ret += pa_source_check_suspend(s->monitor_source, ignore_input, ignore_output);
 
     return ret;
 }
@@ -3257,6 +3258,9 @@ void pa_sink_invalidate_requested_latency(pa_sink *s, bool dynamic) {
         return;
 
     if (PA_SINK_IS_LINKED(s->thread_info.state)) {
+
+        if (s->uplink_of && s->uplink_of->source)
+            pa_source_invalidate_requested_latency(s->uplink_of->source, dynamic);
 
         if (s->update_requested_latency)
             s->update_requested_latency(s);
@@ -4064,9 +4068,32 @@ void pa_sink_move_streams_to_default_sink(pa_core *core, pa_sink *old_sink, bool
         if (!i->sink)
             continue;
 
-        /* Don't move sink-inputs which connect filter sinks to their target sinks */
-        if (i->origin_sink)
+        /* If this is a filter stream and the default sink is set to a filter sink within
+         * the same filter chain, we would create a loop and therefore have to find another
+         * sink to move to. */
+        if (i->origin_sink && pa_sink_input_is_filter_loop(i, core->default_sink)) {
+            pa_sink *best;
+
+            /* If the default sink changed to our filter chain, lets make the current
+             * master the preferred sink. */
+            if (default_sink_changed) {
+                pa_xfree(i->preferred_sink);
+                i->preferred_sink = pa_xstrdup(i->sink->name);
+
+                continue;
+            }
+
+            best = pa_core_find_best_sink(core, true);
+
+            if (!best || !pa_sink_input_may_move_to(i, best))
+                continue;
+
+            pa_log_info("Moving sink input %u \"%s\" to the default sink would create a filter loop, moving to %s instead.",
+                        i->index, pa_strnull(pa_proplist_gets(i->proplist, PA_PROP_APPLICATION_NAME)), best->name);
+
+            pa_sink_input_move_to(i, best, false);
             continue;
+        }
 
         /* If default_sink_changed is false, the old sink became unavailable, so all streams must be moved. */
         if (pa_safe_streq(old_sink->name, i->preferred_sink) && default_sink_changed)

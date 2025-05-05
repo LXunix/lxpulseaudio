@@ -272,7 +272,7 @@ static bool find_paired_master(struct userdata *u, struct filter *filter, pa_obj
                         }
                         /* Make sure we're not routing to another instance of
                          * the same filter. */
-                        filter->source_master = so->source->output_from_master->source;
+                        filter->source_master = so->source->vsource->output_from_master->source;
                     } else {
                         filter->source_master = so->source;
                     }
@@ -293,7 +293,7 @@ static bool find_paired_master(struct userdata *u, struct filter *filter, pa_obj
                     if (pa_streq(module_name, si->sink->module->name)) {
                         /* Make sure we're not routing to another instance of
                          * the same filter. */
-                        filter->sink_master = si->sink->input_to_master->sink;
+                        filter->sink_master = si->sink->vsink->input_to_master->sink;
                     } else {
                         filter->sink_master = si->sink;
                     }
@@ -461,7 +461,7 @@ static void find_filters_for_module(struct userdata *u, pa_module *m, const char
         if (sink->module == m) {
             pa_assert(pa_sink_is_filter(sink));
 
-            fltr = filter_new(name, parameters, sink->input_to_master->sink, NULL);
+            fltr = filter_new(name, parameters, sink->vsink->input_to_master->sink, NULL);
             fltr->module_index = m->index;
             fltr->sink = sink;
 
@@ -474,12 +474,12 @@ static void find_filters_for_module(struct userdata *u, pa_module *m, const char
             pa_assert(pa_source_is_filter(source));
 
             if (!fltr) {
-                fltr = filter_new(name, parameters, NULL, source->output_from_master->source);
+                fltr = filter_new(name, parameters, NULL, source->vsource->output_from_master->source);
                 fltr->module_index = m->index;
                 fltr->source = source;
             } else {
                 fltr->source = source;
-                fltr->source_master = source->output_from_master->source;
+                fltr->source_master = source->vsource->output_from_master->source;
             }
 
             break;

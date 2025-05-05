@@ -415,7 +415,7 @@ finish:
 /* a  < b  ->  return -1
  * a == b  ->  return  0
  * a  > b  ->  return  1 */
-static int compare_sinks(pa_sink *a, pa_sink *b) {
+static int compare_sinks(pa_sink *a, pa_sink *b, bool ignore_configured_virtual_default) {
     pa_core *core;
 
     core = a->core;
@@ -429,21 +429,35 @@ static int compare_sinks(pa_sink *a, pa_sink *b) {
         return 1;
 
     /* The policy default sink is preferred over any other sink. */
-    if (pa_safe_streq(b->name, core->policy_default_sink))
-        return -1;
-    if (pa_safe_streq(a->name, core->policy_default_sink))
-        return 1;
+    if (pa_safe_streq(b->name, core->policy_default_sink)) {
+        if (!ignore_configured_virtual_default || !pa_sink_is_filter(b))
+            return -1;
+    }
+    if (pa_safe_streq(a->name, core->policy_default_sink)) {
+        if (!ignore_configured_virtual_default || !pa_sink_is_filter(a))
+            return 1;
+    }
 
     /* The configured default sink is preferred over any other sink
      * except the policy default sink. */
-    if (pa_safe_streq(b->name, core->configured_default_sink))
-        return -1;
-    if (pa_safe_streq(a->name, core->configured_default_sink))
-        return 1;
+    if (pa_safe_streq(b->name, core->configured_default_sink)) {
+        if (!ignore_configured_virtual_default || !pa_sink_is_filter(b))
+            return -1;
+    }
+    if (pa_safe_streq(a->name, core->configured_default_sink)) {
+        if (!ignore_configured_virtual_default || !pa_sink_is_filter(a))
+            return 1;
+    }
 
     if (a->priority < b->priority)
         return -1;
     if (a->priority > b->priority)
+        return 1;
+
+    /* Let sinks like pipe sink or null sink win against filter sinks */
+    if (a->vsink && !b->vsink)
+        return -1;
+    if (!a->vsink && b->vsink)
         return 1;
 
     /* It's hard to find any difference between these sinks, but maybe one of
@@ -457,11 +471,10 @@ static int compare_sinks(pa_sink *a, pa_sink *b) {
     return 0;
 }
 
-void pa_core_update_default_sink(pa_core *core) {
+pa_sink *pa_core_find_best_sink(pa_core *core, bool ignore_configured_virtual_default) {
     pa_sink *best = NULL;
     pa_sink *sink;
     uint32_t idx;
-    pa_sink *old_default_sink;
 
     pa_assert(core);
 
@@ -474,9 +487,20 @@ void pa_core_update_default_sink(pa_core *core) {
             continue;
         }
 
-        if (compare_sinks(sink, best) > 0)
+        if (compare_sinks(sink, best, ignore_configured_virtual_default) > 0)
             best = sink;
     }
+
+    return best;
+}
+
+void pa_core_update_default_sink(pa_core *core) {
+    pa_sink *best;
+    pa_sink *old_default_sink;
+
+    pa_assert(core);
+
+    best = pa_core_find_best_sink(core, false);
 
     old_default_sink = core->default_sink;
 
@@ -503,7 +527,7 @@ void pa_core_update_default_sink(pa_core *core) {
 /* a  < b  ->  return -1
  * a == b  ->  return  0
  * a  > b  ->  return  1 */
-static int compare_sources(pa_source *a, pa_source *b) {
+static int compare_sources(pa_source *a, pa_source *b, bool ignore_configured_virtual_default) {
     pa_core *core;
 
     core = a->core;
@@ -517,17 +541,25 @@ static int compare_sources(pa_source *a, pa_source *b) {
         return 1;
 
     /* The policy default source is preferred over any other source. */
-    if (pa_safe_streq(b->name, core->policy_default_source))
-        return -1;
-    if (pa_safe_streq(a->name, core->policy_default_source))
-        return 1;
+    if (pa_safe_streq(b->name, core->policy_default_source)) {
+        if (!ignore_configured_virtual_default || !pa_source_is_filter(b))
+            return -1;
+    }
+    if (pa_safe_streq(a->name, core->policy_default_source)) {
+        if (!ignore_configured_virtual_default || !pa_source_is_filter(a))
+            return 1;
+    }
 
     /* The configured default source is preferred over any other source
      * except the policy default source. */
-    if (pa_safe_streq(b->name, core->configured_default_source))
-        return -1;
-    if (pa_safe_streq(a->name, core->configured_default_source))
-        return 1;
+    if (pa_safe_streq(b->name, core->configured_default_source)) {
+        if (!ignore_configured_virtual_default || !pa_source_is_filter(b))
+            return -1;
+    }
+    if (pa_safe_streq(a->name, core->configured_default_source)) {
+        if (!ignore_configured_virtual_default || !pa_source_is_filter(a))
+            return 1;
+    }
 
     /* Monitor sources lose to non-monitor sources. */
     if (a->monitor_of && !b->monitor_of)
@@ -540,9 +572,15 @@ static int compare_sources(pa_source *a, pa_source *b) {
     if (a->priority > b->priority)
         return 1;
 
+    /* Let sources like pipe source or null source win against filter sources */
+    if (a->vsource && !b->vsource)
+        return -1;
+    if (!a->vsource && b->vsource)
+        return 1;
+
     /* If the sources are monitors, we can compare the monitored sinks. */
     if (a->monitor_of)
-        return compare_sinks(a->monitor_of, b->monitor_of);
+        return compare_sinks(a->monitor_of, b->monitor_of, false);
 
     /* It's hard to find any difference between these sources, but maybe one of
      * them is already the default source? If so, it's best to keep it as the
@@ -555,11 +593,10 @@ static int compare_sources(pa_source *a, pa_source *b) {
     return 0;
 }
 
-void pa_core_update_default_source(pa_core *core) {
+pa_source *pa_core_find_best_source(pa_core *core, bool ignore_configured_virtual_default) {
     pa_source *best = NULL;
     pa_source *source;
     uint32_t idx;
-    pa_source *old_default_source;
 
     pa_assert(core);
 
@@ -572,9 +609,20 @@ void pa_core_update_default_source(pa_core *core) {
             continue;
         }
 
-        if (compare_sources(source, best) > 0)
+        if (compare_sources(source, best, ignore_configured_virtual_default) > 0)
             best = source;
     }
+
+    return best;
+}
+
+void pa_core_update_default_source(pa_core *core) {
+    pa_source *best;
+    pa_source *old_default_source;
+
+    pa_assert(core);
+
+    best = pa_core_find_best_source(core, false);
 
     old_default_source = core->default_source;
 
@@ -693,11 +741,6 @@ void pa_core_move_streams_to_newly_available_preferred_sink(pa_core *c, pa_sink 
         if (!si->sink)
             continue;
 
-        /* Skip this sink input if it is connecting a filter sink to
-         * the master */
-        if (si->origin_sink)
-            continue;
-
         /* It might happen that a stream and a sink are set up at the
            same time, in which case we want to make sure we don't
            interfere with that */
@@ -725,11 +768,6 @@ void pa_core_move_streams_to_newly_available_preferred_source(pa_core *c, pa_sou
             continue;
 
         if (!so->source)
-            continue;
-
-        /* Skip this source output if it is connecting a filter source to
-         * the master */
-        if (so->destination_source)
             continue;
 
         /* It might happen that a stream and a source are set up at the

@@ -273,7 +273,7 @@ pa_source* pa_source_new(
     s->outputs = pa_idxset_new(NULL, NULL);
     s->n_corked = 0;
     s->monitor_of = NULL;
-    s->output_from_master = NULL;
+    s->vsource = NULL;
 
     s->reference_volume = s->real_volume = data->volume;
     pa_cvolume_reset(&s->soft_volume, s->sample_spec.channels);
@@ -1235,10 +1235,10 @@ pa_source *pa_source_get_master(pa_source *s) {
     pa_source_assert_ref(s);
 
     while (s && (s->flags & PA_SOURCE_SHARE_VOLUME_WITH_MASTER)) {
-        if (PA_UNLIKELY(!s->output_from_master))
+        if (PA_UNLIKELY(!s->vsource || (s->vsource && !s->vsource->output_from_master)))
             return NULL;
 
-        s = s->output_from_master->source;
+        s = s->vsource->output_from_master->source;
     }
 
     return s;
@@ -1248,7 +1248,7 @@ pa_source *pa_source_get_master(pa_source *s) {
 bool pa_source_is_filter(pa_source *s) {
     pa_source_assert_ref(s);
 
-    return (s->output_from_master != NULL);
+    return (s->vsource->output_from_master != NULL);
 }
 
 /* Called from main context */
@@ -2019,7 +2019,7 @@ unsigned pa_source_used_by(pa_source *s) {
 }
 
 /* Called from main thread */
-unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore) {
+unsigned pa_source_check_suspend(pa_source *s, pa_sink_input *ignore_input, pa_source_output *ignore_output) {
     unsigned ret;
     pa_source_output *o;
     uint32_t idx;
@@ -2033,7 +2033,7 @@ unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore) {
     ret = 0;
 
     PA_IDXSET_FOREACH(o, s->outputs, idx) {
-        if (o == ignore)
+        if (o == ignore_output)
             continue;
 
         /* We do not assert here. It is perfectly valid for a source output to
@@ -2052,6 +2052,9 @@ unsigned pa_source_check_suspend(pa_source *s, pa_source_output *ignore) {
 
         ret ++;
     }
+
+    if (s->vsource && s->vsource->uplink_sink)
+        ret += pa_sink_check_suspend(s->vsource->uplink_sink, ignore_input, ignore_output);
 
     return ret;
 }
@@ -2399,6 +2402,16 @@ pa_usec_t pa_source_get_requested_latency_within_thread(pa_source *s) {
         if (o->thread_info.requested_source_latency != (pa_usec_t) -1 &&
             (result == (pa_usec_t) -1 || result > o->thread_info.requested_source_latency))
             result = o->thread_info.requested_source_latency;
+
+    if (s->vsource && s->vsource->uplink_sink) {
+        pa_usec_t uplink_sink_latency;
+
+        uplink_sink_latency = pa_sink_get_requested_latency_within_thread(s->vsource->uplink_sink);
+
+        if (uplink_sink_latency != (pa_usec_t) -1 &&
+            (result == (pa_usec_t) -1 || result > uplink_sink_latency))
+            result = uplink_sink_latency;
+    }
 
     if (result != (pa_usec_t) -1)
         result = PA_CLAMP(result, s->thread_info.min_latency, s->thread_info.max_latency);
@@ -3033,9 +3046,32 @@ void pa_source_move_streams_to_default_source(pa_core *core, pa_source *old_sour
         if (!o->source)
             continue;
 
-        /* Don't move source-outputs which connect sources to filter sources */
-        if (o->destination_source)
+        /* If this is a filter stream and the default source is set to a filter source within
+         * the same filter chain, we would create a loop and therefore have to find another
+         * source to move to. */
+        if (o->destination_source && pa_source_output_is_filter_loop(o, core->default_source)) {
+            pa_source *best;
+
+            /* If the default source changed to our filter chain, lets make the current
+             * master the preferred source. */
+            if (default_source_changed) {
+                pa_xfree(o->preferred_source);
+                o->preferred_source = pa_xstrdup(o->source->name);
+
+                continue;
+            }
+
+            best = pa_core_find_best_source(core, true);
+
+            if (!best || !pa_source_output_may_move_to(o, best))
+                continue;
+
+            pa_log_info("Moving source output %u \"%s\" to the default source would create a filter loop, moving to %s instead.",
+                        o->index, pa_strnull(pa_proplist_gets(o->proplist, PA_PROP_APPLICATION_NAME)), best->name);
+
+            pa_source_output_move_to(o, best, false);
             continue;
+        }
 
         /* If default_source_changed is false, the old source became unavailable, so all streams must be moved. */
         if (pa_safe_streq(old_source->name, o->preferred_source) && default_source_changed)

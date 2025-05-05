@@ -1304,12 +1304,13 @@ bool pa_source_output_may_move(pa_source_output *o) {
     return true;
 }
 
-static bool find_filter_source_output(pa_source_output *target, pa_source *s) {
+bool pa_source_output_is_filter_loop(pa_source_output *target, pa_source *s) {
     unsigned PA_UNUSED i = 0;
-    while (s && s->output_from_master) {
-        if (s->output_from_master == target)
+
+    while (s && (s->vsource && s->vsource->output_from_master)) {
+        if (s->vsource->output_from_master == target)
             return true;
-        s = s->output_from_master->source;
+        s = s->vsource->output_from_master->source;
         pa_assert(i++ < 100);
     }
     return false;
@@ -1321,8 +1322,8 @@ static bool is_filter_source_moving(pa_source_output *o) {
     if (!source)
         return false;
 
-    while (source->output_from_master) {
-        source = source->output_from_master->source;
+    while (source->vsource && source->vsource->output_from_master) {
+        source = source->vsource->output_from_master->source;
 
         if (!source)
             return true;
@@ -1347,7 +1348,7 @@ bool pa_source_output_may_move_to(pa_source_output *o, pa_source *dest) {
         return false;
 
     /* Make sure we're not creating a filter source cycle */
-    if (find_filter_source_output(o, dest)) {
+    if (pa_source_output_is_filter_loop(o, dest)) {
         pa_log_debug("Can't connect output to %s, as that would create a cycle.", dest->name);
         return false;
     }
@@ -1660,10 +1661,28 @@ void pa_source_output_fail_move(pa_source_output *o) {
     if (pa_hook_fire(&o->core->hooks[PA_CORE_HOOK_SOURCE_OUTPUT_MOVE_FAIL], o) == PA_HOOK_STOP)
         return;
 
-    /* Can we move the source output to the default source? */
-    if (o->core->rescue_streams && pa_source_output_may_move_to(o, o->core->default_source)) {
-        if (pa_source_output_finish_move(o, o->core->default_source, false) >= 0)
-            return;
+    /* Try to rescue stream if configured */
+    if (o->core->rescue_streams) {
+
+        /* Can we move the source output to the default source? */
+        if (pa_source_output_may_move_to(o, o->core->default_source)) {
+            if (pa_source_output_finish_move(o, o->core->default_source, false) >= 0)
+                return;
+        }
+
+        /* If this is a filter stream and the default source is set to a filter source within
+         * the same filter chain, we would create a loop and therefore have to find another
+         * source to move to. */
+        if (o->destination_source && pa_source_output_is_filter_loop(o, o->core->default_source)) {
+            pa_source *best;
+
+            best = pa_core_find_best_source(o->core, true);
+
+            if (best && pa_source_output_may_move_to(o, best)) {
+                if (pa_source_output_finish_move(o, best, false) >= 0)
+                return;
+            }
+        }
     }
 
     if (o->moving)
