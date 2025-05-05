@@ -629,7 +629,7 @@ static void handle_url(struct connection *c) {
         html_response(c, 404, "Not Found", NULL);
 }
 
-static void line_callback(pa_ioline *line, const char *s, void *userdata) {
+static void line_callback(pa_ioline *line, const char *s, size_t l, void *userdata) {
     struct connection *c = userdata;
     pa_assert(line);
     pa_assert(c);

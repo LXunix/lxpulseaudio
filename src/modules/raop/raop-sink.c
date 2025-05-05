@@ -69,7 +69,7 @@
 
 #include "raop-sink.h"
 #include "raop-client.h"
-#include "raop-util.h"
+#include "raop-common.h"
 
 #define UDP_TIMING_PACKET_LOSS_MAX (30 * PA_USEC_PER_SEC)
 #define UDP_TIMING_PACKET_DISCONNECT_CYCLE 3
@@ -79,6 +79,7 @@ struct userdata {
     pa_module *module;
     pa_sink *sink;
     pa_card *card;
+    pa_subscription *subscription;
 
     pa_thread *thread;
     pa_thread_mq thread_mq;
@@ -91,6 +92,7 @@ struct userdata {
     pa_raop_protocol_t protocol;
     pa_raop_encryption_t encryption;
     pa_raop_codec_t codec;
+    char *password;
     bool autoreconnect;
     /* if true, behaves like a null-sink when disconnected */
     bool autonull;
@@ -115,7 +117,9 @@ struct userdata {
 
 enum {
     PA_SINK_MESSAGE_SET_RAOP_STATE = PA_SINK_MESSAGE_MAX,
-    PA_SINK_MESSAGE_DISCONNECT_REQUEST
+    PA_SINK_MESSAGE_CONNECTED,
+    PA_SINK_MESSAGE_DISCONNECTED,
+    PA_SINK_MESSAGE_CONNECT_REQUEST
 };
 
 static void userdata_free(struct userdata *u);
@@ -129,7 +133,8 @@ static void raop_state_cb(pa_raop_state_t state, void *userdata) {
 
     pa_log_debug("State change received, informing IO thread...");
 
-    pa_asyncmsgq_post(u->thread_mq.inq, PA_MSGOBJECT(u->sink), PA_SINK_MESSAGE_SET_RAOP_STATE, PA_INT_TO_PTR(state), 0, NULL, NULL);
+    pa_asyncmsgq_send(u->thread_mq.inq, PA_MSGOBJECT(u->sink),
+                      PA_SINK_MESSAGE_SET_RAOP_STATE, PA_INT_TO_PTR(state), 0, NULL);
 }
 
 static int64_t sink_get_latency(const struct userdata *u) {
@@ -156,6 +161,44 @@ static int64_t sink_get_latency(const struct userdata *u) {
     return latency;
 }
 
+static void disconnect(struct userdata *u) {
+    unsigned int nbfds = 0;
+    struct pollfd *pollfd;
+    unsigned int i;
+
+    if (u->rtpoll_item) {
+        pollfd = pa_rtpoll_item_get_pollfd(u->rtpoll_item, &nbfds);
+        if (pollfd) {
+            for (i = 0; i < nbfds; i++) {
+                if (pollfd->fd >= 0)
+                    pa_close(pollfd->fd);
+                pollfd++;
+            }
+        }
+        pa_rtpoll_item_free(u->rtpoll_item);
+        u->rtpoll_item = NULL;
+    }
+
+    pa_raop_client_disconnect(u->raop);
+
+    if (u->sink->thread_info.state == PA_SINK_SUSPENDED)
+        pa_rtpoll_set_timer_disabled(u->rtpoll);
+
+    if (u->sink->thread_info.state == PA_SINK_RUNNING) {
+        if (!u->autonull)
+            pa_rtpoll_set_timer_disabled(u->rtpoll);
+
+        if (u->autoreconnect) {
+            if (pa_raop_client_is_authenticated(u->raop))
+                pa_raop_client_announce(u->raop);
+            else
+                pa_raop_client_authenticate(u->raop, u->password);
+        } else
+            pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->sink),
+                              PA_SINK_MESSAGE_DISCONNECTED, NULL, 0, NULL, NULL);
+    }
+}
+
 static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk) {
     struct userdata *u = PA_SINK(o)->userdata;
 
@@ -163,23 +206,34 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
     pa_assert(u->raop);
 
     switch (code) {
-        /* Exception : for this message, we are in main thread, msg sent from the IO/thread
-           Done here, as alloc/free of rtsp_client is also done in this thread for other cases */
-        case PA_SINK_MESSAGE_DISCONNECT_REQUEST: {
-            if (u->sink->state == PA_SINK_RUNNING) {
-                /* Disconnect raop client, and restart the whole chain since
-                 * the authentication token might be outdated */
-                pa_raop_client_disconnect(u->raop);
-                pa_raop_client_authenticate(u->raop, NULL);
-            }
+        case PA_SINK_MESSAGE_CONNECTED: {
+            pa_assert_ctl_context();
+            pa_device_port_set_available(u->sink->active_port, PA_AVAILABLE_YES);
+            return 0;
+        }
 
+        case PA_SINK_MESSAGE_DISCONNECTED: {
+            pa_assert_ctl_context();
+            /* Mark the port as unavailable so a different sink can be used */
+            pa_device_port_set_available(u->sink->active_port, PA_AVAILABLE_NO);
+            return 0;
+        }
+
+        case PA_SINK_MESSAGE_CONNECT_REQUEST: {
+            pa_assert_io_context();
+            pa_log_debug("Received connect request");
+            if (pa_raop_client_is_authenticated(u->raop))
+                pa_raop_client_announce(u->raop);
+            else
+                pa_raop_client_authenticate(u->raop, u->password);
             return 0;
         }
 
         case PA_SINK_MESSAGE_GET_LATENCY: {
+            pa_assert_io_context();
             int64_t r = 0;
 
-            if (u->autonull || pa_raop_client_can_stream(u->raop))
+            if (u->autonull || pa_raop_client_is_streaming(u->raop))
                 r = sink_get_latency(u);
 
             *((int64_t*) data) = r;
@@ -188,13 +242,10 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
         }
 
         case PA_SINK_MESSAGE_SET_RAOP_STATE: {
+            pa_assert_io_context();
             switch ((pa_raop_state_t) PA_PTR_TO_UINT(data)) {
                 case PA_RAOP_AUTHENTICATED: {
-                    if (!pa_raop_client_is_authenticated(u->raop)) {
-                        pa_module_unload_request(u->module, true);
-                    }
-
-                    if (u->autoreconnect && u->sink->state == PA_SINK_RUNNING) {
+                    if (u->sink->state == PA_SINK_RUNNING) {
                         pa_usec_t now;
                         now = pa_rtclock_now();
 #ifdef USE_SMOOTHER_2
@@ -202,11 +253,8 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 #else
                         pa_smoother_reset(u->smoother, now, false);
 #endif
-
-                        if (!pa_raop_client_is_alive(u->raop)) {
-                            /* Connecting will trigger a RECORD and start steaming */
-                            pa_raop_client_announce(u->raop);
-                        }
+                        /* Connecting will trigger a RECORD and start streaming */
+                        pa_raop_client_announce(u->raop);
                     }
 
                     return 0;
@@ -216,6 +264,9 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
                     pa_assert(!u->rtpoll_item);
 
                     u->oob = pa_raop_client_register_pollfd(u->raop, u->rtpoll, &u->rtpoll_item);
+
+                    pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->sink),
+                                      PA_SINK_MESSAGE_CONNECTED, NULL, 0, NULL, NULL);
 
                     return 0;
                 }
@@ -244,40 +295,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 
                 case PA_RAOP_INVALID_STATE:
                 case PA_RAOP_DISCONNECTED: {
-                    unsigned int nbfds = 0;
-                    struct pollfd *pollfd;
-                    unsigned int i;
-
-                    if (u->rtpoll_item) {
-                        pollfd = pa_rtpoll_item_get_pollfd(u->rtpoll_item, &nbfds);
-                        if (pollfd) {
-                            for (i = 0; i < nbfds; i++) {
-                                if (pollfd->fd >= 0)
-                                   pa_close(pollfd->fd);
-                                pollfd++;
-                            }
-                        }
-                        pa_rtpoll_item_free(u->rtpoll_item);
-                        u->rtpoll_item = NULL;
-                    }
-
-                    if (u->sink->thread_info.state == PA_SINK_SUSPENDED) {
-                        pa_rtpoll_set_timer_disabled(u->rtpoll);
-
-                        return 0;
-                    }
-
-                    if (u->autoreconnect) {
-                        if (u->sink->thread_info.state != PA_SINK_IDLE) {
-                            if (!u->autonull)
-                                pa_rtpoll_set_timer_disabled(u->rtpoll);
-                            pa_raop_client_authenticate(u->raop, NULL);
-                        }
-                    } else {
-                        if (u->sink->thread_info.state != PA_SINK_IDLE)
-                            pa_module_unload_request(u->module, true);
-                    }
-
+                    disconnect(u);
                     return 0;
                 }
             }
@@ -285,6 +303,8 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
             return 0;
         }
     }
+
+    pa_assert_io_context();
 
     return pa_sink_process_msg(o, code, data, offset, chunk);
 }
@@ -308,9 +328,8 @@ static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state,
             pa_assert(PA_SINK_IS_OPENED(s->thread_info.state));
 
             /* Issue a TEARDOWN if we are still connected */
-            if (pa_raop_client_is_alive(u->raop)) {
+            if (pa_raop_client_is_alive(u->raop))
                 pa_raop_client_teardown(u->raop);
-            }
 
             break;
 
@@ -348,9 +367,12 @@ static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state,
 
             if (!pa_raop_client_is_alive(u->raop)) {
                 /* Connecting will trigger a RECORD and start streaming */
-                pa_raop_client_announce(u->raop);
-            } else if (!pa_raop_client_is_recording(u->raop)) {
-                /* RECORD alredy sent, simply start streaming */
+                if (pa_raop_client_is_authenticated(u->raop))
+                    pa_raop_client_announce(u->raop);
+                else
+                    pa_raop_client_authenticate(u->raop, u->password);
+            } else if (!pa_raop_client_is_streaming(u->raop)) {
+                /* RECORD already sent, simply start streaming */
                 pa_raop_client_stream(u->raop);
                 pa_rtpoll_set_timer_absolute(u->rtpoll, now);
                 u->write_count = 0;
@@ -445,7 +467,7 @@ static void thread_func(void *userdata) {
         uint64_t position;
         size_t index;
         int ret;
-        bool canstream, sendstream, on_timeout;
+        bool is_streaming, on_timeout;
 #ifndef USE_SMOOTHER_2
         pa_usec_t estimated;
 #endif
@@ -478,25 +500,26 @@ static void thread_func(void *userdata) {
 
             /* if oob: streaming managed by timing, pollfd for oob sockets */
             if (pollfd && u->oob && !on_timeout) {
-                uint8_t packet[32];
-                ssize_t read;
-
                 for (i = 0; i < nbfds; i++) {
                     if (pollfd->revents & POLLERR) {
-                        if (u->autoreconnect && pa_raop_client_is_alive(u->raop)) {
-                            pollfd->revents = 0;
-                            pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->sink),
-                                              PA_SINK_MESSAGE_DISCONNECT_REQUEST, 0, 0, NULL, NULL);
-                            continue;
-                        }
-
-                        /* one of UDP fds is in faulty state, may have been disconnected, this is fatal  */
-                        goto fail;
+                        disconnect(u);
+                        continue;
                     }
                     if (pollfd->revents & pollfd->events) {
                         pollfd->revents = 0;
-                        read = pa_read(pollfd->fd, packet, sizeof(packet), NULL);
-                        pa_raop_client_handle_oob_packet(u->raop, pollfd->fd, packet, read);
+                        if (pa_raop_client_handle_oob_packet(u->raop, pollfd->fd) < 0) {
+                            if (errno == EINTR) {
+                                pa_log_debug("Failed to handle oob packet (EINTR), ignoring");
+                                continue;
+                            } else if (errno == EAGAIN) {
+                                pa_log_debug("Failed to handle oob packet (EAGAIN), ignoring");
+                                continue;
+                            } else {
+                                pa_log("Failed to handle oob packet: %s", pa_cstrerror(errno));
+                                disconnect(u);
+                                continue;
+                            }
+                        }
                         if (pa_raop_client_is_timing_fd(u->raop, pollfd->fd)) {
                             last_timing = pa_rtclock_now();
                             check_timing_count = 1;
@@ -510,9 +533,8 @@ static void thread_func(void *userdata) {
             }
         }
 
-        if (u->sink->thread_info.state != PA_SINK_RUNNING) {
+        if (u->sink->thread_info.state != PA_SINK_RUNNING)
             continue;
-        }
 
         if (u->first) {
             last_timing = 0;
@@ -521,11 +543,11 @@ static void thread_func(void *userdata) {
             u->first = false;
         }
 
-        canstream = pa_raop_client_can_stream(u->raop);
+        is_streaming = pa_raop_client_is_streaming(u->raop);
         now = pa_rtclock_now();
 
         if (u->oob && u->autoreconnect && on_timeout) {
-            if (!canstream) {
+            if (!is_streaming) {
                 last_timing = 0;
             } else if (last_timing != 0) {
                 pa_usec_t since = now - last_timing;
@@ -543,28 +565,23 @@ static void thread_func(void *userdata) {
                                 UDP_TIMING_PACKET_DISCONNECT_CYCLE-1, since_in_sec, u->server);
                         check_timing_count++;
                     } else {
-                        /* Limit reached, then request disconnect */
+                        /* Limit reached, then disconnect */
                         check_timing_count = 1;
                         last_timing = 0;
-                        if (pa_raop_client_is_alive(u->raop)) {
-                            pa_log_warn("UDP Timing Packets Warn limit reached - Requesting reconnect");
-                            pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->sink),
-                                              PA_SINK_MESSAGE_DISCONNECT_REQUEST, 0, 0, NULL, NULL);
-                            continue;
-                        }
+                        pa_log_warn("UDP Timing Packets Warn limit reached - disconnecting");
+                        disconnect(u);
+                        continue;
                     }
                 }
             }
         }
 
         if (!u->autonull) {
-            if (!canstream) {
-                pa_log_debug("Can't stream, connection not established yet...");
+            if (!is_streaming)
                 continue;
-            }
             /* This assertion is meant to silence a complaint from Coverity about
              * pollfd being possibly NULL when we access it later. That's a false
-             * positive, because we check pa_raop_client_can_stream() above, and if
+             * positive, because we check pa_raop_client_is_streaming() above, and if
              * that returns true, it means that the connection is up, and when the
              * connection is up, pollfd will be non-NULL. */
             pa_assert(pollfd);
@@ -584,36 +601,30 @@ static void thread_func(void *userdata) {
 
         if (u->memchunk.length > 0) {
             index = u->memchunk.index;
-            sendstream = !u->autonull || (u->autonull && canstream);
-            if (sendstream && pa_raop_client_send_audio_packet(u->raop, &u->memchunk, offset) < 0) {
+            if (is_streaming && pa_raop_client_send_audio_packet(u->raop, &u->memchunk, offset) < 0) {
                 if (errno == EINTR) {
                     /* Just try again. */
-                    pa_log_debug("Failed to write data to FIFO (EINTR), retrying");
-                    if (u->autoreconnect) {
-                        pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->sink), PA_SINK_MESSAGE_DISCONNECT_REQUEST,
-                                          0, 0, NULL, NULL);
+                    pa_log_debug("Failed to write audio packet (EINTR), retrying");
+                    continue;
+                } else if (errno == EAGAIN) {
+                    if (u->oob) {
+                        /* Just try again. */
+                        pa_log_debug("Failed to write audio packet (EAGAIN), retrying");
                         continue;
-                    } else
-                        goto fail;
-                } else if (errno != EAGAIN && !u->oob) {
-                    /* Buffer is full, wait for POLLOUT. */
-                    if (!u->oob) {
+                    } else {
+                        /* Buffer is full, wait for POLLOUT. */
                         pollfd->events = POLLOUT;
                         pollfd->revents = 0;
                     }
                 } else {
-                    pa_log("Failed to write data to FIFO: %s", pa_cstrerror(errno));
-                    if (u->autoreconnect) {
-                        pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->sink), PA_SINK_MESSAGE_DISCONNECT_REQUEST,
-                                          0, 0, NULL, NULL);
-                        continue;
-                    } else
-                        goto fail;
+                    pa_log("Failed to write audio packet: %s", pa_cstrerror(errno));
+                    disconnect(u);
+                    continue;
                 }
             } else {
-                if (sendstream) {
+                if (is_streaming) {
                     u->write_count += (uint64_t) u->memchunk.index - (uint64_t) index;
-                } else {
+                } else if (u->autonull) {
                     u->write_count += u->memchunk.length;
                     u->memchunk.length = 0;
                 }
@@ -627,7 +638,7 @@ static void thread_func(void *userdata) {
                 pa_smoother_put(u->smoother, now, estimated);
 #endif
 
-                if ((u->autonull && !canstream) || (u->oob && canstream && on_timeout)) {
+                if ((u->autonull && !is_streaming) || (u->oob && is_streaming && on_timeout)) {
                     /* Sleep until next packet transmission */
                     intvl = u->start + pa_bytes_to_usec(u->write_count, &u->sink->sample_spec);
                     pa_rtpoll_set_timer_absolute(u->rtpoll, intvl);
@@ -658,6 +669,18 @@ finish:
 
 static int sink_set_port_cb(pa_sink *s, pa_device_port *p) {
     return 0;
+}
+
+static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint32_t idx, void *userdata) {
+    struct userdata *u = userdata;
+
+    pa_assert_ctl_context();
+
+    /* Try to reconnect on server changes */
+    if (u->sink->active_port->available == PA_AVAILABLE_NO) {
+        pa_asyncmsgq_post(u->thread_mq.inq, PA_MSGOBJECT(u->sink),
+                          PA_SINK_MESSAGE_CONNECT_REQUEST, NULL, 0, NULL, NULL);
+    }
 }
 
 static pa_device_port *raop_create_port(struct userdata *u, const char *server) {
@@ -902,6 +925,11 @@ pa_sink* pa_raop_sink_new(pa_module *m, pa_modargs *ma, const char *driver) {
         goto fail;
     }
 
+    u->subscription = pa_subscription_new(
+        m->core, PA_SUBSCRIPTION_EVENT_SERVER | PA_SUBSCRIPTION_EVENT_CHANGE,
+        subscribe_callback, u
+    );
+
     u->sink->parent.process_msg = sink_process_msg;
     u->sink->set_state_in_io_thread = sink_set_state_in_io_thread_cb;
     pa_sink_set_set_volume_callback(u->sink, sink_set_volume_cb);
@@ -939,7 +967,8 @@ pa_sink* pa_raop_sink_new(pa_module *m, pa_modargs *ma, const char *driver) {
 
     /* username = pa_modargs_get_value(ma, "username", NULL); */
     password = pa_modargs_get_value(ma, "password", NULL);
-    pa_raop_client_authenticate(u->raop, password );
+    if (password)
+        u->password = pa_xstrdup(password);
 
     return u->sink;
 
@@ -969,6 +998,10 @@ static void userdata_free(struct userdata *u) {
         pa_sink_unref(u->sink);
     u->sink = NULL;
 
+    if (u->subscription)
+        pa_subscription_free(u->subscription);
+    u->subscription = NULL;
+
     if (u->rtpoll_item)
         pa_rtpoll_item_free(u->rtpoll_item);
     if (u->rtpoll)
@@ -995,6 +1028,8 @@ static void userdata_free(struct userdata *u) {
         pa_card_free(u->card);
     if (u->server)
         pa_xfree(u->server);
+    if (u->password)
+        pa_xfree(u->password);
 
     pa_xfree(u);
 }

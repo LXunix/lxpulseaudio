@@ -57,7 +57,7 @@ struct pa_cli {
     char *last_line;
 };
 
-static void line_callback(pa_ioline *line, const char *s, void *userdata);
+static void line_callback(pa_ioline *line, const char *s, size_t l, void *userdata);
 static void client_kill(pa_client *c);
 
 pa_cli* pa_cli_new(pa_core *core, pa_iochannel *io, pa_module *m) {
@@ -117,7 +117,7 @@ static void client_kill(pa_client *client) {
         c->eof_callback(c, c->userdata);
 }
 
-static void line_callback(pa_ioline *line, const char *s, void *userdata) {
+static void line_callback(pa_ioline *line, const char *s, size_t l, void *userdata) {
     pa_strbuf *buf;
     pa_cli *c = userdata;
     char *p;

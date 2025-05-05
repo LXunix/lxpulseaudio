@@ -65,8 +65,7 @@ bool pa_raop_client_is_authenticated(pa_raop_client *c);
 
 int pa_raop_client_announce(pa_raop_client *c);
 bool pa_raop_client_is_alive(pa_raop_client *c);
-bool pa_raop_client_is_recording(pa_raop_client *c);
-bool pa_raop_client_can_stream(pa_raop_client *c);
+bool pa_raop_client_is_streaming(pa_raop_client *c);
 int pa_raop_client_stream(pa_raop_client *c);
 int pa_raop_client_set_volume(pa_raop_client *c, pa_volume_t volume);
 int pa_raop_client_flush(pa_raop_client *c);
@@ -77,7 +76,7 @@ void pa_raop_client_get_frames_per_block(pa_raop_client *c, size_t *size);
 bool pa_raop_client_register_pollfd(pa_raop_client *c, pa_rtpoll *poll, pa_rtpoll_item **poll_item);
 bool pa_raop_client_is_timing_fd(pa_raop_client *c, const int fd);
 pa_volume_t pa_raop_client_adjust_volume(pa_raop_client *c, pa_volume_t volume);
-void pa_raop_client_handle_oob_packet(pa_raop_client *c, const int fd, const uint8_t packet[], ssize_t size);
+ssize_t pa_raop_client_handle_oob_packet(pa_raop_client *c, const int fd);
 ssize_t pa_raop_client_send_audio_packet(pa_raop_client *c, pa_memchunk *block, size_t offset);
 
 typedef void (*pa_raop_client_state_cb_t)(pa_raop_state_t state, void *userdata);

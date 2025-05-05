@@ -37,8 +37,9 @@
 #include <pulsecore/macro.h>
 #include <pulsecore/random.h>
 
+#include <modules/rtp/rtsp-util.h>
+
 #include "raop-crypto.h"
-#include "raop-util.h"
 
 #define AES_CHUNK_SIZE 16
 
@@ -92,7 +93,7 @@ static int rsa_encrypt(uint8_t *data, int len, uint8_t *str) {
         goto fail;
     }
 
-    size = pa_raop_base64_decode(rsa_modulus, modulus);
+    size = pa_rtsp_base64_decode(rsa_modulus, modulus);
 
     n_bn = BN_bin2bn(modulus, size, NULL);
     if (!n_bn) {
@@ -100,7 +101,7 @@ static int rsa_encrypt(uint8_t *data, int len, uint8_t *str) {
         goto fail;
     }
 
-    size = pa_raop_base64_decode(rsa_exponent, exponent);
+    size = pa_rtsp_base64_decode(rsa_exponent, exponent);
 
     e_bn = BN_bin2bn(exponent, size, NULL);
     if (!e_bn) {
@@ -165,7 +166,7 @@ char* pa_raop_secret_get_iv(pa_raop_secret *s) {
 
     pa_assert(s);
 
-    pa_raop_base64_encode(s->iv, AES_CHUNK_SIZE, &base64_iv);
+    pa_rtsp_base64_encode(s->iv, AES_CHUNK_SIZE, &base64_iv);
 
     return base64_iv;
 }
@@ -184,7 +185,7 @@ char* pa_raop_secret_get_key(pa_raop_secret *s) {
         return NULL;
     }
 
-    pa_raop_base64_encode(rsa_key, size, &base64_key);
+    pa_rtsp_base64_encode(rsa_key, size, &base64_key);
 
     return base64_key;
 }
