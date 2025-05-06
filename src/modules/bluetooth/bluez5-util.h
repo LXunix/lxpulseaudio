@@ -134,6 +134,8 @@ struct pa_bluetooth_transport {
     pa_bluetooth_transport_set_volume_cb set_sink_volume;
     pa_bluetooth_transport_set_volume_cb set_source_volume;
     void *userdata;
+
+    int set_sink_volume_count;   /*  call set_sink_volume count  */
 };
 
 struct pa_bluetooth_device {
