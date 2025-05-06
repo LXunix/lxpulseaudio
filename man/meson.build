@@ -10,8 +10,13 @@ if get_option('daemon')
     ['pulse-cli-syntax', '5'],
     ['pulse-daemon.conf', '5'],
     ['pulseaudio', '1'],
-    ['start-pulseaudio-x11', '1'],
   ]
+
+  if x11_dep.found()
+    manpages += [
+      ['start-pulseaudio-x11', '1'],
+    ]
+  endif
 endif
 
 if get_option('client')
