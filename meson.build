@@ -293,6 +293,7 @@ endif
 
 check_usable_headers = [
   'cpuid.h',
+  'sys/auxv.h',
 ]
 
 foreach h : check_usable_headers
@@ -593,6 +594,18 @@ if host_machine.cpu_family() == 'arm'
   endif
 endif
 # NEON checks are automatically done by the unstable-simd module
+
+if host_machine.cpu_family() == 'riscv64'
+  if cc.compiles('''
+      int main() {
+          __asm__ __volatile__ (
+            ".option arch, +v\nvsetivli zero, 0, e8, m1, ta, ma"
+          );
+      }
+      ''', name : 'rvv code')
+  cdata.set('HAVE_RVV', 1)
+  endif
+endif
 
 # Dependencies common to client, daemon and modules
 

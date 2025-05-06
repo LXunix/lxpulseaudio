@@ -1,10 +1,10 @@
-#ifndef foocpuhfoo
-#define foocpuhfoo
+#ifndef foocpuriscvhfoo
+#define foocpuriscvhfoo
 
 /***
   This file is part of PulseAudio.
 
-  Copyright 2010 Arun Raghavan
+  Copyright (c) 2024 Institue of Software Chinese Academy of Sciences (ISCAS).
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
@@ -20,33 +20,22 @@
   along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#include <pulsecore/cpu-x86.h>
-#include <pulsecore/cpu-arm.h>
-#include <pulsecore/cpu-riscv.h>
+#include <stdint.h>
+#include <pulsecore/macro.h>
 
-typedef enum {
-    PA_CPU_UNDEFINED = 0,
-    PA_CPU_X86,
-    PA_CPU_ARM,
-    PA_CPU_RISCV,
-} pa_cpu_type_t;
+#ifndef PACKAGE
+#error "Please include config.h before including this file!"
+#endif
 
-typedef struct pa_cpu_info pa_cpu_info;
+typedef enum pa_cpu_riscv_flag {
+    PA_CPU_RISCV_V      = (1 << 0),
+} pa_cpu_riscv_flag_t;
 
-struct pa_cpu_info {
-    pa_cpu_type_t cpu_type;
+void pa_cpu_get_riscv_flags(pa_cpu_riscv_flag_t *flags);
+bool pa_cpu_init_riscv (pa_cpu_riscv_flag_t *flags);
 
-    union {
-        pa_cpu_x86_flag_t x86;
-        pa_cpu_arm_flag_t arm;
-        pa_cpu_riscv_flag_t riscv;
-    } flags;
-    bool force_generic_code;
-};
+#ifdef HAVE_RVV
+void pa_convert_func_init_rvv(pa_cpu_riscv_flag_t flags);
+#endif
 
-void pa_cpu_init(pa_cpu_info *cpu_info);
-
-void pa_remap_func_init(const pa_cpu_info *cpu_info);
-void pa_mix_func_init(const pa_cpu_info *cpu_info);
-
-#endif /* foocpuhfoo */
+#endif /* foocpuxriscvhfoo */

@@ -23,6 +23,7 @@
 
 #include <pulsecore/cpu-arm.h>
 #include <pulsecore/cpu-x86.h>
+#include <pulsecore/cpu-riscv.h>
 #include <pulsecore/random.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/sconv.h>
@@ -190,6 +191,35 @@ START_TEST (sconv_sse_test) {
 END_TEST
 #endif /* (defined (__i386__) || defined (__amd64__)) && defined (HAVE_SSE) */
 
+#if HAVE_RVV
+START_TEST (sconv_rvv_test) {
+    pa_cpu_riscv_flag_t flags = 0;
+    pa_convert_func_t orig_func, rvv_func;
+
+    pa_cpu_get_riscv_flags(&flags);
+
+    if (!(flags & PA_CPU_RISCV_V)) {
+        pa_log_info("RVV not supported. Skipping");
+        return;
+    }
+
+    orig_func = pa_get_convert_from_float32ne_function(PA_SAMPLE_S16LE);
+    pa_convert_func_init_rvv(PA_CPU_RISCV_V);
+    rvv_func = pa_get_convert_from_float32ne_function(PA_SAMPLE_S16LE);
+
+    pa_log_debug("Checking RVV sconv (float -> s16)");
+    run_conv_test_float_to_s16(rvv_func, orig_func, 0, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 1, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 2, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 3, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 4, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 5, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 6, true, false);
+    run_conv_test_float_to_s16(rvv_func, orig_func, 7, true, true);
+}
+END_TEST
+#endif /* (defined () */
+
 #if defined (__arm__) && defined (__linux__) && defined (HAVE_NEON)
 START_TEST (sconv_neon_test) {
     pa_cpu_arm_flag_t flags = 0;
@@ -250,6 +280,10 @@ int main(int argc, char *argv[]) {
 #endif
 #if defined (__arm__) && defined (__linux__) && defined (HAVE_NEON)
     tcase_add_test(tc, sconv_neon_test);
+#endif
+#if HAVE_RVV
+    tcase_set_timeout(tc, 0);
+    tcase_add_test(tc, sconv_rvv_test);
 #endif
     suite_add_tcase(s, tc);
 
