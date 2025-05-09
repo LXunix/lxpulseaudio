@@ -124,6 +124,7 @@ struct userdata {
     pa_sample_spec verified_sample_spec;
     pa_sample_format_t *supported_formats;
     unsigned int *supported_rates;
+    unsigned int *supported_channels;
     struct {
         size_t fragment_size;
         size_t nfrags;
@@ -158,6 +159,7 @@ struct userdata {
 
     char *device_name;  /* name of the PCM device */
     char *control_device; /* name of the control device */
+    bool passthrough;
 
     bool use_mmap:1, use_tsched:1, deferred_volume:1, fixed_latency_range:1;
 
@@ -1202,12 +1204,34 @@ static int unsuspend(struct userdata *u, bool recovering) {
 
     pa_log_info("Trying resume...");
 
-    if ((is_iec958(u) || is_hdmi(u)) && pa_sink_is_passthrough(u->sink)) {
+    if ((is_iec958(u) || is_hdmi(u))) {
         /* Need to open device in NONAUDIO mode */
-        int len = strlen(u->device_name) + 8;
+        int len = strlen(u->device_name) + 50;
+        uint8_t aes3;
+
+        switch (u->sink->sample_spec.rate) {
+            case 22050: aes3 = IEC958_AES3_CON_FS_22050; break;
+            case 24000: aes3 = IEC958_AES3_CON_FS_24000; break;
+            case 32000: aes3 = IEC958_AES3_CON_FS_32000; break;
+            case 44100: aes3 = IEC958_AES3_CON_FS_44100; break;
+            case 48000: aes3 = IEC958_AES3_CON_FS_48000; break;
+            case 88200: aes3 = IEC958_AES3_CON_FS_88200; break;
+            case 96000: aes3 = IEC958_AES3_CON_FS_96000; break;
+            case 176400: aes3 = IEC958_AES3_CON_FS_176400; break;
+            case 192000: aes3 = IEC958_AES3_CON_FS_192000; break;
+            case 768000: aes3 = IEC958_AES3_CON_FS_768000; break;
+            default: aes3 = IEC958_AES3_CON_FS_NOTID; break;
+        }
+
+        if (u->sink->sample_spec.channels == 8)
+            aes3 = IEC958_AES3_CON_FS_768000;
 
         device_name = pa_xmalloc(len);
-        pa_snprintf(device_name, len, "%s,AES0=6", u->device_name);
+        pa_snprintf(device_name, len, "%s,AES0=0x%02x,AES1=0x%02x,AES2=0x%02x,AES3=0x%02x", u->device_name,
+                IEC958_AES0_CON_EMPHASIS_NONE | (u->passthrough ? IEC958_AES0_NONAUDIO : 0),
+                IEC958_AES1_CON_ORIGINAL | IEC958_AES1_CON_PCM_CODER,
+                0, aes3);
+        pa_log_debug("Opening device for passthrough as: %s", device_name);
     }
 
     /*
@@ -1817,27 +1841,22 @@ static bool sink_set_formats(pa_sink *s, pa_idxset *formats) {
     return true;
 }
 
-static void sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, bool passthrough) {
+static int sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     struct userdata *u = s->userdata;
     int i;
     bool format_supported = false;
     bool rate_supported = false;
-#ifdef USE_SMOOTHER_2
+    bool channels_supported = false;
     pa_sample_spec effective_spec;
-#endif
+    pa_channel_map effective_map;
 
     pa_assert(u);
 
-#ifdef USE_SMOOTHER_2
-    effective_spec.channels = s->sample_spec.channels;
-#endif
+    effective_spec = s->sample_spec;
 
     for (i = 0; u->supported_formats[i] != PA_SAMPLE_MAX; i++) {
         if (u->supported_formats[i] == spec->format) {
-            pa_sink_set_sample_format(u->sink, spec->format);
-#ifdef USE_SMOOTHER_2
             effective_spec.format = spec->format;
-#endif
             format_supported = true;
             break;
         }
@@ -1846,18 +1865,12 @@ static void sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, bool passthrou
     if (!format_supported) {
         pa_log_info("Sink does not support sample format of %s, set it to a verified value",
                     pa_sample_format_to_string(spec->format));
-        pa_sink_set_sample_format(u->sink, u->verified_sample_spec.format);
-#ifdef USE_SMOOTHER_2
         effective_spec.format = u->verified_sample_spec.format;
-#endif
     }
 
     for (i = 0; u->supported_rates[i]; i++) {
         if (u->supported_rates[i] == spec->rate) {
-            pa_sink_set_sample_rate(u->sink, spec->rate);
-#ifdef USE_SMOOTHER_2
             effective_spec.rate = spec->rate;
-#endif
             rate_supported = true;
             break;
         }
@@ -1865,17 +1878,42 @@ static void sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, bool passthrou
 
     if (!rate_supported) {
         pa_log_info("Sink does not support sample rate of %u, set it to a verified value", spec->rate);
-        pa_sink_set_sample_rate(u->sink, u->verified_sample_spec.rate);
-#ifdef USE_SMOOTHER_2
         effective_spec.rate = u->verified_sample_spec.rate;
-#endif
     }
+
+    for (i = 0; u->supported_channels[i]; i++) {
+        if (u->supported_channels[i] == spec->channels) {
+            effective_spec.channels = spec->channels;
+            channels_supported = true;
+            break;
+        }
+    }
+
+    if (!channels_supported) {
+        pa_log_info("Sink does not support %u channels, set it to a verified value", spec->channels);
+        effective_spec.channels = u->verified_sample_spec.channels;
+    }
+
+    /* We con't actually support configuring the channel map, so let's do the best we can */
+    pa_channel_map_init_auto(&effective_map, effective_spec.channels, PA_CHANNEL_MAP_ALSA);
+    if (!pa_channel_map_equal(map, &effective_map)) {
+        char req_map_str[PA_CHANNEL_MAP_SNPRINT_MAX], eff_map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
+
+        pa_log_info("Cannot set channel map to %s, using default of %s",
+            pa_channel_map_snprint(req_map_str, sizeof(req_map_str), map),
+            pa_channel_map_snprint(eff_map_str, sizeof(eff_map_str), &effective_map));
+    }
+
+    pa_sink_set_sample_spec(u->sink, &effective_spec, &effective_map);
 
 #ifdef USE_SMOOTHER_2
     pa_smoother_2_set_sample_spec(u->smoother, pa_rtclock_now(), &effective_spec);
 #endif
 
     /* Passthrough status change is handled during unsuspend */
+    u->passthrough = passthrough;
+
+    return 0;
 }
 
 static int process_rewind(struct userdata *u) {
@@ -2346,6 +2384,7 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
     bool b;
     bool d;
     bool avoid_resampling;
+    bool avoid_processing;
     pa_sink_new_data data;
     bool volume_is_set;
     bool mute_is_set;
@@ -2362,6 +2401,7 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
     ss = m->core->default_sample_spec;
     map = m->core->default_channel_map;
     avoid_resampling = m->core->avoid_resampling;
+    avoid_processing = m->core->avoid_processing;
 
     /* Pick sample spec overrides from the mapping, if any */
     if (mapping) {
@@ -2461,6 +2501,7 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
     u->first = true;
     u->rewind_safeguard = rewind_safeguard;
     u->rtpoll = pa_rtpoll_new();
+    u->passthrough = false;
 
     if (pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll) < 0) {
         pa_log("pa_thread_mq_init() failed.");
@@ -2614,6 +2655,12 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
         goto fail;
     }
 
+    u->supported_channels = pa_alsa_get_supported_channels(u->pcm_handle, ss.channels);
+    if (!u->supported_channels) {
+        pa_log_error("Failed to find any supported channel counts.");
+        goto fail;
+    }
+
     /* ALSA might tweak the sample spec, so recalculate the frame size */
     frame_size = pa_frame_size(&ss);
 
@@ -2641,6 +2688,13 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
         goto fail;
     }
     pa_sink_new_data_set_avoid_resampling(&data, avoid_resampling);
+
+    if (pa_modargs_get_value_boolean(ma, "avoid_processing", &avoid_processing) < 0) {
+        pa_log("Failed to parse avoid_processing argument.");
+        pa_sink_new_data_done(&data);
+        goto fail;
+    }
+    pa_sink_new_data_set_avoid_processing(&data, avoid_processing);
 
     pa_sink_new_data_set_sample_spec(&data, &ss);
     pa_sink_new_data_set_channel_map(&data, &map);
@@ -2928,6 +2982,9 @@ static void userdata_free(struct userdata *u) {
 
     if (u->supported_rates)
         pa_xfree(u->supported_rates);
+
+    if (u->supported_channels)
+        pa_xfree(u->supported_channels);
 
     reserve_done(u);
     monitor_done(u);

@@ -112,6 +112,7 @@ struct userdata {
     pa_sample_spec verified_sample_spec;
     pa_sample_format_t *supported_formats;
     unsigned int *supported_rates;
+    unsigned int *supported_channels;
     struct {
         size_t fragment_size;
         size_t nfrags;
@@ -1632,27 +1633,22 @@ static void source_update_requested_latency_cb(pa_source *s) {
     update_sw_params(u);
 }
 
-static void source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, bool passthrough) {
+static int source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
     struct userdata *u = s->userdata;
     int i;
     bool format_supported = false;
     bool rate_supported = false;
-#ifdef USE_SMOOTHER_2
+    bool channels_supported = false;
     pa_sample_spec effective_spec;
-#endif
+    pa_channel_map effective_map;
 
     pa_assert(u);
 
-#ifdef USE_SMOOTHER_2
-    effective_spec.channels = s->sample_spec.channels;
-#endif
+    effective_spec = s->sample_spec;
 
     for (i = 0; u->supported_formats[i] != PA_SAMPLE_MAX; i++) {
         if (u->supported_formats[i] == spec->format) {
-            pa_source_set_sample_format(u->source, spec->format);
-#ifdef USE_SMOOTHER_2
             effective_spec.format = spec->format;
-#endif
             format_supported = true;
             break;
         }
@@ -1661,18 +1657,12 @@ static void source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, bool passt
     if (!format_supported) {
         pa_log_info("Source does not support sample format of %s, set it to a verified value",
                     pa_sample_format_to_string(spec->format));
-        pa_source_set_sample_format(u->source, u->verified_sample_spec.format);
-#ifdef USE_SMOOTHER_2
         effective_spec.format = u->verified_sample_spec.format;
-#endif
     }
 
     for (i = 0; u->supported_rates[i]; i++) {
         if (u->supported_rates[i] == spec->rate) {
-            pa_source_set_sample_rate(u->source, spec->rate);
-#ifdef USE_SMOOTHER_2
             effective_spec.rate = spec->rate;
-#endif
             rate_supported = true;
             break;
         }
@@ -1680,16 +1670,39 @@ static void source_reconfigure_cb(pa_source *s, pa_sample_spec *spec, bool passt
 
     if (!rate_supported) {
         pa_log_info("Source does not support sample rate of %u, set it to a verfied value", spec->rate);
-        pa_source_set_sample_rate(u->source, u->verified_sample_spec.rate);
-#ifdef USE_SMOOTHER_2
         effective_spec.rate = u->verified_sample_spec.rate;
-#endif
     }
 
-#ifdef USE_SMOOTHER_2
+    for (i = 0; u->supported_channels[i]; i++) {
+        if (u->supported_channels[i] == spec->channels) {
+            effective_spec.channels = spec->channels;
+            channels_supported = true;
+            break;
+        }
+    }
+
+    if (!channels_supported) {
+        pa_log_info("Sink does not support %u channels, set it to a verified value", spec->channels);
+        effective_spec.channels = u->verified_sample_spec.channels;
+    }
+
+    /* We con't actually support configuring the channel map, so let's do the best we can */
+    pa_channel_map_init_auto(&effective_map, effective_spec.channels, PA_CHANNEL_MAP_ALSA);
+    if (!pa_channel_map_equal(map, &effective_map)) {
+        char req_map_str[PA_CHANNEL_MAP_SNPRINT_MAX], eff_map_str[PA_CHANNEL_MAP_SNPRINT_MAX];
+
+        pa_log_info("Cannot set channel map to %s, using default of %s",
+            pa_channel_map_snprint(req_map_str, sizeof(req_map_str), map),
+            pa_channel_map_snprint(eff_map_str, sizeof(eff_map_str), &effective_map));
+    }
+
+    pa_source_set_sample_spec(u->source, &effective_spec, map);
+
+#if USE_SMOOTHER_2
     pa_smoother_2_set_sample_spec(u->smoother, pa_rtclock_now(), &effective_spec);
 #endif
 
+    return 0;
 }
 
 static void thread_func(void *userdata) {
@@ -2049,6 +2062,7 @@ pa_source *pa_alsa_source_new(pa_module *m, pa_modargs *ma, const char*driver, p
     bool b;
     bool d;
     bool avoid_resampling;
+    bool avoid_processing;
     pa_source_new_data data;
     bool volume_is_set;
     bool mute_is_set;
@@ -2061,6 +2075,7 @@ pa_source *pa_alsa_source_new(pa_module *m, pa_modargs *ma, const char*driver, p
     ss = m->core->default_sample_spec;
     map = m->core->default_channel_map;
     avoid_resampling = m->core->avoid_resampling;
+    avoid_processing = m->core->avoid_processing;
 
     /* Pick sample spec overrides from the mapping, if any */
     if (mapping) {
@@ -2289,6 +2304,12 @@ pa_source *pa_alsa_source_new(pa_module *m, pa_modargs *ma, const char*driver, p
         goto fail;
     }
 
+    u->supported_channels = pa_alsa_get_supported_channels(u->pcm_handle, ss.channels);
+    if (!u->supported_channels) {
+        pa_log_error("Failed to find any supported channel counts.");
+        goto fail;
+    }
+
     /* ALSA might tweak the sample spec, so recalculate the frame size */
     frame_size = pa_frame_size(&ss);
 
@@ -2316,6 +2337,13 @@ pa_source *pa_alsa_source_new(pa_module *m, pa_modargs *ma, const char*driver, p
         goto fail;
     }
     pa_source_new_data_set_avoid_resampling(&data, avoid_resampling);
+
+    if (pa_modargs_get_value_boolean(ma, "avoid_processing", &avoid_processing) < 0) {
+        pa_log("Failed to parse avoid_processing argument.");
+        pa_source_new_data_done(&data);
+        goto fail;
+    }
+    pa_source_new_data_set_avoid_processing(&data, avoid_processing);
 
     pa_source_new_data_set_sample_spec(&data, &ss);
     pa_source_new_data_set_channel_map(&data, &map);
@@ -2542,6 +2570,9 @@ static void userdata_free(struct userdata *u) {
 
     if (u->supported_rates)
         pa_xfree(u->supported_rates);
+
+    if (u->supported_channels)
+        pa_xfree(u->supported_channels);
 
     reserve_done(u);
     monitor_done(u);

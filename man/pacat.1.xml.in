@@ -149,6 +149,14 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
     </option>
 
     <option>
+      <p><opt>--encoding</opt></p>
+      <optdesc><p>The encoding to use while playing non-PCM audio (with
+        the <opt>--raw</opt> flag). Valid options can be found at
+        https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/SupportedAudioFormats/
+      </p></optdesc>
+    </option>
+
+    <option>
       <p><opt>--fix-format</opt></p>
       <optdesc><p>If passed, the sample format of the stream is changed to the native format of the sink the stream is connected to.</p></optdesc>
     </option>

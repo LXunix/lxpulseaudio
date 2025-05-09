@@ -21,9 +21,10 @@
 #include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <pulse/rtclock.h>
@@ -35,6 +36,7 @@
 #include <pulsecore/macro.h>
 #include <pulsecore/sink.h>
 #include <pulsecore/module.h>
+#include <pulsecore/core-error.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/modargs.h>
 #include <pulsecore/log.h>
@@ -52,9 +54,12 @@ PA_MODULE_USAGE(
         "format=<sample format> "
         "rate=<sample rate> "
         "channels=<number of channels> "
-        "channel_map=<channel map>"
-        "formats=<semi-colon separated sink formats>"
-        "norewinds=<disable rewinds>");
+        "channel_map=<channel map> "
+        "formats=<semi-colon separated sink formats> "
+        "norewinds=<disable rewinds> "
+        "dump=<path to file to dump to, automatically prefixed with /tmp/pulse-> "
+        "avoid_processing=<use stream original sample spec if possible?> "
+);
 
 #define DEFAULT_SINK_NAME "null"
 #define BLOCK_USEC (2 * PA_USEC_PER_SEC)
@@ -75,6 +80,8 @@ struct userdata {
     pa_idxset *formats;
 
     bool norewinds;
+
+    int dump_fd;
 };
 
 static const char* const valid_modargs[] = {
@@ -86,6 +93,8 @@ static const char* const valid_modargs[] = {
     "channel_map",
     "formats",
     "norewinds",
+    "dump",
+    "avoid_processing",
     NULL
 };
 
@@ -168,9 +177,12 @@ static void sink_update_requested_latency_cb(pa_sink *s) {
     sink_recalculate_max_request_and_rewind(s);
 }
 
-static void sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, bool passthrough) {
-    /* We don't need to do anything */
-    s->sample_spec = *spec;
+static int sink_reconfigure_cb(pa_sink *s, pa_sample_spec *spec, pa_channel_map *map, bool passthrough) {
+    pa_sink_assert_ref(s);
+
+    pa_sink_set_sample_spec(s, spec, map);
+
+    return 0;
 }
 
 static bool sink_set_formats_cb(pa_sink *s, pa_idxset *formats) {
@@ -247,6 +259,25 @@ static void process_render(struct userdata *u, pa_usec_t now) {
         request_size = PA_MIN(request_size, u->sink->thread_info.max_request);
         pa_sink_render(u->sink, request_size, &chunk);
 
+        if (u->dump_fd >= 0) {
+            void *p;
+            size_t l = 0;
+
+            p = pa_memblock_acquire(chunk.memblock);
+
+            while (l < chunk.length) {
+                ssize_t ret = pa_write(u->dump_fd, (uint8_t*) p + chunk.index + l, chunk.length - l, NULL);
+                if (ret < 0) {
+                    pa_log_error("Failed to write data to dump file: %s", pa_cstrerror(ret));
+                    break;
+                }
+
+                l += ret;
+            }
+
+            pa_memblock_release(chunk.memblock);
+        }
+
         pa_memblock_unref(chunk.memblock);
 
 /*         pa_log_debug("Ate %lu bytes.", (unsigned long) chunk.length); */
@@ -319,8 +350,9 @@ int pa__init(pa_module*m) {
     pa_modargs *ma = NULL;
     pa_sink_new_data data;
     pa_format_info *format;
-    const char *formats;
+    const char *formats, *dump_file;
     size_t nbytes;
+    bool avoid_processing;
 
     pa_assert(m);
 
@@ -331,6 +363,8 @@ int pa__init(pa_module*m) {
 
     ss = m->core->default_sample_spec;
     map = m->core->default_channel_map;
+    avoid_processing = m->core->avoid_processing;
+
     if (pa_modargs_get_sample_spec_and_channel_map(ma, &ss, &map, PA_CHANNEL_MAP_DEFAULT) < 0) {
         pa_log("Invalid sample format specification or channel map");
         goto fail;
@@ -346,6 +380,25 @@ int pa__init(pa_module*m) {
         pa_log("pa_thread_mq_init() failed.");
         goto fail;
     }
+
+    u->dump_fd = -1;
+    if ((dump_file = pa_modargs_get_value(ma, "dump", NULL))) {
+        char dump_path[1024];
+
+        pa_snprintf(dump_path, sizeof(dump_path), "/tmp/pulse-%s", dump_file);
+
+        if ((u->dump_fd = pa_open_cloexec(dump_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0) {
+            pa_log_error("Could not open dump file: %s (%s)", dump_path, pa_cstrerror(errno));
+            goto fail;
+        }
+    }
+
+    if (pa_modargs_get_value_boolean(ma, "avoid_processing", &avoid_processing) < 0) {
+        pa_log("Failed to parse avoid_processing argument.");
+        pa_sink_new_data_done(&data);
+        goto fail;
+    }
+    data.avoid_processing = avoid_processing;
 
     pa_sink_new_data_init(&data);
     data.driver = __FILE__;
@@ -478,6 +531,9 @@ void pa__done(pa_module*m) {
 
     if (u->formats)
         pa_idxset_free(u->formats, (pa_free_cb_t) pa_format_info_free);
+
+    if (u->dump_fd >= 0)
+        pa_close(u->dump_fd);
 
     pa_xfree(u);
 }

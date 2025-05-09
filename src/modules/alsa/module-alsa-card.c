@@ -69,6 +69,7 @@ PA_MODULE_USAGE(
         "paths_dir=<directory containing the path configuration files> "
         "use_ucm=<load use case manager> "
         "avoid_resampling=<use stream original sample rate if possible?> "
+        "avoid_processing=<use stream original sample spec if possible?> "
         "control=<name of mixer control> "
 );
 
@@ -98,6 +99,7 @@ static const char* const valid_modargs[] = {
     "paths_dir",
     "use_ucm",
     "avoid_resampling",
+    "avoid_processing",
     "control",
     NULL
 };
