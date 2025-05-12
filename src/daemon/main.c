@@ -524,6 +524,9 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_FORK
     int daemon_pipe[2] = { -1, -1 };
     int daemon_pipe2[2] = { -1, -1 };
+#ifdef HAVE_COREAUDIO
+    char **args;
+#endif
 #endif
     int autospawn_fd = -1;
     bool autospawn_locked = false;
@@ -828,6 +831,16 @@ int main(int argc, char *argv[]) {
         goto finish;
     }
 
+#if defined(HAVE_FORK) && defined(HAVE_COREAUDIO)
+    if ((e = getenv("PULSE_DAEMON_FD"))) {
+        int32_t fd;
+        if (pa_atoi(e, &fd) < 0)
+            goto finish;
+        daemon_pipe2[1] = fd;
+        if (conf->cmd == PA_CMD_START) autospawn_locked = true;
+    }
+#endif
+
     if (conf->cmd == PA_CMD_START && (configured_address = check_configured_address())) {
         /* There is an server address in our config, but where did it come from?
          * By default a standard X11 login will load module-x11-publish which will
@@ -904,7 +917,7 @@ int main(int argc, char *argv[]) {
             goto finish;
         }
 
-        if ((pa_autospawn_lock_acquire(true) < 0)) {
+        if (!autospawn_locked && pa_autospawn_lock_acquire(true) < 0) {
             pa_log("Failed to acquire autospawn lock");
             goto finish;
         }
@@ -1050,6 +1063,18 @@ int main(int argc, char *argv[]) {
 #endif
 
         pa_nullify_stdfds();
+
+#if defined(HAVE_FORK) && defined(HAVE_COREAUDIO)
+        /* CoreAudio crashes if we don't exec after forking */
+        if (!(args = malloc((argc + 2) * sizeof *args)))
+            goto finish;
+        memcpy(args, argv, argc * sizeof *argv);
+        args[argc] = "--daemonize=no";
+        args[argc+1] = NULL;
+        s = pa_sprintf_malloc("%d", daemon_pipe2[1]);
+        pa_set_env("PULSE_DAEMON_FD", s);
+        execv(PA_BINARY, args);
+#endif
     }
 
     pa_set_env_and_record("PULSE_INTERNAL", "1");
