@@ -170,4 +170,8 @@ if systemd_dep.found()
   install_data('systemd/user/pulseaudio.socket',
     install_dir: systemduserunitdir,
   )
+
+  install_data('systemd/pulse.conf',
+    install_dir: join_paths(sysconfdir,'tmpfiles.d', 'pulse.conf')
+  )
 endif
