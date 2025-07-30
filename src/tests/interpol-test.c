@@ -196,7 +196,7 @@ START_TEST (interpol_test) {
             if ((info = pa_stream_get_timing_info(stream))) {
                 if (memcmp(&last_info, &info->timestamp, sizeof(struct timeval))) {
                     changed = true;
-                    last_info = info->timestamp;
+                    last_info = *info->timestamp;
                 }
                 if (info->playing)
                     playing = true;

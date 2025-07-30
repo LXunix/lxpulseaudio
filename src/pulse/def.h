@@ -678,16 +678,9 @@ typedef enum pa_subscription_event_type {
  * API updates at any time in any new release.
  * */
 typedef struct pa_timing_info {
-    struct timeval timestamp;
+    struct timeval* timestamp;
     /**< The system clock time when this timing info structure was
      * current. */
-
-    int synchronized_clocks;
-    /**< Non-zero if the local and the remote machine have
-     * synchronized clocks. If synchronized clocks are detected
-     * transport_usec becomes much more reliable. However, the code
-     * that detects synchronized clocks is very limited and unreliable
-     * itself. */
 
     pa_usec_t sink_usec;
     /**< Time in usecs a sample takes to be played on the sink. For
@@ -702,30 +695,37 @@ typedef struct pa_timing_info {
     /**< Estimated time in usecs a sample takes to be transferred
      * to/from the daemon. For both playback and record streams. */
 
-    int playing;
+    int synchronized_clocks : 8;
+    /**< Non-zero if the local and the remote machine have
+     * synchronized clocks. If synchronized clocks are detected
+     * transport_usec becomes much more reliable. However, the code
+     * that detects synchronized clocks is very limited and unreliable
+     * itself. */
+
+    int playing : 8;
     /**< Non-zero when the stream is currently not underrun and data
      * is being passed on to the device. Only for playback
      * streams. This field does not say whether the data is actually
      * already being played. To determine this check whether
      * since_underrun (converted to usec) is larger than sink_usec.*/
 
-    int write_index_corrupt;
+    int write_index_corrupt : 8;
     /**< Non-zero if write_index is not up-to-date because a local
      * write command that corrupted it has been issued in the time
      * since this latency info was current . Only write commands with
      * SEEK_RELATIVE_ON_READ and SEEK_RELATIVE_END can corrupt
      * write_index. */
 
+    int read_index_corrupt : 8;
+    /**< Non-zero if read_index is not up-to-date because a local
+     * pause or flush request that corrupted it has been issued in the
+     * time since this latency info was current. */
+
     int64_t write_index;
     /**< Current write index into the playback buffer in bytes. Think
      * twice before using this for seeking purposes: it might be out
      * of date at the time you want to use it. Consider using
      * PA_SEEK_RELATIVE instead. */
-
-    int read_index_corrupt;
-    /**< Non-zero if read_index is not up-to-date because a local
-     * pause or flush request that corrupted it has been issued in the
-     * time since this latency info was current. */
 
     int64_t read_index;
     /**< Current read index into the playback buffer in bytes. Think

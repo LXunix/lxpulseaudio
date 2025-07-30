@@ -1891,13 +1891,13 @@ static void stream_get_timing_info_callback(pa_pdispatch *pd, uint32_t command, 
                 i->transport_usec = pa_timeval_diff(&now, &remote);
 
             i->synchronized_clocks = true;
-            i->timestamp = remote;
+            i->timestamp = &remote;
         } else {
             /* clocks are not synchronized, let's estimate latency then */
             i->transport_usec = pa_timeval_diff(&now, &local)/2;
             i->synchronized_clocks = false;
-            i->timestamp = local;
-            pa_timeval_add(&i->timestamp, i->transport_usec);
+            i->timestamp = &local;
+            pa_timeval_add(i->timestamp, i->transport_usec);
         }
 
         /* Invalidate read and write indexes if necessary */
