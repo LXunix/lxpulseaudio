@@ -50,13 +50,15 @@ typedef enum pa_daemon_conf_cmd {
 #ifdef HAVE_SYS_RESOURCE_H
 typedef struct pa_rlimit {
     rlim_t value;
-    bool is_set;
+    bool is_set : 1;
 } pa_rlimit;
 #endif
 
 /* A structure containing configuration data for the PulseAudio server . */
 typedef struct pa_daemon_conf {
-    pa_daemon_conf_cmd_t cmd;
+    pa_daemon_conf_cmd_t cmd : 4;
+    pa_server_type_t local_server_type : 3;
+    pa_log_level_t log_level : 3;
     bool daemonize,
         fail,
         high_priority,
@@ -80,16 +82,14 @@ typedef struct pa_daemon_conf {
         rescue_streams,
         lock_memory,
         deferred_volume;
-    pa_server_type_t local_server_type;
     int exit_idle_time,
         scache_idle_time,
         realtime_priority,
         nice_level,
         resample_method;
+    unsigned log_backtrace;
     char *script_commands, *dl_search_path, *default_script_file;
     pa_log_target *log_target;
-    pa_log_level_t log_level;
-    unsigned log_backtrace;
     char *config_file;
 
 #ifdef HAVE_SYS_RESOURCE_H
@@ -135,7 +135,7 @@ typedef struct pa_daemon_conf {
     unsigned lfe_crossover_freq;
     pa_sample_spec default_sample_spec;
     uint32_t alternate_sample_rate;
-    pa_channel_map default_channel_map;
+    pa_channel_map* default_channel_map;
     size_t shm_size;
 } pa_daemon_conf;
 

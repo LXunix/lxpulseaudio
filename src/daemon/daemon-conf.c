@@ -105,7 +105,7 @@ static const pa_daemon_conf default_conf = {
     .deferred_volume_extra_delay_usec = 0,
     .default_sample_spec = { .format = PA_SAMPLE_S16NE, .rate = 44100, .channels = 2 },
     .alternate_sample_rate = 48000,
-    .default_channel_map = { .channels = 2, .map = { PA_CHANNEL_POSITION_LEFT, PA_CHANNEL_POSITION_RIGHT } },
+    .default_channel_map = &(pa_channel_map){ .channels = 2, .map = { PA_CHANNEL_POSITION_LEFT, PA_CHANNEL_POSITION_RIGHT } },
     .shm_size = 0
 #ifdef HAVE_SYS_RESOURCE_H
    ,.rlimit_fsize = { .value = 0, .is_set = false },
@@ -412,7 +412,7 @@ static int parse_channel_map(pa_config_parser_state *state) {
 
     i = state->data;
 
-    if (!pa_channel_map_parse(&i->conf->default_channel_map, state->rvalue)) {
+    if (!pa_channel_map_parse(i->conf->default_channel_map, state->rvalue)) {
         pa_log(_("[%s:%u] Invalid channel map '%s'."), state->filename, state->lineno, state->rvalue);
         return -1;
     }
@@ -697,14 +697,14 @@ int pa_daemon_conf_load(pa_daemon_conf *c, const char *filename) {
 
         if (ci.default_sample_spec_set &&
             ci.default_channel_map_set &&
-            c->default_channel_map.channels != c->default_sample_spec.channels) {
+            c->default_channel_map->channels != c->default_sample_spec.channels) {
             pa_log_error(_("The specified default channel map has a different number of channels than the specified default number of channels."));
             r = -1;
             goto finish;
         } else if (ci.default_sample_spec_set)
-            pa_channel_map_init_extend(&c->default_channel_map, c->default_sample_spec.channels, PA_CHANNEL_MAP_DEFAULT);
+            pa_channel_map_init_extend(c->default_channel_map, c->default_sample_spec.channels, PA_CHANNEL_MAP_DEFAULT);
         else if (ci.default_channel_map_set)
-            c->default_sample_spec.channels = c->default_channel_map.channels;
+            c->default_sample_spec.channels = c->default_channel_map->channels;
     }
 
 finish:
@@ -828,7 +828,7 @@ char *pa_daemon_conf_dump(pa_daemon_conf *c) {
     pa_strbuf_printf(s, "default-sample-rate = %u\n", c->default_sample_spec.rate);
     pa_strbuf_printf(s, "alternate-sample-rate = %u\n", c->alternate_sample_rate);
     pa_strbuf_printf(s, "default-sample-channels = %u\n", c->default_sample_spec.channels);
-    pa_strbuf_printf(s, "default-channel-map = %s\n", pa_channel_map_snprint(cm, sizeof(cm), &c->default_channel_map));
+    pa_strbuf_printf(s, "default-channel-map = %s\n", pa_channel_map_snprint(cm, sizeof(cm), c->default_channel_map));
     pa_strbuf_printf(s, "default-fragments = %u\n", c->default_n_fragments);
     pa_strbuf_printf(s, "default-fragment-size-msec = %u\n", c->default_fragment_size_msec);
     pa_strbuf_printf(s, "enable-deferred-volume = %s\n", pa_yes_no(c->deferred_volume));
