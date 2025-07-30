@@ -40,7 +40,7 @@
 struct pa_dbusobj_server_lookup {
     pa_core *core;
     pa_dbus_connection *conn;
-    bool path_registered;
+    bool path_registered : 1;
 };
 
 static const char introspection[] =

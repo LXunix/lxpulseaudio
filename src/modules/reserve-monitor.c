@@ -37,15 +37,15 @@
 struct rm_monitor {
 	int ref;
 
+	unsigned busy:1;
+	unsigned filtering:1;
+	unsigned matching:1;
+
 	char *device_name;
 	char *service_name;
 	char *match;
 
 	DBusConnection *connection;
-
-	unsigned busy:1;
-	unsigned filtering:1;
-	unsigned matching:1;
 
 	rm_change_cb_t change_cb;
 	void *userdata;
