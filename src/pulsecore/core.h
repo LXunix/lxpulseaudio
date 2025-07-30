@@ -237,7 +237,7 @@ struct pa_core {
     pa_resample_method_t resample_method;
     int realtime_priority;
 
-    pa_server_type_t server_type;
+    pa_server_type_t server_type : 3; // 3-bit max
     pa_cpu_info cpu_info;
 
     /* hooks */

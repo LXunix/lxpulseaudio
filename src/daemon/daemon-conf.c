@@ -60,45 +60,45 @@
 
 static const pa_daemon_conf default_conf = {
     .cmd = PA_CMD_DAEMON,
-    .daemonize = false,
-    .fail = true,
-    .high_priority = true,
+    .params0.daemonize = false,
+    .params0.fail = true,
+    .params0.high_priority = true,
     .nice_level = -11,
-    .realtime_scheduling = true,
+    .params0.realtime_scheduling = true,
     .realtime_priority = 5,  /* Half of JACK's default rtprio */
-    .disallow_module_loading = false,
-    .disallow_exit = false,
-    .flat_volumes = false,
-    .rescue_streams = true,
+    .params0.disallow_module_loading = false,
+    .params2.disallow_exit = false,
+    .params2.flat_volumes = false,
+    .params2.rescue_streams = true,
     .exit_idle_time = 20,
     .scache_idle_time = 20,
     .script_commands = NULL,
     .dl_search_path = NULL,
-    .load_default_script_file = true,
+    .params1.load_default_script_file = true,
     .default_script_file = NULL,
     .log_target = NULL,
     .log_level = PA_LOG_NOTICE,
     .log_backtrace = 0,
-    .log_meta = false,
-    .log_time = false,
+    .params2.log_meta = false,
+    .params2.log_time = false,
     .resample_method = PA_RESAMPLER_AUTO,
-    .avoid_resampling = false,
-    .disable_remixing = false,
-    .remixing_use_all_sink_channels = true,
-    .remixing_produce_lfe = false,
-    .remixing_consume_lfe = false,
+    .params1.avoid_resampling = false,
+    .params1.disable_remixing = false,
+    .params1.remixing_use_all_sink_channels = true,
+    .params1.remixing_produce_lfe = false,
+    .params1.remixing_consume_lfe = false,
     .lfe_crossover_freq = 0,
     .config_file = NULL,
-    .use_pid_file = true,
-    .system_instance = false,
+    .params0.use_pid_file = true,
+    .params0.system_instance = false,
 #ifdef HAVE_DBUS
     .local_server_type = PA_SERVER_TYPE_UNSET, /* The actual default is _USER, but we have to detect when the user doesn't specify this option. */
 #endif
-    .no_cpu_limit = true,
-    .disable_shm = false,
-    .disable_memfd = false,
-    .lock_memory = false,
-    .deferred_volume = true,
+    .params0.no_cpu_limit = true,
+    .params1.disable_shm = false,
+    .params1.disable_memfd = false,
+    .params2.lock_memory = false,
+    .params2.deferred_volume = true,
     .default_n_fragments = 4,
     .default_fragment_size_msec = 25,
     .deferred_volume_safety_margin_usec = 8000,
@@ -510,11 +510,11 @@ static int parse_disable_lfe_remix(pa_config_parser_state *state) {
         return -1;
     }
 
-    c->remixing_produce_lfe = c->remixing_consume_lfe = !k;
+    c->params1.remixing_produce_lfe = c->params1.remixing_consume_lfe = !k;
 
     pa_log("[%s:%u] Deprecated option 'disable-lfe-remixing' found.", state->filename, state->lineno);
     pa_log("[%s:%u] Please migrate to 'remixing-produce-lfe' and 'remixing-consume-lfe', set both to '%s'.",
-           state->filename, state->lineno, pa_yes_no(c->remixing_produce_lfe));
+           state->filename, state->lineno, pa_yes_no(c->params1.remixing_produce_lfe));
 
     return 0;
 }
@@ -531,11 +531,11 @@ static int parse_enable_lfe_remix(pa_config_parser_state *state) {
         return -1;
     }
 
-    c->remixing_produce_lfe = c->remixing_consume_lfe = k;
+    c->params1.remixing_produce_lfe = c->params1.remixing_consume_lfe = k;
 
     pa_log("[%s:%u] Deprecated option 'enable-lfe-remixing' found.", state->filename, state->lineno);
     pa_log("[%s:%u] Please migrate to 'remixing-produce-lfe' and 'remixing-consume-lfe', set both to '%s'.",
-           state->filename, state->lineno, pa_yes_no(c->remixing_produce_lfe));
+           state->filename, state->lineno, pa_yes_no(c->params1.remixing_produce_lfe));
 
     return 0;
 }
@@ -562,28 +562,28 @@ int pa_daemon_conf_load(pa_daemon_conf *c, const char *filename) {
     FILE *f = NULL;
     struct channel_conf_info ci;
     pa_config_item table[] = {
-        { "daemonize",                  pa_config_parse_bool,     &c->daemonize, NULL },
-        { "fail",                       pa_config_parse_bool,     &c->fail, NULL },
-        { "high-priority",              pa_config_parse_bool,     &c->high_priority, NULL },
-        { "realtime-scheduling",        pa_config_parse_bool,     &c->realtime_scheduling, NULL },
-        { "disallow-module-loading",    pa_config_parse_bool,     &c->disallow_module_loading, NULL },
-        { "allow-module-loading",       pa_config_parse_not_bool, &c->disallow_module_loading, NULL },
-        { "disallow-exit",              pa_config_parse_bool,     &c->disallow_exit, NULL },
-        { "allow-exit",                 pa_config_parse_not_bool, &c->disallow_exit, NULL },
-        { "use-pid-file",               pa_config_parse_bool,     &c->use_pid_file, NULL },
-        { "system-instance",            pa_config_parse_bool,     &c->system_instance, NULL },
+        { "daemonize",                  pa_config_parse_bool,     GET_ADDR_BITFIELD(0, DAEMONIZE), NULL },
+        { "fail",                       pa_config_parse_bool,     GET_ADDR_BITFIELD(0, FAIL), NULL },
+        { "high-priority",              pa_config_parse_bool,     GET_ADDR_BITFIELD(0, HIGH_PRIORITY), NULL },
+        { "realtime-scheduling",        pa_config_parse_bool,     GET_ADDR_BITFIELD(0, REALTIME_SCHEDULING), NULL },
+        { "disallow-module-loading",    pa_config_parse_bool,     GET_ADDR_BITFIELD(0, DISALLOW_MODULE_LOADING), NULL },
+        { "allow-module-loading",       pa_config_parse_not_bool, GET_ADDR_BITFIELD(0, DISALLOW_MODULE_LOADING) , NULL },
+        { "disallow-exit",              pa_config_parse_bool,     GET_ADDR_BITFIELD(2, DISALLOW_EXIT), NULL },
+        { "allow-exit",                 pa_config_parse_not_bool, GET_ADDR_BITFIELD(2, DISALLOW_EXIT), NULL },
+        { "use-pid-file",               pa_config_parse_bool,     GET_ADDR_BITFIELD(0, USE_PID_FILE), NULL },
+        { "system-instance",            pa_config_parse_bool,     GET_ADDR_BITFIELD(0, SYSTEM_INSTANCE), NULL },
 #ifdef HAVE_DBUS
         { "local-server-type",          parse_server_type,        c, NULL },
 #endif
-        { "no-cpu-limit",               pa_config_parse_bool,     &c->no_cpu_limit, NULL },
-        { "cpu-limit",                  pa_config_parse_not_bool, &c->no_cpu_limit, NULL },
-        { "disable-shm",                pa_config_parse_bool,     &c->disable_shm, NULL },
-        { "enable-shm",                 pa_config_parse_not_bool, &c->disable_shm, NULL },
-        { "enable-memfd",               pa_config_parse_not_bool, &c->disable_memfd, NULL },
-        { "flat-volumes",               pa_config_parse_bool,     &c->flat_volumes, NULL },
-        { "rescue-streams",             pa_config_parse_bool,     &c->rescue_streams, NULL },
-        { "lock-memory",                pa_config_parse_bool,     &c->lock_memory, NULL },
-        { "enable-deferred-volume",     pa_config_parse_bool,     &c->deferred_volume, NULL },
+        { "no-cpu-limit",               pa_config_parse_bool,     GET_ADDR_BITFIELD(0, NO_CPU_LIMIT), NULL },
+        { "cpu-limit",                  pa_config_parse_not_bool, GET_ADDR_BITFIELD(0, NO_CPU_LIMIT), NULL },
+        { "disable-shm",                pa_config_parse_bool,     GET_ADDR_BITFIELD(1, DISABLE_SHM), NULL },
+        { "enable-shm",                 pa_config_parse_not_bool, GET_ADDR_BITFIELD(1, DISABLE_SHM), NULL },
+        { "enable-memfd",               pa_config_parse_not_bool, GET_ADDR_BITFIELD(1, DISABLE_MEMFD), NULL },
+        { "flat-volumes",               pa_config_parse_bool,     GET_ADDR_BITFIELD(2, FLAT_VOLUMES), NULL },
+        { "rescue-streams",             pa_config_parse_bool,     GET_ADDR_BITFIELD(2, RESCUE_STREAMS), NULL },
+        { "lock-memory",                pa_config_parse_bool,     GET_ADDR_BITFIELD(2, LOCK_MEMORY), NULL },
+        { "enable-deferred-volume",     pa_config_parse_bool,     GET_ADDR_BITFIELD(2, DEFERRED_VOLUME), NULL },
         { "exit-idle-time",             pa_config_parse_int,      &c->exit_idle_time, NULL },
         { "scache-idle-time",           pa_config_parse_int,      &c->scache_idle_time, NULL },
         { "realtime-priority",          parse_rtprio,             c, NULL },
@@ -605,20 +605,20 @@ int pa_daemon_conf_load(pa_daemon_conf *c, const char *filename) {
         { "deferred-volume-extra-delay-usec",
                                         pa_config_parse_int,      &c->deferred_volume_extra_delay_usec, NULL },
         { "nice-level",                 parse_nice_level,         c, NULL },
-        { "avoid-resampling",           pa_config_parse_bool,     &c->avoid_resampling, NULL },
-        { "disable-remixing",           pa_config_parse_bool,     &c->disable_remixing, NULL },
-        { "enable-remixing",            pa_config_parse_not_bool, &c->disable_remixing, NULL },
+        { "avoid-resampling",           pa_config_parse_bool,     GET_ADDR_BITFIELD(1, AVOID_RESAMPLING), NULL },
+        { "disable-remixing",           pa_config_parse_bool,     GET_ADDR_BITFIELD(1, DISABLE_REMIXING), NULL },
+        { "enable-remixing",            pa_config_parse_not_bool, GET_ADDR_BITFIELD(1, DISABLE_REMIXING), NULL },
         { "remixing-use-all-sink-channels",
-                                        pa_config_parse_bool,     &c->remixing_use_all_sink_channels, NULL },
+                                        pa_config_parse_bool,     GET_ADDR_BITFIELD(1, REMIXING_USE_ALL_SINK_CHANNELS), NULL },
         { "disable-lfe-remixing",       parse_disable_lfe_remix,  c, NULL },
         { "enable-lfe-remixing",        parse_enable_lfe_remix,   c, NULL },
-        { "remixing-produce-lfe",       pa_config_parse_bool,     &c->remixing_produce_lfe, NULL },
-        { "remixing-consume-lfe",       pa_config_parse_bool,     &c->remixing_consume_lfe, NULL },
+        { "remixing-produce-lfe",       pa_config_parse_bool,     GET_ADDR_BITFIELD(1, REMIXING_PRODUCE_LFE), NULL },
+        { "remixing-consume-lfe",       pa_config_parse_bool,     GET_ADDR_BITFIELD(1, REMIXING_CONSUME_LFE), NULL },
         { "lfe-crossover-freq",         pa_config_parse_unsigned, &c->lfe_crossover_freq, NULL },
-        { "load-default-script-file",   pa_config_parse_bool,     &c->load_default_script_file, NULL },
+        { "load-default-script-file",   pa_config_parse_bool,     GET_ADDR_BITFIELD(1, LOAD_DEFAULT_SCRIPT_FILE), NULL },
         { "shm-size-bytes",             pa_config_parse_size,     &c->shm_size, NULL },
-        { "log-meta",                   pa_config_parse_bool,     &c->log_meta, NULL },
-        { "log-time",                   pa_config_parse_bool,     &c->log_time, NULL },
+        { "log-meta",                   pa_config_parse_bool,     GET_ADDR_BITFIELD(1, LOG_META), NULL },
+        { "log-time",                   pa_config_parse_bool,     GET_ADDR_BITFIELD(1, LOG_TIME), NULL },
         { "log-backtrace",              pa_config_parse_unsigned, &c->log_backtrace, NULL },
 #ifdef HAVE_SYS_RESOURCE_H
         { "rlimit-fsize",               parse_rlimit,             &c->rlimit_fsize, NULL },
@@ -734,7 +734,7 @@ const char *pa_daemon_conf_get_default_script_file(pa_daemon_conf *c) {
     pa_assert(c);
 
     if (!c->default_script_file) {
-        if (c->system_instance)
+        if (c->params0.system_instance)
             c->default_script_file = pa_find_config_file(DEFAULT_SYSTEM_SCRIPT_FILE, NULL, ENV_SCRIPT_FILE);
         else
             c->default_script_file = pa_find_config_file(DEFAULT_SCRIPT_FILE, DEFAULT_SCRIPT_FILE_USER, ENV_SCRIPT_FILE);
@@ -748,7 +748,7 @@ FILE *pa_daemon_conf_open_default_script_file(pa_daemon_conf *c) {
     pa_assert(c);
 
     if (!c->default_script_file) {
-        if (c->system_instance)
+        if (c->params0.system_instance)
             f = pa_open_config_file(DEFAULT_SYSTEM_SCRIPT_FILE, NULL, ENV_SCRIPT_FILE, &c->default_script_file);
         else
             f = pa_open_config_file(DEFAULT_SCRIPT_FILE, DEFAULT_SCRIPT_FILE_USER, ENV_SCRIPT_FILE, &c->default_script_file);
@@ -792,37 +792,37 @@ char *pa_daemon_conf_dump(pa_daemon_conf *c) {
     if (c->log_target)
         log_target = pa_log_target_to_string(c->log_target);
 
-    pa_strbuf_printf(s, "daemonize = %s\n", pa_yes_no(c->daemonize));
-    pa_strbuf_printf(s, "fail = %s\n", pa_yes_no(c->fail));
-    pa_strbuf_printf(s, "high-priority = %s\n", pa_yes_no(c->high_priority));
+    pa_strbuf_printf(s, "daemonize = %s\n", pa_yes_no(c->params0.daemonize));
+    pa_strbuf_printf(s, "fail = %s\n", pa_yes_no(c->params0.fail));
+    pa_strbuf_printf(s, "high-priority = %s\n", pa_yes_no(c->params0.high_priority));
     pa_strbuf_printf(s, "nice-level = %i\n", c->nice_level);
-    pa_strbuf_printf(s, "realtime-scheduling = %s\n", pa_yes_no(c->realtime_scheduling));
+    pa_strbuf_printf(s, "realtime-scheduling = %s\n", pa_yes_no(c->params0.realtime_scheduling));
     pa_strbuf_printf(s, "realtime-priority = %i\n", c->realtime_priority);
-    pa_strbuf_printf(s, "allow-module-loading = %s\n", pa_yes_no(!c->disallow_module_loading));
-    pa_strbuf_printf(s, "allow-exit = %s\n", pa_yes_no(!c->disallow_exit));
-    pa_strbuf_printf(s, "use-pid-file = %s\n", pa_yes_no(c->use_pid_file));
-    pa_strbuf_printf(s, "system-instance = %s\n", pa_yes_no(c->system_instance));
+    pa_strbuf_printf(s, "allow-module-loading = %s\n", pa_yes_no(!c->params0.disallow_module_loading));
+    pa_strbuf_printf(s, "allow-exit = %s\n", pa_yes_no(!c->params2.disallow_exit));
+    pa_strbuf_printf(s, "use-pid-file = %s\n", pa_yes_no(c->params0.use_pid_file));
+    pa_strbuf_printf(s, "system-instance = %s\n", pa_yes_no(c->params0.system_instance));
 #ifdef HAVE_DBUS
     pa_strbuf_printf(s, "local-server-type = %s\n", server_type_to_string[c->local_server_type]);
 #endif
-    pa_strbuf_printf(s, "cpu-limit = %s\n", pa_yes_no(!c->no_cpu_limit));
-    pa_strbuf_printf(s, "enable-shm = %s\n", pa_yes_no(!c->disable_shm));
-    pa_strbuf_printf(s, "flat-volumes = %s\n", pa_yes_no(c->flat_volumes));
-    pa_strbuf_printf(s, "rescue-streams = %s\n", pa_yes_no(c->rescue_streams));
-    pa_strbuf_printf(s, "lock-memory = %s\n", pa_yes_no(c->lock_memory));
+    pa_strbuf_printf(s, "cpu-limit = %s\n", pa_yes_no(!c->params0.no_cpu_limit));
+    pa_strbuf_printf(s, "enable-shm = %s\n", pa_yes_no(!c->params1.disable_shm));
+    pa_strbuf_printf(s, "flat-volumes = %s\n", pa_yes_no(c->params2.flat_volumes));
+    pa_strbuf_printf(s, "rescue-streams = %s\n", pa_yes_no(c->params2.rescue_streams));
+    pa_strbuf_printf(s, "lock-memory = %s\n", pa_yes_no(c->params2.lock_memory));
     pa_strbuf_printf(s, "exit-idle-time = %i\n", c->exit_idle_time);
     pa_strbuf_printf(s, "scache-idle-time = %i\n", c->scache_idle_time);
     pa_strbuf_printf(s, "dl-search-path = %s\n", pa_strempty(c->dl_search_path));
     pa_strbuf_printf(s, "default-script-file = %s\n", pa_strempty(pa_daemon_conf_get_default_script_file(c)));
-    pa_strbuf_printf(s, "load-default-script-file = %s\n", pa_yes_no(c->load_default_script_file));
+    pa_strbuf_printf(s, "load-default-script-file = %s\n", pa_yes_no(c->params1.load_default_script_file));
     pa_strbuf_printf(s, "log-target = %s\n", pa_strempty(log_target));
     pa_strbuf_printf(s, "log-level = %s\n", log_level_to_string[c->log_level]);
     pa_strbuf_printf(s, "resample-method = %s\n", pa_resample_method_to_string(c->resample_method));
-    pa_strbuf_printf(s, "avoid-resampling = %s\n", pa_yes_no(c->avoid_resampling));
-    pa_strbuf_printf(s, "enable-remixing = %s\n", pa_yes_no(!c->disable_remixing));
-    pa_strbuf_printf(s, "remixing-use-all-sink-channels = %s\n", pa_yes_no(c->remixing_use_all_sink_channels));
-    pa_strbuf_printf(s, "remixing-produce-lfe = %s\n", pa_yes_no(c->remixing_produce_lfe));
-    pa_strbuf_printf(s, "remixing-consume-lfe = %s\n", pa_yes_no(c->remixing_consume_lfe));
+    pa_strbuf_printf(s, "avoid-resampling = %s\n", pa_yes_no(c->params1.avoid_resampling));
+    pa_strbuf_printf(s, "enable-remixing = %s\n", pa_yes_no(!c->params1.disable_remixing));
+    pa_strbuf_printf(s, "remixing-use-all-sink-channels = %s\n", pa_yes_no(c->params1.remixing_use_all_sink_channels));
+    pa_strbuf_printf(s, "remixing-produce-lfe = %s\n", pa_yes_no(c->params1.remixing_produce_lfe));
+    pa_strbuf_printf(s, "remixing-consume-lfe = %s\n", pa_yes_no(c->params1.remixing_consume_lfe));
     pa_strbuf_printf(s, "lfe-crossover-freq = %u\n", c->lfe_crossover_freq);
     pa_strbuf_printf(s, "default-sample-format = %s\n", pa_sample_format_to_string(c->default_sample_spec.format));
     pa_strbuf_printf(s, "default-sample-rate = %u\n", c->default_sample_spec.rate);
@@ -831,12 +831,12 @@ char *pa_daemon_conf_dump(pa_daemon_conf *c) {
     pa_strbuf_printf(s, "default-channel-map = %s\n", pa_channel_map_snprint(cm, sizeof(cm), &c->default_channel_map));
     pa_strbuf_printf(s, "default-fragments = %u\n", c->default_n_fragments);
     pa_strbuf_printf(s, "default-fragment-size-msec = %u\n", c->default_fragment_size_msec);
-    pa_strbuf_printf(s, "enable-deferred-volume = %s\n", pa_yes_no(c->deferred_volume));
+    pa_strbuf_printf(s, "enable-deferred-volume = %s\n", pa_yes_no(c->params2.deferred_volume));
     pa_strbuf_printf(s, "deferred-volume-safety-margin-usec = %u\n", c->deferred_volume_safety_margin_usec);
     pa_strbuf_printf(s, "deferred-volume-extra-delay-usec = %d\n", c->deferred_volume_extra_delay_usec);
     pa_strbuf_printf(s, "shm-size-bytes = %lu\n", (unsigned long) c->shm_size);
-    pa_strbuf_printf(s, "log-meta = %s\n", pa_yes_no(c->log_meta));
-    pa_strbuf_printf(s, "log-time = %s\n", pa_yes_no(c->log_time));
+    pa_strbuf_printf(s, "log-meta = %s\n", pa_yes_no(c->params2.log_meta));
+    pa_strbuf_printf(s, "log-time = %s\n", pa_yes_no(c->params2.log_time));
     pa_strbuf_printf(s, "log-backtrace = %u\n", c->log_backtrace);
 #ifdef HAVE_SYS_RESOURCE_H
     pa_strbuf_printf(s, "rlimit-fsize = %li\n", c->rlimit_fsize.is_set ? (long int) c->rlimit_fsize.value : -1);

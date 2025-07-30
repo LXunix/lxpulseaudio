@@ -659,9 +659,9 @@ int main(int argc, char *argv[]) {
     }
 
     pa_log_set_level(conf->log_level);
-    if (conf->log_meta)
+    if (conf->params2.log_meta)
         pa_log_set_flags(PA_LOG_PRINT_META, PA_LOG_SET);
-    if (conf->log_time)
+    if (conf->params2.log_time)
         pa_log_set_flags(PA_LOG_PRINT_TIME, PA_LOG_SET);
     pa_log_set_show_backtrace(conf->log_backtrace);
 
@@ -670,14 +670,14 @@ int main(int argc, char *argv[]) {
      * same thing; make them agree about what is requested. */
     switch (conf->local_server_type) {
         case PA_SERVER_TYPE_UNSET:
-            conf->local_server_type = conf->system_instance ? PA_SERVER_TYPE_SYSTEM : PA_SERVER_TYPE_USER;
+            conf->local_server_type = conf->params0.system_instance ? PA_SERVER_TYPE_SYSTEM : PA_SERVER_TYPE_USER;
             break;
         case PA_SERVER_TYPE_USER:
         case PA_SERVER_TYPE_NONE:
-            conf->system_instance = false;
+            conf->params0.system_instance = false;
             break;
         case PA_SERVER_TYPE_SYSTEM:
-            conf->system_instance = true;
+            conf->params0.system_instance = true;
             break;
         default:
             pa_assert_not_reached();
@@ -687,7 +687,7 @@ int main(int argc, char *argv[]) {
 
     if (!start_server && conf->local_server_type == PA_SERVER_TYPE_SYSTEM) {
         pa_log_notice(_("System mode refused for non-root user. Only starting the D-Bus server lookup service."));
-        conf->system_instance = false;
+        conf->params0.system_instance = false;
     }
 #endif
 
@@ -813,7 +813,7 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef HAVE_GETUID
-    if (getuid() == 0 && !conf->system_instance)
+    if (getuid() == 0 && !conf->params0.system_instance)
         pa_log_warn(_("This program is not intended to be run as root (unless --system is specified)."));
 #ifndef HAVE_DBUS /* A similar, only a notice worthy check was done earlier, if D-Bus is enabled. */
     else if (getuid() != 0 && conf->system_instance) {
@@ -823,7 +823,7 @@ int main(int argc, char *argv[]) {
 #endif
 #endif  /* HAVE_GETUID */
 
-    if (conf->cmd == PA_CMD_START && conf->system_instance) {
+    if (conf->cmd == PA_CMD_START && conf->params0.system_instance) {
         pa_log(_("--start not supported for system instances."));
         goto finish;
     }
@@ -874,18 +874,18 @@ int main(int argc, char *argv[]) {
         pa_xfree(configured_address);
     }
 
-    if (conf->system_instance && !conf->disallow_exit)
+    if (conf->params0.system_instance && !conf->params2.disallow_exit)
         pa_log_warn(_("Running in system mode, but --disallow-exit not set."));
 
-    if (conf->system_instance && !conf->disallow_module_loading)
+    if (conf->params0.system_instance && !conf->params0.disallow_module_loading)
         pa_log_warn(_("Running in system mode, but --disallow-module-loading not set."));
 
-    if (conf->system_instance && !conf->disable_shm) {
+    if (conf->params0.system_instance && !conf->params1.disable_shm) {
         pa_log_notice(_("Running in system mode, forcibly disabling SHM mode."));
-        conf->disable_shm = true;
+        conf->params1.disable_shm = true;
     }
 
-    if (conf->system_instance && conf->exit_idle_time >= 0) {
+    if (conf->params0.system_instance && conf->exit_idle_time >= 0) {
         pa_log_notice(_("Running in system mode, forcibly disabling exit idle time."));
         conf->exit_idle_time = -1;
     }
@@ -913,7 +913,7 @@ int main(int argc, char *argv[]) {
 #endif
     }
 
-    if (conf->daemonize) {
+    if (conf->params0.daemonize) {
 #ifdef HAVE_FORK
         pid_t child;
 #endif
@@ -1061,14 +1061,14 @@ int main(int argc, char *argv[]) {
 #endif
     pa_rtclock_hrtimer_enable();
 
-    if (conf->high_priority)
+    if (conf->params0.high_priority)
         pa_raise_priority(conf->nice_level);
 
-    if (conf->system_instance)
+    if (conf->params0.system_instance)
         if (change_user() < 0)
             goto finish;
 
-    pa_set_env_and_record("PULSE_SYSTEM", conf->system_instance ? "1" : "0");
+    pa_set_env_and_record("PULSE_SYSTEM", conf->params0.system_instance ? "1" : "0");
 
     pa_log_info("This is PulseAudio %s", PACKAGE_VERSION);
     pa_log_debug("Compilation CFLAGS: %s", PA_CFLAGS);
@@ -1145,7 +1145,7 @@ int main(int argc, char *argv[]) {
         pa_log_warn(_("OK, so you are running PA in system mode. Please make sure that you actually do want to do that.\n"
                       "Please read http://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/WhatIsWrongWithSystemWide/ for an explanation why system mode is usually a bad idea."));
 
-    if (conf->use_pid_file) {
+    if (conf->params0.use_pid_file) {
         int z;
 
         if ((z = pa_pid_file_create("pulseaudio")) != 0) {
@@ -1172,7 +1172,7 @@ int main(int argc, char *argv[]) {
     else
         pa_log_info("System appears to not support high resolution timers");
 
-    if (conf->lock_memory) {
+    if (conf->params2.lock_memory) {
 #if defined(HAVE_SYS_MMAN_H) && !defined(__ANDROID__)
         if (mlockall(MCL_FUTURE) < 0)
             pa_log_warn("mlockall() failed: %s", pa_cstrerror(errno));
@@ -1187,8 +1187,8 @@ int main(int argc, char *argv[]) {
 
     pa_assert_se(mainloop = pa_mainloop_new());
 
-    if (!(c = pa_core_new(pa_mainloop_get_api(mainloop), !conf->disable_shm,
-                          !conf->disable_shm && !conf->disable_memfd && pa_memfd_is_locally_supported(),
+    if (!(c = pa_core_new(pa_mainloop_get_api(mainloop), !conf->params1.disable_shm,
+                          !conf->params1.disable_shm && !conf->params1.disable_memfd && pa_memfd_is_locally_supported(),
                           conf->shm_size))) {
         pa_log(_("pa_core_new() failed."));
         goto finish;
@@ -1206,17 +1206,17 @@ int main(int argc, char *argv[]) {
     c->scache_idle_time = conf->scache_idle_time;
     c->resample_method = conf->resample_method;
     c->realtime_priority = conf->realtime_priority;
-    c->realtime_scheduling = conf->realtime_scheduling;
-    c->avoid_resampling = conf->avoid_resampling;
-    c->disable_remixing = conf->disable_remixing;
-    c->remixing_use_all_sink_channels = conf->remixing_use_all_sink_channels;
-    c->remixing_produce_lfe = conf->remixing_produce_lfe;
-    c->remixing_consume_lfe = conf->remixing_consume_lfe;
-    c->deferred_volume = conf->deferred_volume;
-    c->running_as_daemon = conf->daemonize;
-    c->disallow_exit = conf->disallow_exit;
-    c->flat_volumes = conf->flat_volumes;
-    c->rescue_streams = conf->rescue_streams;
+    c->realtime_scheduling = conf->params0.realtime_scheduling;
+    c->avoid_resampling = conf->params1.avoid_resampling;
+    c->disable_remixing = conf->params1.disable_remixing;
+    c->remixing_use_all_sink_channels = conf->params1.remixing_use_all_sink_channels;
+    c->remixing_produce_lfe = conf->params1.remixing_produce_lfe;
+    c->remixing_consume_lfe = conf->params1.remixing_consume_lfe;
+    c->deferred_volume = conf->params2.deferred_volume;
+    c->running_as_daemon = conf->params0.daemonize;
+    c->disallow_exit = conf->params2.disallow_exit;
+    c->flat_volumes = conf->params2.flat_volumes;
+    c->rescue_streams = conf->params2.rescue_streams;
 #ifdef HAVE_DBUS
     c->server_type = conf->local_server_type;
 #endif
@@ -1240,7 +1240,7 @@ int main(int argc, char *argv[]) {
     pa_signal_new(SIGHUP, signal_callback, c);
 #endif
 
-    if (!conf->no_cpu_limit)
+    if (!conf->params0.no_cpu_limit)
         pa_assert_se(pa_cpu_limit_init(pa_mainloop_get_api(mainloop)) == 0);
 
     buf = pa_strbuf_new();
@@ -1253,25 +1253,25 @@ int main(int argc, char *argv[]) {
     {
         const char *command_source = NULL;
 
-        if (conf->load_default_script_file) {
+        if (conf->params1.load_default_script_file) {
             FILE *f;
 
             if ((f = pa_daemon_conf_open_default_script_file(conf))) {
-                r = pa_cli_command_execute_file_stream(c, f, buf, &conf->fail);
+                r = pa_cli_command_execute_file_stream(c, f, buf, GET_ADDR_BITFIELD2(0, FAIL));
                 fclose(f);
                 command_source = pa_daemon_conf_get_default_script_file(conf);
             }
         }
 
         if (r >= 0) {
-            r = pa_cli_command_execute(c, conf->script_commands, buf, &conf->fail);
+            r = pa_cli_command_execute(c, conf->script_commands, buf, GET_ADDR_BITFIELD2(0, FAIL));
             command_source = _("command line arguments");
         }
 
         pa_log_error("%s", s = pa_strbuf_to_string_free(buf));
         pa_xfree(s);
 
-        if (r < 0 && conf->fail) {
+        if (r < 0 && conf->params0.fail) {
             pa_log(_("Failed to initialize daemon due to errors while executing startup commands. Source of commands: %s"), command_source);
             goto finish;
         }
@@ -1286,16 +1286,16 @@ int main(int argc, char *argv[]) {
          * any modules to be loaded. We haven't loaded any so far, so one might
          * think there's no way to contact the server, but receiving certain
          * signals could still cause modules to load. */
-        conf->disallow_module_loading = true;
+        conf->params0.disallow_module_loading = true;
 #endif
     }
 
     /* We completed the initial module loading, so let's disable it
      * from now on, if requested */
-    c->disallow_module_loading = conf->disallow_module_loading;
+    c->disallow_module_loading = conf->params0.disallow_module_loading;
 
 #ifdef HAVE_DBUS
-    if (!conf->system_instance) {
+    if (!conf->params0.system_instance) {
         if ((server_lookup = pa_dbusobj_server_lookup_new(c))) {
             if (!(lookup_service_bus = register_dbus_name(c, DBUS_BUS_SESSION, "org.PulseAudio1")))
                 goto finish;
@@ -1303,7 +1303,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (start_server)
-        server_bus = register_dbus_name(c, conf->system_instance ? DBUS_BUS_SYSTEM : DBUS_BUS_SESSION, "org.pulseaudio.Server");
+        server_bus = register_dbus_name(c, conf->params0.system_instance ? DBUS_BUS_SYSTEM : DBUS_BUS_SESSION, "org.pulseaudio.Server");
 #endif
 
 #ifdef HAVE_FORK
@@ -1382,7 +1382,7 @@ finish:
         pa_log_info("Daemon terminated.");
     }
 
-    if (!conf->no_cpu_limit)
+    if (!conf->params0.no_cpu_limit)
         pa_cpu_limit_done();
 
     pa_signal_done();

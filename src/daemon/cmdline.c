@@ -216,7 +216,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
 
             case ARG_START:
                 conf->cmd = PA_CMD_START;
-                conf->daemonize = true;
+                conf->params0.daemonize = true;
                 break;
 
             case ARG_CHECK:
@@ -246,7 +246,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--daemonize expects boolean argument"));
                     goto fail;
                 }
-                conf->daemonize = !!b;
+                conf->params0.daemonize = !!b;
                 break;
 
             case ARG_FAIL:
@@ -254,7 +254,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--fail expects boolean argument"));
                     goto fail;
                 }
-                conf->fail = !!b;
+                conf->params0.fail = !!b;
                 break;
 
             case 'v':
@@ -277,7 +277,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--high-priority expects boolean argument"));
                     goto fail;
                 }
-                conf->high_priority = !!b;
+                conf->params0.high_priority = !!b;
                 break;
 
             case ARG_REALTIME:
@@ -285,7 +285,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--realtime expects boolean argument"));
                     goto fail;
                 }
-                conf->realtime_scheduling = !!b;
+                conf->params0.realtime_scheduling = !!b;
                 break;
 
             case ARG_DISALLOW_MODULE_LOADING:
@@ -293,7 +293,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--disallow-module-loading expects boolean argument"));
                     goto fail;
                 }
-                conf->disallow_module_loading = !!b;
+                conf->params0.disallow_module_loading = !!b;
                 break;
 
             case ARG_DISALLOW_EXIT:
@@ -301,7 +301,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--disallow-exit expects boolean argument"));
                     goto fail;
                 }
-                conf->disallow_exit = !!b;
+                conf->params2.disallow_exit = !!b;
                 break;
 
             case ARG_USE_PID_FILE:
@@ -309,7 +309,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--use-pid-file expects boolean argument"));
                     goto fail;
                 }
-                conf->use_pid_file = !!b;
+                conf->params0.use_pid_file = !!b;
                 break;
 
             case 'p':
@@ -319,7 +319,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                 break;
 
             case 'n':
-                conf->load_default_script_file = false;
+                conf->params1.load_default_script_file = false;
                 break;
 
             case ARG_LOG_TARGET:
@@ -338,7 +338,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--log-time expects boolean argument"));
                     goto fail;
                 }
-                conf->log_time = !!b;
+                conf->params2.log_time = !!b;
                 break;
 
             case ARG_LOG_META:
@@ -346,7 +346,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--log-meta expects boolean argument"));
                     goto fail;
                 }
-                conf->log_meta = !!b;
+                conf->params2.log_meta = !!b;
                 break;
 
             case ARG_LOG_BACKTRACE:
@@ -373,7 +373,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--system expects boolean argument"));
                     goto fail;
                 }
-                conf->system_instance = !!b;
+                conf->params0.system_instance = !!b;
                 break;
 
             case ARG_NO_CPU_LIMIT:
@@ -381,7 +381,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--no-cpu-limit expects boolean argument"));
                     goto fail;
                 }
-                conf->no_cpu_limit = !!b;
+                conf->params0.no_cpu_limit = !!b;
                 break;
 
             case ARG_DISABLE_SHM:
@@ -389,7 +389,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--disable-shm expects boolean argument"));
                     goto fail;
                 }
-                conf->disable_shm = !!b;
+                conf->params1.disable_shm = !!b;
                 break;
 
             case ARG_ENABLE_MEMFD:
@@ -397,7 +397,7 @@ int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d
                     pa_log(_("--enable-memfd expects boolean argument"));
                     goto fail;
                 }
-                conf->disable_memfd = !b;
+                conf->params1.disable_memfd = !b;
                 break;
 
             default:

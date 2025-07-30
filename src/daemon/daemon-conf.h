@@ -54,37 +54,81 @@ typedef struct pa_rlimit {
 } pa_rlimit;
 #endif
 
+#define GET_ADDR_BITFIELD(index, enum_val) (void*)&c->params##index + (enum_val)
+#define GET_ADDR_BITFIELD2(index, enum_val) (bool*)&conf->params##index + (enum_val)
+
+enum pa_params0
+{
+    DAEMONIZE,
+    FAIL,
+    HIGH_PRIORITY,
+    REALTIME_SCHEDULING,
+    DISALLOW_MODULE_LOADING,
+    USE_PID_FILE,
+    SYSTEM_INSTANCE,
+    NO_CPU_LIMIT
+};
+
+enum pa_params1
+{
+    DISABLE_SHM,
+    DISABLE_MEMFD,
+    AVOID_RESAMPLING,
+    DISABLE_REMIXING,
+    REMIXING_USE_ALL_SINK_CHANNELS,
+    REMIXING_PRODUCE_LFE,
+    REMIXING_CONSUME_LFE,
+    LOAD_DEFAULT_SCRIPT_FILE
+};
+
+enum pa_params2
+{
+    DISALLOW_EXIT,
+    LOG_META,
+    LOG_TIME,
+    FLAT_VOLUMES,
+    RESCUE_STREAMS,
+    LOCK_MEMORY,
+    DEFERRED_VOLUME
+};
+
 /* A structure containing configuration data for the PulseAudio server . */
 typedef struct pa_daemon_conf {
-    pa_daemon_conf_cmd_t cmd;
-    bool daemonize,
-        fail,
-        high_priority,
-        realtime_scheduling,
-        disallow_module_loading,
-        use_pid_file,
-        system_instance,
-        no_cpu_limit,
-        disable_shm,
-        disable_memfd,
-        avoid_resampling,
-        disable_remixing,
-        remixing_use_all_sink_channels,
-        remixing_produce_lfe,
-        remixing_consume_lfe,
-        load_default_script_file,
-        disallow_exit,
-        log_meta,
-        log_time,
-        flat_volumes,
-        rescue_streams,
-        lock_memory,
-        deferred_volume;
-    pa_server_type_t local_server_type;
-    int exit_idle_time,
+    pa_daemon_conf_cmd_t cmd : 4; // 4-bit max
+    pa_server_type_t local_server_type : 3; // 3-bit max
+    struct {
+        bool daemonize : 1;
+        bool fail : 1;
+        bool high_priority : 1;
+        bool realtime_scheduling : 1;
+        bool disallow_module_loading : 1;
+        bool use_pid_file : 1;
+        bool system_instance : 1;
+        bool no_cpu_limit : 1;
+    } params0;
+    struct {
+        bool disable_shm : 1;
+        bool disable_memfd : 1;
+        bool avoid_resampling : 1;
+        bool disable_remixing : 1;
+        bool remixing_use_all_sink_channels : 1;
+        bool remixing_produce_lfe : 1;
+        bool remixing_consume_lfe : 1;
+        bool load_default_script_file : 1;
+    } params1;
+    struct {
+        bool disallow_exit : 1;
+        bool log_meta : 1;
+        bool log_time : 1;
+        bool flat_volumes : 1;
+        bool rescue_streams : 1;
+        bool lock_memory : 1;
+        bool deferred_volume : 1;
+    } params2;
+    int8_t nice_level;
+    unsigned short exit_idle_time,
         scache_idle_time,
         realtime_priority,
-        nice_level,
         resample_method;
     char *script_commands, *dl_search_path, *default_script_file;
     pa_log_target *log_target;
