@@ -1579,7 +1579,7 @@ void pa_sink_reconfigure(pa_sink *s, pa_sample_spec *spec, bool passthrough) {
 
 /* Called from main thread */
 size_t pa_sink_get_last_rewind(pa_sink *s) {
-    size_t rewind_bytes;
+    size_t rewind_bytes = 0;
 
     pa_sink_assert_ref(s);
     pa_assert_ctl_context();
@@ -2397,7 +2397,7 @@ bool pa_sink_get_mute(pa_sink *s, bool force_refresh) {
     pa_assert(PA_SINK_IS_LINKED(s->state));
 
     if ((s->refresh_muted || force_refresh) && s->get_mute) {
-        bool mute;
+        bool mute = false;
 
         if (s->flags & PA_SINK_DEFERRED_VOLUME) {
             if (pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SINK_MESSAGE_GET_MUTE, &mute, 0, NULL) >= 0)
@@ -3383,7 +3383,7 @@ void pa_sink_set_fixed_latency(pa_sink *s, pa_usec_t latency) {
 
 /* Called from main thread */
 pa_usec_t pa_sink_get_fixed_latency(pa_sink *s) {
-    pa_usec_t latency;
+    pa_usec_t latency = 0;
 
     pa_sink_assert_ref(s);
     pa_assert_ctl_context();
@@ -3452,7 +3452,7 @@ void pa_sink_set_port_latency_offset(pa_sink *s, int64_t offset) {
 
 /* Called from main context */
 size_t pa_sink_get_max_rewind(pa_sink *s) {
-    size_t r;
+    size_t r = 0;
     pa_assert_ctl_context();
     pa_sink_assert_ref(s);
 
@@ -3466,7 +3466,7 @@ size_t pa_sink_get_max_rewind(pa_sink *s) {
 
 /* Called from main context */
 size_t pa_sink_get_max_request(pa_sink *s) {
-    size_t r;
+    size_t r = 0;
     pa_sink_assert_ref(s);
     pa_assert_ctl_context();
 
