@@ -34,21 +34,22 @@
 #include "reserve.h"
 
 struct rd_device {
-	int ref;
+	int ref : 28;
+
+	unsigned owning : 1;
+	unsigned registered : 1;
+	unsigned filtering : 1;
+	unsigned gave_up : 1;
+
+	int16_t priority;
 
 	char *device_name;
 	char *application_name;
 	char *application_device_name;
 	char *service_name;
 	char *object_path;
-	int32_t priority;
 
 	DBusConnection *connection;
-
-	unsigned owning:1;
-	unsigned registered:1;
-	unsigned filtering:1;
-	unsigned gave_up:1;
 
 	rd_request_cb_t request_cb;
 	void *userdata;
