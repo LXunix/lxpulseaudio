@@ -49,7 +49,7 @@ typedef enum pa_daemon_conf_cmd {
 
 #ifdef HAVE_SYS_RESOURCE_H
 typedef struct pa_rlimit {
-    rlim_t value;
+    rlim_t value : 31;
     bool is_set : 1;
 } pa_rlimit;
 #endif
