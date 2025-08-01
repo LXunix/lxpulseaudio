@@ -143,8 +143,8 @@ struct pa_context {
 #define PA_MAX_WRITE_INDEX_CORRECTIONS 32
 
 typedef struct pa_index_correction {
-    uint32_t tag;
     int64_t value;
+    uint32_t tag;
     bool valid:1;
     bool absolute:1;
     bool corrupt:1;
