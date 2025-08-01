@@ -54,7 +54,7 @@
 #define SMOOTHER_MIN_HISTORY (4)
 #endif
 
-pa_stream *pa_stream_new(pa_context *c, const char *name, const pa_sample_spec *ss, const pa_channel_map *map) {
+pa_stream *pa_stream_new(pa_context *c, const char *name, const pa_sample_spec *ss, pa_channel_map *map) {
     return pa_stream_new_with_proplist(c, name, ss, map, NULL);
 }
 
@@ -87,7 +87,7 @@ static pa_stream *pa_stream_new_with_proplist_internal(
         pa_context *c,
         const char *name,
         const pa_sample_spec *ss,
-        const pa_channel_map *map,
+        pa_channel_map *map,
         pa_format_info * const *formats,
         unsigned int n_formats,
         pa_proplist *p) {
@@ -118,9 +118,9 @@ static pa_stream *pa_stream_new_with_proplist_internal(
         pa_sample_spec_init(&s->sample_spec);
 
     if (map)
-        s->channel_map = *map;
+        s->channel_map = map;
     else
-        pa_channel_map_init(&s->channel_map);
+        pa_channel_map_init(s->channel_map);
 
     s->n_formats = 0;
     if (formats) {
@@ -210,7 +210,7 @@ pa_stream *pa_stream_new_with_proplist(
         pa_context *c,
         const char *name,
         const pa_sample_spec *ss,
-        const pa_channel_map *map,
+        pa_channel_map *map,
         pa_proplist *p) {
 
     pa_channel_map tmap;
@@ -1121,7 +1121,7 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
             (s->n_formats == 0 && (
                 (!(s->flags & PA_STREAM_FIX_FORMAT) && ss.format != s->sample_spec.format) ||
                 (!(s->flags & PA_STREAM_FIX_RATE) && ss.rate != s->sample_spec.rate) ||
-                (!(s->flags & PA_STREAM_FIX_CHANNELS) && !pa_channel_map_equal(&cm, &s->channel_map))))) {
+                (!(s->flags & PA_STREAM_FIX_CHANNELS) && !pa_channel_map_equal(&cm, s->channel_map))))) {
             pa_context_fail(s->context, PA_ERR_PROTOCOL);
             goto finish;
         }
@@ -1130,7 +1130,7 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
         s->device_name = pa_xstrdup(dn);
         s->suspended = suspended;
 
-        s->channel_map = cm;
+        s->channel_map = &cm;
         s->sample_spec = ss;
     }
 
@@ -2613,7 +2613,7 @@ const pa_channel_map* pa_stream_get_channel_map(pa_stream *s) {
 
     PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
 
-    return &s->channel_map;
+    return s->channel_map;
 }
 
 const pa_format_info* pa_stream_get_format_info(const pa_stream *s) {
