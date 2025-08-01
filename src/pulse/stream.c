@@ -105,7 +105,7 @@ static pa_stream *pa_stream_new_with_proplist_internal(
 
     s = pa_xnew(pa_stream, 1);
     PA_REFCNT_INIT(s);
-    s->context = c;
+    s->context = *c;
     s->mainloop = c->mainloop;
 
     s->direction = PA_STREAM_NODIRECTION;
@@ -130,7 +130,7 @@ static pa_stream *pa_stream_new_with_proplist_internal(
     }
 
     /* We'll get the final negotiated format after connecting */
-    s->format = NULL;
+    //s->format = NULL;
 
     s->direct_on_input = PA_INVALID_INDEX;
 
@@ -243,13 +243,13 @@ static void stream_unlink(pa_stream *s) {
     pa_operation *o, *n;
     pa_assert(s);
 
-    if (!s->context)
-        return;
+    //if (!s->context)
+    //    return;
 
     /* Detach from context */
 
     /* Unref all operation objects that point to us */
-    for (o = s->context->operations; o; o = n) {
+    for (o = s->context.operations; o; o = n) {
         n = o->next;
 
         if (o->stream == s)
@@ -257,19 +257,19 @@ static void stream_unlink(pa_stream *s) {
     }
 
     /* Drop all outstanding replies for this stream */
-    if (s->context->pdispatch)
-        pa_pdispatch_unregister_reply(s->context->pdispatch, s);
+    if (s->context.pdispatch)
+        pa_pdispatch_unregister_reply(s->context.pdispatch, s);
 
     if (s->channel_valid) {
-        pa_hashmap_remove((s->direction == PA_STREAM_RECORD) ? s->context->record_streams : s->context->playback_streams, PA_UINT32_TO_PTR(s->channel));
+        pa_hashmap_remove((s->direction == PA_STREAM_RECORD) ? s->context.record_streams : s->context.playback_streams, PA_UINT32_TO_PTR(s->channel));
         s->channel = 0;
         s->channel_valid = false;
     }
 
-    PA_LLIST_REMOVE(pa_stream, s->context->streams, s);
+    PA_LLIST_REMOVE(pa_stream, s->context.streams, s);
     pa_stream_unref(s);
 
-    s->context = NULL;
+    //s->context = NULL;
 
     if (s->auto_timing_update_event) {
         pa_assert(s->mainloop);
@@ -314,8 +314,7 @@ static void stream_free(pa_stream *s) {
     for (i = 0; i < s->n_formats; i++)
         pa_format_info_free(&s->req_formats[i]);
 
-    if (s->format)
-        pa_format_info_free(s->format);
+    pa_format_info_free(&s->format);
 
     pa_xfree(s->device_name);
     pa_xfree(s);
@@ -348,15 +347,15 @@ pa_context* pa_stream_get_context(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    return s->context;
+    return &s->context;
 }
 
 uint32_t pa_stream_get_index(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, PA_INVALID_INDEX);
 
     return s->stream_index;
 }
@@ -411,7 +410,7 @@ static void request_auto_timing_update(pa_stream *s, bool force) {
             if (force)
                 s->auto_timing_interval_usec = AUTO_TIMING_INTERVAL_START_USEC;
 
-            pa_context_rttime_restart(s->context, s->auto_timing_update_event, pa_rtclock_now() + s->auto_timing_interval_usec);
+            pa_context_rttime_restart(&s->context, s->auto_timing_update_event, pa_rtclock_now() + s->auto_timing_interval_usec);
 
             s->auto_timing_interval_usec = PA_MIN(AUTO_TIMING_INTERVAL_END_USEC, s->auto_timing_interval_usec*2);
         }
@@ -480,7 +479,7 @@ static void check_smoother_status(pa_stream *s, bool aposteriori, bool force_sta
             !aposteriori &&
             !force_start &&
             !force_stop &&
-            s->context->version >= 13) {
+            s->context.version >= 13) {
 
             /* If the server supports STARTED events we take them as
              * indications when audio really starts/stops playing, if
@@ -594,7 +593,7 @@ void pa_command_stream_moved(pa_pdispatch *pd, uint32_t command, uint32_t tag, p
 
     if ((s->flags & PA_STREAM_AUTO_TIMING_UPDATE) && !suspended && !s->auto_timing_update_event) {
         s->auto_timing_interval_usec = AUTO_TIMING_INTERVAL_START_USEC;
-        s->auto_timing_update_event = pa_context_rttime_new(s->context, pa_rtclock_now() + s->auto_timing_interval_usec, &auto_timing_update_callback, s);
+        s->auto_timing_update_event = pa_context_rttime_new(&s->context, pa_rtclock_now() + s->auto_timing_interval_usec, &auto_timing_update_callback, s);
         request_auto_timing_update(s, true);
     }
 
@@ -718,7 +717,7 @@ void pa_command_stream_suspended(pa_pdispatch *pd, uint32_t command, uint32_t ta
 
     if ((s->flags & PA_STREAM_AUTO_TIMING_UPDATE) && !suspended && !s->auto_timing_update_event) {
         s->auto_timing_interval_usec = AUTO_TIMING_INTERVAL_START_USEC;
-        s->auto_timing_update_event = pa_context_rttime_new(s->context, pa_rtclock_now() + s->auto_timing_interval_usec, &auto_timing_update_callback, s);
+        s->auto_timing_update_event = pa_context_rttime_new(&s->context, pa_rtclock_now() + s->auto_timing_interval_usec, &auto_timing_update_callback, s);
         request_auto_timing_update(s, true);
     }
 
@@ -938,7 +937,7 @@ static void invalidate_indexes(pa_stream *s, bool r, bool w) {
         return;
 
     if (w) {
-        s->write_index_not_before = s->context->ctag;
+        s->write_index_not_before = s->context.ctag;
 
         if (s->timing_info_valid)
             s->timing_info.write_index_corrupt = true;
@@ -949,7 +948,7 @@ static void invalidate_indexes(pa_stream *s, bool r, bool w) {
     }
 
     if (r) {
-        s->read_index_not_before = s->context->ctag;
+        s->read_index_not_before = s->context.ctag;
 
         if (s->timing_info_valid)
             s->timing_info.read_index_corrupt = true;
@@ -986,7 +985,7 @@ static void create_stream_complete(pa_stream *s) {
     if (s->flags & PA_STREAM_AUTO_TIMING_UPDATE) {
         s->auto_timing_interval_usec = AUTO_TIMING_INTERVAL_START_USEC;
         pa_assert(!s->auto_timing_update_event);
-        s->auto_timing_update_event = pa_context_rttime_new(s->context, pa_rtclock_now() + s->auto_timing_interval_usec, &auto_timing_update_callback, s);
+        s->auto_timing_update_event = pa_context_rttime_new(&s->context, pa_rtclock_now() + s->auto_timing_interval_usec, &auto_timing_update_callback, s);
 
         request_auto_timing_update(s, true);
     }
@@ -1027,7 +1026,7 @@ static void patch_buffer_attr(pa_stream *s, pa_buffer_attr *attr, pa_stream_flag
         }
     }
 
-    if (s->context->version >= 13)
+    if (s->context.version >= 13)
         return;
 
     /* Version older than 0.9.10 didn't do server side buffer_attr
@@ -1064,7 +1063,7 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
     pa_stream_ref(s);
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(s->context, command, t, false) < 0)
+        if (pa_context_handle_error(&s->context, command, t, false) < 0)
             goto finish;
 
         pa_stream_set_state(s, PA_STREAM_FAILED);
@@ -1075,31 +1074,31 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
         s->channel == PA_INVALID_INDEX ||
         ((s->direction != PA_STREAM_UPLOAD) && (pa_tagstruct_getu32(t, &s->stream_index) < 0 || s->stream_index == PA_INVALID_INDEX)) ||
         ((s->direction != PA_STREAM_RECORD) && pa_tagstruct_getu32(t, &requested_bytes) < 0)) {
-        pa_context_fail(s->context, PA_ERR_PROTOCOL);
+        pa_context_fail(&s->context, PA_ERR_PROTOCOL);
         goto finish;
     }
 
     s->requested_bytes = (int64_t) requested_bytes;
 
-    if (s->context->version >= 9) {
+    if (s->context.version >= 9) {
         if (s->direction == PA_STREAM_PLAYBACK) {
             if (pa_tagstruct_getu32(t, &s->buffer_attr.maxlength) < 0 ||
                 pa_tagstruct_getu32(t, &s->buffer_attr.tlength) < 0 ||
                 pa_tagstruct_getu32(t, &s->buffer_attr.prebuf) < 0 ||
                 pa_tagstruct_getu32(t, &s->buffer_attr.minreq) < 0) {
-                pa_context_fail(s->context, PA_ERR_PROTOCOL);
+                pa_context_fail(&s->context, PA_ERR_PROTOCOL);
                 goto finish;
             }
         } else if (s->direction == PA_STREAM_RECORD) {
             if (pa_tagstruct_getu32(t, &s->buffer_attr.maxlength) < 0 ||
                 pa_tagstruct_getu32(t, &s->buffer_attr.fragsize) < 0) {
-                pa_context_fail(s->context, PA_ERR_PROTOCOL);
+                pa_context_fail(&s->context, PA_ERR_PROTOCOL);
                 goto finish;
             }
         }
     }
 
-    if (s->context->version >= 12 && s->direction != PA_STREAM_UPLOAD) {
+    if (s->context.version >= 12 && s->direction != PA_STREAM_UPLOAD) {
         pa_sample_spec ss;
         pa_channel_map cm;
         const char *dn = NULL;
@@ -1110,7 +1109,7 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
             pa_tagstruct_getu32(t, &s->device_index) < 0 ||
             pa_tagstruct_gets(t, &dn) < 0 ||
             pa_tagstruct_get_boolean(t, &suspended) < 0) {
-            pa_context_fail(s->context, PA_ERR_PROTOCOL);
+            pa_context_fail(&s->context, PA_ERR_PROTOCOL);
             goto finish;
         }
 
@@ -1122,7 +1121,7 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
                 (!(s->flags & PA_STREAM_FIX_FORMAT) && ss.format != s->sample_spec.format) ||
                 (!(s->flags & PA_STREAM_FIX_RATE) && ss.rate != s->sample_spec.rate) ||
                 (!(s->flags & PA_STREAM_FIX_CHANNELS) && !pa_channel_map_equal(&cm, &s->channel_map))))) {
-            pa_context_fail(s->context, PA_ERR_PROTOCOL);
+            pa_context_fail(&s->context, PA_ERR_PROTOCOL);
             goto finish;
         }
 
@@ -1139,11 +1138,11 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
         pa_smoother_2_set_sample_spec(s->smoother, pa_rtclock_now(), &s->sample_spec);
 #endif
 
-    if (s->context->version >= 13 && s->direction != PA_STREAM_UPLOAD) {
+    if (s->context.version >= 13 && s->direction != PA_STREAM_UPLOAD) {
         pa_usec_t usec;
 
         if (pa_tagstruct_get_usec(t, &usec) < 0) {
-            pa_context_fail(s->context, PA_ERR_PROTOCOL);
+            pa_context_fail(&s->context, PA_ERR_PROTOCOL);
             goto finish;
         }
 
@@ -1153,8 +1152,8 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
             s->timing_info.configured_sink_usec = usec;
     }
 
-    if ((s->context->version >= 21 && s->direction == PA_STREAM_PLAYBACK)
-        || s->context->version >= 22) {
+    if ((s->context.version >= 21 && s->direction == PA_STREAM_PLAYBACK)
+        || s->context.version >= 22) {
 
         pa_format_info *f = pa_format_info_new();
 
@@ -1162,15 +1161,15 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
             pa_format_info_free(f);
             if (s->n_formats > 0) {
                 /* We used the extended API, so we should have got back a proper format */
-                pa_context_fail(s->context, PA_ERR_PROTOCOL);
+                pa_context_fail(&s->context, PA_ERR_PROTOCOL);
                 goto finish;
             }
         } else
-            s->format = f;
+            s->format = *f;
     }
 
     if (!pa_tagstruct_eof(t)) {
-        pa_context_fail(s->context, PA_ERR_PROTOCOL);
+        pa_context_fail(&s->context, PA_ERR_PROTOCOL);
         goto finish;
     }
 
@@ -1190,7 +1189,7 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
     }
 
     s->channel_valid = true;
-    pa_hashmap_put((s->direction == PA_STREAM_RECORD) ? s->context->record_streams : s->context->playback_streams, PA_UINT32_TO_PTR(s->channel), s);
+    pa_hashmap_put((s->direction == PA_STREAM_RECORD) ? s->context.record_streams : s->context.playback_streams, PA_UINT32_TO_PTR(s->channel), s);
 
     create_stream_complete(s);
 
@@ -1217,10 +1216,10 @@ static int create_stream(
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
     pa_assert(direction == PA_STREAM_PLAYBACK || direction == PA_STREAM_RECORD);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_UNCONNECTED, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direct_on_input == PA_INVALID_INDEX || direction == PA_STREAM_RECORD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, !(flags & ~(PA_STREAM_START_CORKED|
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_UNCONNECTED, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direct_on_input == PA_INVALID_INDEX || direction == PA_STREAM_RECORD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !(flags & ~(PA_STREAM_START_CORKED|
                                               PA_STREAM_INTERPOLATE_TIMING|
                                               PA_STREAM_NOT_MONOTONIC|
                                               PA_STREAM_AUTO_TIMING_UPDATE|
@@ -1241,17 +1240,17 @@ static int create_stream(
                                               PA_STREAM_RELATIVE_VOLUME|
                                               PA_STREAM_PASSTHROUGH)), PA_ERR_INVALID);
 
-    PA_CHECK_VALIDITY(s->context, s->context->version >= 12 || !(flags & PA_STREAM_VARIABLE_RATE), PA_ERR_NOTSUPPORTED);
-    PA_CHECK_VALIDITY(s->context, s->context->version >= 13 || !(flags & PA_STREAM_PEAK_DETECT), PA_ERR_NOTSUPPORTED);
-    PA_CHECK_VALIDITY(s->context, s->context->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->context.version >= 12 || !(flags & PA_STREAM_VARIABLE_RATE), PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY(&s->context, s->context.version >= 13 || !(flags & PA_STREAM_PEAK_DETECT), PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY(&s->context, s->context.state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
     /* Although some of the other flags are not supported on older
      * version, we don't check for them here, because it doesn't hurt
      * when they are passed but actually not supported. This makes
      * client development easier */
 
-    PA_CHECK_VALIDITY(s->context, direction == PA_STREAM_RECORD || !(flags & (PA_STREAM_PEAK_DETECT)), PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, !sync_stream || (direction == PA_STREAM_PLAYBACK && sync_stream->direction == PA_STREAM_PLAYBACK), PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, (flags & (PA_STREAM_ADJUST_LATENCY|PA_STREAM_EARLY_REQUESTS)) != (PA_STREAM_ADJUST_LATENCY|PA_STREAM_EARLY_REQUESTS), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, direction == PA_STREAM_RECORD || !(flags & (PA_STREAM_PEAK_DETECT)), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, !sync_stream || (direction == PA_STREAM_PLAYBACK && sync_stream->direction == PA_STREAM_PLAYBACK), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, (flags & (PA_STREAM_ADJUST_LATENCY|PA_STREAM_EARLY_REQUESTS)) != (PA_STREAM_ADJUST_LATENCY|PA_STREAM_EARLY_REQUESTS), PA_ERR_INVALID);
 
     pa_stream_ref(s);
 
@@ -1288,14 +1287,14 @@ static int create_stream(
     }
 
     if (!dev)
-        dev = s->direction == PA_STREAM_PLAYBACK ? s->context->conf->default_sink : s->context->conf->default_source;
+        dev = s->direction == PA_STREAM_PLAYBACK ? s->context.conf->default_sink : s->context.conf->default_source;
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_PLAYBACK ? PA_COMMAND_CREATE_PLAYBACK_STREAM : PA_COMMAND_CREATE_RECORD_STREAM),
             &tag);
 
-    if (s->context->version < 13)
+    if (s->context.version < 13)
         pa_tagstruct_puts(t, pa_proplist_gets(s->proplist, PA_PROP_MEDIA_NAME));
 
     pa_tagstruct_put(
@@ -1332,7 +1331,7 @@ static int create_stream(
     } else
         pa_tagstruct_putu32(t, s->buffer_attr.fragsize);
 
-    if (s->context->version >= 12) {
+    if (s->context.version >= 12) {
         pa_tagstruct_put(
                 t,
                 PA_TAG_BOOLEAN, flags & PA_STREAM_NO_REMAP_CHANNELS,
@@ -1345,7 +1344,7 @@ static int create_stream(
                 PA_TAG_INVALID);
     }
 
-    if (s->context->version >= 13) {
+    if (s->context.version >= 13) {
 
         if (s->direction == PA_STREAM_PLAYBACK)
             pa_tagstruct_put_boolean(t, flags & PA_STREAM_START_MUTED);
@@ -1362,7 +1361,7 @@ static int create_stream(
             pa_tagstruct_putu32(t, s->direct_on_input);
     }
 
-    if (s->context->version >= 14) {
+    if (s->context.version >= 14) {
 
         if (s->direction == PA_STREAM_PLAYBACK)
             pa_tagstruct_put_boolean(t, volume_set);
@@ -1370,7 +1369,7 @@ static int create_stream(
         pa_tagstruct_put_boolean(t, flags & PA_STREAM_EARLY_REQUESTS);
     }
 
-    if (s->context->version >= 15) {
+    if (s->context.version >= 15) {
 
         if (s->direction == PA_STREAM_PLAYBACK)
             pa_tagstruct_put_boolean(t, flags & (PA_STREAM_START_MUTED|PA_STREAM_START_UNMUTED));
@@ -1379,21 +1378,21 @@ static int create_stream(
         pa_tagstruct_put_boolean(t, flags & PA_STREAM_FAIL_ON_SUSPEND);
     }
 
-    if (s->context->version >= 17 && s->direction == PA_STREAM_PLAYBACK)
+    if (s->context.version >= 17 && s->direction == PA_STREAM_PLAYBACK)
         pa_tagstruct_put_boolean(t, flags & PA_STREAM_RELATIVE_VOLUME);
 
-    if (s->context->version >= 18 && s->direction == PA_STREAM_PLAYBACK)
+    if (s->context.version >= 18 && s->direction == PA_STREAM_PLAYBACK)
         pa_tagstruct_put_boolean(t, flags & (PA_STREAM_PASSTHROUGH));
 
-    if ((s->context->version >= 21 && s->direction == PA_STREAM_PLAYBACK)
-        || s->context->version >= 22) {
+    if ((s->context.version >= 21 && s->direction == PA_STREAM_PLAYBACK)
+        || s->context.version >= 22) {
 
         pa_tagstruct_putu8(t, s->n_formats);
         for (i = 0; i < s->n_formats; i++)
             pa_tagstruct_put_format_info(t, &s->req_formats[i]);
     }
 
-    if (s->context->version >= 22 && s->direction == PA_STREAM_RECORD) {
+    if (s->context.version >= 22 && s->direction == PA_STREAM_RECORD) {
         pa_tagstruct_put_cvolume(t, volume);
         pa_tagstruct_put_boolean(t, flags & PA_STREAM_START_MUTED);
         pa_tagstruct_put_boolean(t, volume_set);
@@ -1402,8 +1401,8 @@ static int create_stream(
         pa_tagstruct_put_boolean(t, flags & (PA_STREAM_PASSTHROUGH));
     }
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_create_stream_callback, s, NULL);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_create_stream_callback, s, NULL);
 
     pa_stream_set_state(s, PA_STREAM_CREATING);
 
@@ -1445,16 +1444,16 @@ int pa_stream_begin_write(
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction == PA_STREAM_PLAYBACK || s->direction == PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, data, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, nbytes && *nbytes != 0, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction == PA_STREAM_PLAYBACK || s->direction == PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, data, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, nbytes && *nbytes != 0, PA_ERR_INVALID);
 
     if (*nbytes != (size_t) -1) {
         size_t m, fs;
 
-        m = pa_mempool_block_size_max(s->context->mempool);
+        m = pa_mempool_block_size_max(s->context.mempool);
         fs = pa_frame_size(&s->sample_spec);
 
         m = (m / fs) * fs;
@@ -1463,7 +1462,7 @@ int pa_stream_begin_write(
     }
 
     if (!s->write_memblock) {
-        s->write_memblock = pa_memblock_new(s->context->mempool, *nbytes);
+        s->write_memblock = pa_memblock_new(s->context.mempool, *nbytes);
         s->write_data = pa_memblock_acquire(s->write_memblock);
     }
 
@@ -1479,10 +1478,10 @@ int pa_stream_cancel_write(
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction == PA_STREAM_PLAYBACK || s->direction == PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->write_memblock, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction == PA_STREAM_PLAYBACK || s->direction == PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->write_memblock, PA_ERR_BADSTATE);
 
     pa_assert(s->write_data);
 
@@ -1507,19 +1506,19 @@ int pa_stream_write_ext_free(
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
     pa_assert(data);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction == PA_STREAM_PLAYBACK || s->direction == PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, seek <= PA_SEEK_RELATIVE_END, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, s->direction == PA_STREAM_PLAYBACK || (seek == PA_SEEK_RELATIVE && offset == 0), PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context,
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction == PA_STREAM_PLAYBACK || s->direction == PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, seek <= PA_SEEK_RELATIVE_END, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, s->direction == PA_STREAM_PLAYBACK || (seek == PA_SEEK_RELATIVE && offset == 0), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context,
                       !s->write_memblock ||
                       ((data >= s->write_data) &&
                        ((const char*) data + length <= (const char*) s->write_data + pa_memblock_get_length(s->write_memblock))),
                       PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, offset % pa_frame_size(&s->sample_spec) == 0, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, length % pa_frame_size(&s->sample_spec) == 0, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, !free_cb || !s->write_memblock, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, offset % pa_frame_size(&s->sample_spec) == 0, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, length % pa_frame_size(&s->sample_spec) == 0, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, !free_cb || !s->write_memblock, PA_ERR_INVALID);
 
     if (s->write_memblock) {
         pa_memchunk chunk;
@@ -1535,7 +1534,7 @@ int pa_stream_write_ext_free(
         s->write_memblock = NULL;
         s->write_data = NULL;
 
-        pa_pstream_send_memblock(s->context->pstream, s->channel, offset, seek, &chunk, pa_frame_size(&s->sample_spec));
+        pa_pstream_send_memblock(s->context.pstream, s->channel, offset, seek, &chunk, pa_frame_size(&s->sample_spec));
         pa_memblock_unref(chunk.memblock);
 
     } else {
@@ -1551,8 +1550,8 @@ int pa_stream_write_ext_free(
 
             chunk.index = 0;
 
-            if (free_cb && !pa_pstream_get_shm(s->context->pstream)) {
-                chunk.memblock = pa_memblock_new_user(s->context->mempool, (void*) t_data, t_length, free_cb, free_cb_data, 1);
+            if (free_cb && !pa_pstream_get_shm(s->context.pstream)) {
+                chunk.memblock = pa_memblock_new_user(s->context.mempool, (void*) t_data, t_length, free_cb, free_cb_data, 1);
                 chunk.length = t_length;
             } else {
                 void *d;
@@ -1560,16 +1559,16 @@ int pa_stream_write_ext_free(
 
                 /* Break large audio streams into _aligned_ blocks or the
                  * other endpoint will happily discard them upon arrival. */
-                blk_size_max = pa_frame_align(pa_mempool_block_size_max(s->context->mempool), &s->sample_spec);
+                blk_size_max = pa_frame_align(pa_mempool_block_size_max(s->context.mempool), &s->sample_spec);
                 chunk.length = PA_MIN(t_length, blk_size_max);
-                chunk.memblock = pa_memblock_new(s->context->mempool, chunk.length);
+                chunk.memblock = pa_memblock_new(s->context.mempool, chunk.length);
 
                 d = pa_memblock_acquire(chunk.memblock);
                 memcpy(d, t_data, chunk.length);
                 pa_memblock_release(chunk.memblock);
             }
 
-            pa_pstream_send_memblock(s->context->pstream, s->channel, t_offset, t_seek, &chunk, pa_frame_size(&s->sample_spec));
+            pa_pstream_send_memblock(s->context.pstream, s->channel, t_offset, t_seek, &chunk, pa_frame_size(&s->sample_spec));
 
             t_offset = 0;
             t_seek = PA_SEEK_RELATIVE;
@@ -1580,7 +1579,7 @@ int pa_stream_write_ext_free(
             pa_memblock_unref(chunk.memblock);
         }
 
-        if (free_cb && pa_pstream_get_shm(s->context->pstream))
+        if (free_cb && pa_pstream_get_shm(s->context.pstream))
             free_cb(free_cb_data);
     }
 
@@ -1645,9 +1644,9 @@ int pa_stream_peek(pa_stream *s, const void **data, size_t *length) {
     pa_assert(data);
     pa_assert(length);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction == PA_STREAM_RECORD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction == PA_STREAM_RECORD, PA_ERR_BADSTATE);
 
     if (!s->peek_memchunk.memblock) {
 
@@ -1678,10 +1677,10 @@ int pa_stream_drop(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction == PA_STREAM_RECORD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->peek_memchunk.length > 0, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction == PA_STREAM_RECORD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->peek_memchunk.length > 0, PA_ERR_BADSTATE);
 
     pa_memblockq_drop(s->record_memblockq, s->peek_memchunk.length);
 
@@ -1705,9 +1704,9 @@ size_t pa_stream_writable_size(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, !pa_detect_fork(), PA_ERR_FORKED, (size_t) -1);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, (size_t) -1);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->direction != PA_STREAM_RECORD, PA_ERR_BADSTATE, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, !pa_detect_fork(), PA_ERR_FORKED, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->direction != PA_STREAM_RECORD, PA_ERR_BADSTATE, (size_t) -1);
 
     return s->requested_bytes > 0 ? (size_t) s->requested_bytes : 0;
 }
@@ -1716,9 +1715,9 @@ size_t pa_stream_readable_size(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, !pa_detect_fork(), PA_ERR_FORKED, (size_t) -1);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, (size_t) -1);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->direction == PA_STREAM_RECORD, PA_ERR_BADSTATE, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, !pa_detect_fork(), PA_ERR_FORKED, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->direction == PA_STREAM_RECORD, PA_ERR_BADSTATE, (size_t) -1);
 
     return pa_memblockq_get_length(s->record_memblockq);
 }
@@ -1731,21 +1730,21 @@ pa_operation * pa_stream_drain(pa_stream *s, pa_stream_success_cb_t cb, void *us
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction == PA_STREAM_PLAYBACK, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction == PA_STREAM_PLAYBACK, PA_ERR_BADSTATE);
 
     /* Ask for a timing update before we cork/uncork to get the best
      * accuracy for the transport latency suitable for the
      * check_smoother_status() call in the started callback */
     request_auto_timing_update(s, true);
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
-    t = pa_tagstruct_command(s->context, PA_COMMAND_DRAIN_PLAYBACK_STREAM, &tag);
+    t = pa_tagstruct_command(&s->context, PA_COMMAND_DRAIN_PLAYBACK_STREAM, &tag);
     pa_tagstruct_putu32(t, s->channel);
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     /* This might cause the read index to continue again, hence
      * let's request a timing update */
@@ -2029,28 +2028,28 @@ pa_operation* pa_stream_update_timing_info(pa_stream *s, pa_stream_success_cb_t 
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
 
     if (s->direction == PA_STREAM_PLAYBACK) {
         /* Find a place to store the write_index correction data for this entry */
         cidx = (s->current_write_index_correction + 1) % PA_MAX_WRITE_INDEX_CORRECTIONS;
 
         /* Check if we could allocate a correction slot. If not, there are too many outstanding queries */
-        PA_CHECK_VALIDITY_RETURN_NULL(s->context, !s->write_index_corrections[cidx].valid, PA_ERR_INTERNAL);
+        PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !s->write_index_corrections[cidx].valid, PA_ERR_INTERNAL);
     }
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_PLAYBACK ? PA_COMMAND_GET_PLAYBACK_LATENCY : PA_COMMAND_GET_RECORD_LATENCY),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
     pa_tagstruct_put_timeval(t, pa_gettimeofday(&now));
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, stream_get_timing_info_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, stream_get_timing_info_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     if (s->direction == PA_STREAM_PLAYBACK) {
         /* Fill in initial correction data */
@@ -2077,13 +2076,13 @@ void pa_stream_disconnect_callback(pa_pdispatch *pd, uint32_t command, uint32_t 
     pa_stream_ref(s);
 
     if (command != PA_COMMAND_REPLY) {
-        if (pa_context_handle_error(s->context, command, t, false) < 0)
+        if (pa_context_handle_error(&s->context, command, t, false) < 0)
             goto finish;
 
         pa_stream_set_state(s, PA_STREAM_FAILED);
         goto finish;
     } else if (!pa_tagstruct_eof(t)) {
-        pa_context_fail(s->context, PA_ERR_PROTOCOL);
+        pa_context_fail(&s->context, PA_ERR_PROTOCOL);
         goto finish;
     }
 
@@ -2100,20 +2099,20 @@ int pa_stream_disconnect(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->channel_valid, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->context->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->channel_valid, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->context.state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     pa_stream_ref(s);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_PLAYBACK ? PA_COMMAND_DELETE_PLAYBACK_STREAM :
                         (s->direction == PA_STREAM_RECORD ? PA_COMMAND_DELETE_RECORD_STREAM : PA_COMMAND_DELETE_UPLOAD_STREAM)),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_disconnect_callback, s, NULL);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_disconnect_callback, s, NULL);
 
     pa_stream_unref(s);
     return 0;
@@ -2312,9 +2311,9 @@ pa_operation* pa_stream_cork(pa_stream *s, int b, pa_stream_success_cb_t cb, voi
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
 
     /* Ask for a timing update before we cork/uncork to get the best
      * accuracy for the transport latency suitable for the
@@ -2323,16 +2322,16 @@ pa_operation* pa_stream_cork(pa_stream *s, int b, pa_stream_success_cb_t cb, voi
 
     s->corked = b;
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_PLAYBACK ? PA_COMMAND_CORK_PLAYBACK_STREAM : PA_COMMAND_CORK_RECORD_STREAM),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
     pa_tagstruct_put_boolean(t, !!b);
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     check_smoother_status(s, false, false, false);
 
@@ -2351,15 +2350,15 @@ static pa_operation* stream_send_simple_command(pa_stream *s, uint32_t command, 
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
-    t = pa_tagstruct_command(s->context, command, &tag);
+    t = pa_tagstruct_command(&s->context, command, &tag);
     pa_tagstruct_putu32(t, s->channel);
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     return o;
 }
@@ -2370,9 +2369,9 @@ pa_operation* pa_stream_flush(pa_stream *s, pa_stream_success_cb_t cb, void *use
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
 
     /* Ask for a timing update *before* the flush, so that the
      * transport usec is as up to date as possible when we get the
@@ -2413,10 +2412,10 @@ pa_operation* pa_stream_prebuf(pa_stream *s, pa_stream_success_cb_t cb, void *us
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction == PA_STREAM_PLAYBACK, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->buffer_attr.prebuf > 0, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction == PA_STREAM_PLAYBACK, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->buffer_attr.prebuf > 0, PA_ERR_BADSTATE);
 
     /* Ask for a timing update before we cork/uncork to get the best
      * accuracy for the transport latency suitable for the
@@ -2439,10 +2438,10 @@ pa_operation* pa_stream_trigger(pa_stream *s, pa_stream_success_cb_t cb, void *u
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction == PA_STREAM_PLAYBACK, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->buffer_attr.prebuf > 0, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction == PA_STREAM_PLAYBACK, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->buffer_attr.prebuf > 0, PA_ERR_BADSTATE);
 
     /* Ask for a timing update before we cork/uncork to get the best
      * accuracy for the transport latency suitable for the
@@ -2466,11 +2465,11 @@ pa_operation* pa_stream_set_name(pa_stream *s, const char *name, pa_stream_succe
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
     pa_assert(name);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
 
-    if (s->context->version >= 13) {
+    if (s->context.version >= 13) {
         pa_proplist *p = pa_proplist_new();
 
         pa_proplist_sets(p, PA_PROP_MEDIA_NAME, name);
@@ -2480,15 +2479,15 @@ pa_operation* pa_stream_set_name(pa_stream *s, const char *name, pa_stream_succe
         pa_tagstruct *t;
         uint32_t tag;
 
-        o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+        o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
         t = pa_tagstruct_command(
-                s->context,
+                &s->context,
                 (uint32_t) (s->direction == PA_STREAM_RECORD ? PA_COMMAND_SET_RECORD_STREAM_NAME : PA_COMMAND_SET_PLAYBACK_STREAM_NAME),
                 &tag);
         pa_tagstruct_putu32(t, s->channel);
         pa_tagstruct_puts(t, name);
-        pa_pstream_send_tagstruct(s->context->pstream, t);
-        pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+        pa_pstream_send_tagstruct(s->context.pstream, t);
+        pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
     }
 
     return o;
@@ -2500,12 +2499,12 @@ int pa_stream_get_time(pa_stream *s, pa_usec_t *r_usec) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->timing_info_valid, PA_ERR_NODATA);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_PLAYBACK || !s->timing_info.read_index_corrupt, PA_ERR_NODATA);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_RECORD || !s->timing_info.write_index_corrupt, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->timing_info_valid, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_PLAYBACK || !s->timing_info.read_index_corrupt, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_RECORD || !s->timing_info.write_index_corrupt, PA_ERR_NODATA);
 
     if (s->smoother)
 #ifdef USE_SMOOTHER_2
@@ -2558,12 +2557,12 @@ int pa_stream_get_latency(pa_stream *s, pa_usec_t *r_usec, int *negative) {
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
     pa_assert(r_usec);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->timing_info_valid, PA_ERR_NODATA);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_PLAYBACK || !s->timing_info.write_index_corrupt, PA_ERR_NODATA);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_RECORD || !s->timing_info.read_index_corrupt, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->timing_info_valid, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_PLAYBACK || !s->timing_info.write_index_corrupt, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_RECORD || !s->timing_info.read_index_corrupt, PA_ERR_NODATA);
 
     if ((r = pa_stream_get_time(s, &t)) < 0)
         return r;
@@ -2590,10 +2589,10 @@ const pa_timing_info* pa_stream_get_timing_info(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->timing_info_valid, PA_ERR_NODATA);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->timing_info_valid, PA_ERR_NODATA);
 
     return &s->timing_info;
 }
@@ -2602,7 +2601,7 @@ const pa_sample_spec* pa_stream_get_sample_spec(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
 
     return &s->sample_spec;
 }
@@ -2611,7 +2610,7 @@ const pa_channel_map* pa_stream_get_channel_map(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
 
     return &s->channel_map;
 }
@@ -2621,18 +2620,18 @@ const pa_format_info* pa_stream_get_format_info(const pa_stream *s) {
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
     /* We don't have the format till routing is done */
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
 
-    return s->format;
+    return &s->format;
 }
 const pa_buffer_attr* pa_stream_get_buffer_attr(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->context->version >= 9, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->context.version >= 9, PA_ERR_NOTSUPPORTED);
 
     return &s->buffer_attr;
 }
@@ -2670,7 +2669,7 @@ static void stream_set_buffer_attr_callback(pa_pdispatch *pd, uint32_t command, 
             }
         }
 
-        if (o->stream->context->version >= 13) {
+        if (o->stream->context.version >= 13) {
             pa_usec_t usec;
 
             if (pa_tagstruct_get_usec(t, &usec) < 0) {
@@ -2710,20 +2709,20 @@ pa_operation* pa_stream_set_buffer_attr(pa_stream *s, const pa_buffer_attr *attr
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
     pa_assert(attr);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->context->version >= 12, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->context.version >= 12, PA_ERR_NOTSUPPORTED);
 
     /* Ask for a timing update before we cork/uncork to get the best
      * accuracy for the transport latency suitable for the
      * check_smoother_status() call in the started callback */
     request_auto_timing_update(s, true);
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_RECORD ? PA_COMMAND_SET_RECORD_STREAM_BUFFER_ATTR : PA_COMMAND_SET_PLAYBACK_STREAM_BUFFER_ATTR),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
@@ -2744,14 +2743,14 @@ pa_operation* pa_stream_set_buffer_attr(pa_stream *s, const pa_buffer_attr *attr
     else
         pa_tagstruct_putu32(t, attr->fragsize);
 
-    if (s->context->version >= 13)
+    if (s->context.version >= 13)
         pa_tagstruct_put_boolean(t, !!(s->flags & PA_STREAM_ADJUST_LATENCY));
 
-    if (s->context->version >= 14)
+    if (s->context.version >= 14)
         pa_tagstruct_put_boolean(t, !!(s->flags & PA_STREAM_EARLY_REQUESTS));
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, stream_set_buffer_attr_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, stream_set_buffer_attr_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     /* This might cause changes in the read/write index, hence let's
      * request a timing update */
@@ -2764,11 +2763,11 @@ uint32_t pa_stream_get_device_index(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->context->version >= 12, PA_ERR_NOTSUPPORTED, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->device_index != PA_INVALID_INDEX, PA_ERR_BADSTATE, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->context.version >= 12, PA_ERR_NOTSUPPORTED, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->device_index != PA_INVALID_INDEX, PA_ERR_BADSTATE, PA_INVALID_INDEX);
 
     return s->device_index;
 }
@@ -2777,11 +2776,11 @@ const char *pa_stream_get_device_name(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->context->version >= 12, PA_ERR_NOTSUPPORTED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->device_name, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->context.version >= 12, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->device_name, PA_ERR_BADSTATE);
 
     return s->device_name;
 }
@@ -2790,10 +2789,10 @@ int pa_stream_is_suspended(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->context->version >= 12, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->context.version >= 12, PA_ERR_NOTSUPPORTED);
 
     return s->suspended;
 }
@@ -2802,9 +2801,9 @@ int pa_stream_is_corked(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
 
     return s->corked;
 }
@@ -2858,25 +2857,25 @@ pa_operation *pa_stream_update_sample_rate(pa_stream *s, uint32_t rate, pa_strea
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, pa_sample_rate_valid(rate), PA_ERR_INVALID);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->flags & PA_STREAM_VARIABLE_RATE, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->context->version >= 12, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, pa_sample_rate_valid(rate), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->flags & PA_STREAM_VARIABLE_RATE, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->context.version >= 12, PA_ERR_NOTSUPPORTED);
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
     o->private = PA_UINT_TO_PTR(rate);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_RECORD ? PA_COMMAND_UPDATE_RECORD_STREAM_SAMPLE_RATE : PA_COMMAND_UPDATE_PLAYBACK_STREAM_SAMPLE_RATE),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
     pa_tagstruct_putu32(t, rate);
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, stream_update_sample_rate_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, stream_update_sample_rate_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     return o;
 }
@@ -2889,24 +2888,24 @@ pa_operation *pa_stream_proplist_update(pa_stream *s, pa_update_mode_t mode, pa_
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, mode == PA_UPDATE_SET || mode == PA_UPDATE_MERGE || mode == PA_UPDATE_REPLACE, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->context->version >= 13, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, mode == PA_UPDATE_SET || mode == PA_UPDATE_MERGE || mode == PA_UPDATE_REPLACE, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->context.version >= 13, PA_ERR_NOTSUPPORTED);
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_RECORD ? PA_COMMAND_UPDATE_RECORD_STREAM_PROPLIST : PA_COMMAND_UPDATE_PLAYBACK_STREAM_PROPLIST),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
     pa_tagstruct_putu32(t, (uint32_t) mode);
     pa_tagstruct_put_proplist(t, p);
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     /* Please note that we don't update s->proplist here, because we
      * don't export that field */
@@ -2923,16 +2922,16 @@ pa_operation *pa_stream_proplist_remove(pa_stream *s, const char *const keys[], 
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, keys && keys[0], PA_ERR_INVALID);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY_RETURN_NULL(s->context, s->context->version >= 13, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, keys && keys[0], PA_ERR_INVALID);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->state == PA_STREAM_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->direction != PA_STREAM_UPLOAD, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY_RETURN_NULL(&s->context, s->context.version >= 13, PA_ERR_NOTSUPPORTED);
 
-    o = pa_operation_new(s->context, s, (pa_operation_cb_t) cb, userdata);
+    o = pa_operation_new(&s->context, s, (pa_operation_cb_t) cb, userdata);
 
     t = pa_tagstruct_command(
-            s->context,
+            &s->context,
             (uint32_t) (s->direction == PA_STREAM_RECORD ? PA_COMMAND_REMOVE_RECORD_STREAM_PROPLIST : PA_COMMAND_REMOVE_PLAYBACK_STREAM_PROPLIST),
             &tag);
     pa_tagstruct_putu32(t, s->channel);
@@ -2942,8 +2941,8 @@ pa_operation *pa_stream_proplist_remove(pa_stream *s, const char *const keys[], 
 
     pa_tagstruct_puts(t, NULL);
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
 
     /* Please note that we don't update s->proplist here, because we
      * don't export that field */
@@ -2955,10 +2954,10 @@ int pa_stream_set_monitor_stream(pa_stream *s, uint32_t sink_input_idx) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, sink_input_idx != PA_INVALID_INDEX, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_UNCONNECTED, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->context->version >= 13, PA_ERR_NOTSUPPORTED);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, sink_input_idx != PA_INVALID_INDEX, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_UNCONNECTED, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->context.version >= 13, PA_ERR_NOTSUPPORTED);
 
     s->direct_on_input = sink_input_idx;
 
@@ -2969,9 +2968,9 @@ uint32_t pa_stream_get_monitor_stream(const pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->direct_on_input != PA_INVALID_INDEX, PA_ERR_BADSTATE, PA_INVALID_INDEX);
-    PA_CHECK_VALIDITY_RETURN_ANY(s->context, s->context->version >= 13, PA_ERR_NOTSUPPORTED, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->direct_on_input != PA_INVALID_INDEX, PA_ERR_BADSTATE, PA_INVALID_INDEX);
+    PA_CHECK_VALIDITY_RETURN_ANY(&s->context, s->context.version >= 13, PA_ERR_NOTSUPPORTED, PA_INVALID_INDEX);
 
     return s->direct_on_input;
 }

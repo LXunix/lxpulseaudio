@@ -42,34 +42,34 @@ int pa_stream_connect_upload(pa_stream *s, size_t length) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->state == PA_STREAM_UNCONNECTED, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, length > 0, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, length == (size_t) (uint32_t) length, PA_ERR_INVALID);
-    PA_CHECK_VALIDITY(s->context, s->context->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->state == PA_STREAM_UNCONNECTED, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, length > 0, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, length == (size_t) (uint32_t) length, PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, s->context.state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     if (!(name = pa_proplist_gets(s->proplist, PA_PROP_EVENT_ID)))
         name = pa_proplist_gets(s->proplist, PA_PROP_MEDIA_NAME);
 
-    PA_CHECK_VALIDITY(s->context, name && *name && pa_utf8_valid(name), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(&s->context, name && *name && pa_utf8_valid(name), PA_ERR_INVALID);
 
     pa_stream_ref(s);
 
     s->direction = PA_STREAM_UPLOAD;
     s->flags = 0;
 
-    t = pa_tagstruct_command(s->context, PA_COMMAND_CREATE_UPLOAD_STREAM, &tag);
+    t = pa_tagstruct_command(&s->context, PA_COMMAND_CREATE_UPLOAD_STREAM, &tag);
 
     pa_tagstruct_puts(t, name);
     pa_tagstruct_put_sample_spec(t, &s->sample_spec);
     pa_tagstruct_put_channel_map(t, &s->channel_map);
     pa_tagstruct_putu32(t, (uint32_t) length);
 
-    if (s->context->version >= 13)
+    if (s->context.version >= 13)
         pa_tagstruct_put_proplist(t, s->proplist);
 
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_create_stream_callback, s, NULL);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_create_stream_callback, s, NULL);
 
     pa_stream_set_state(s, PA_STREAM_CREATING);
 
@@ -84,16 +84,16 @@ int pa_stream_finish_upload(pa_stream *s) {
     pa_assert(s);
     pa_assert(PA_REFCNT_VALUE(s) >= 1);
 
-    PA_CHECK_VALIDITY(s->context, !pa_detect_fork(), PA_ERR_FORKED);
-    PA_CHECK_VALIDITY(s->context, s->channel_valid, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(s->context, s->context->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY(&s->context, s->channel_valid, PA_ERR_BADSTATE);
+    PA_CHECK_VALIDITY(&s->context, s->context.state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     pa_stream_ref(s);
 
-    t = pa_tagstruct_command(s->context, PA_COMMAND_FINISH_UPLOAD_STREAM, &tag);
+    t = pa_tagstruct_command(&s->context, PA_COMMAND_FINISH_UPLOAD_STREAM, &tag);
     pa_tagstruct_putu32(t, s->channel);
-    pa_pstream_send_tagstruct(s->context->pstream, t);
-    pa_pdispatch_register_reply(s->context->pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_disconnect_callback, s, NULL);
+    pa_pstream_send_tagstruct(s->context.pstream, t);
+    pa_pdispatch_register_reply(s->context.pdispatch, tag, DEFAULT_TIMEOUT, pa_stream_disconnect_callback, s, NULL);
 
     pa_stream_unref(s);
     return 0;

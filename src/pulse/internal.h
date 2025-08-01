@@ -153,7 +153,7 @@ struct pa_stream {
     PA_REFCNT_DECLARE;
     PA_LLIST_FIELDS(pa_stream);
 
-    pa_context *context;
+    pa_context context;
     pa_mainloop_api *mainloop;
 
     uint32_t direct_on_input;
@@ -166,7 +166,7 @@ struct pa_stream {
     pa_channel_map channel_map;
     uint8_t n_formats;
     pa_format_info req_formats[PA_MAX_FORMATS];
-    pa_format_info *format;
+    pa_format_info format;
 
     pa_proplist *proplist;
 
