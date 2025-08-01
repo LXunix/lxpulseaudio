@@ -647,8 +647,7 @@ fail:
 
     if (ma)
         pa_modargs_free(ma);
-    if (roles_in_group)
-        pa_xfree(roles_in_group);
+    pa_xfree(roles_in_group);
 
     return -1;
 

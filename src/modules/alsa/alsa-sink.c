@@ -2923,11 +2923,9 @@ static void userdata_free(struct userdata *u) {
     if (u->formats)
         pa_idxset_free(u->formats, (pa_free_cb_t) pa_format_info_free);
 
-    if (u->supported_formats)
-        pa_xfree(u->supported_formats);
+    pa_xfree(u->supported_formats);
 
-    if (u->supported_rates)
-        pa_xfree(u->supported_rates);
+    pa_xfree(u->supported_rates);
 
     reserve_done(u);
     monitor_done(u);

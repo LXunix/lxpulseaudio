@@ -2507,8 +2507,7 @@ static int do_init(pa_module *m) {
         goto fail;
     }
 
-    if (server)
-        pa_xfree(server);
+    pa_xfree(server);
 
 #ifdef HAVE_X11
     if (xcb)
@@ -2530,8 +2529,7 @@ static int do_init(pa_module *m) {
     return 0;
 
 fail:
-    if (server)
-        pa_xfree(server);
+    pa_xfree(server);
 
 #ifdef HAVE_X11
     if (xcb)

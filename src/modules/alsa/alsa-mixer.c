@@ -411,10 +411,8 @@ static void defer_cb(pa_mainloop_api *a, pa_defer_event *e, void *userdata) {
     num_fds = (unsigned) n;
 
     if (num_fds != fdl->num_fds) {
-        if (fdl->fds)
-            pa_xfree(fdl->fds);
-        if (fdl->work_fds)
-            pa_xfree(fdl->work_fds);
+        pa_xfree(fdl->fds);
+        pa_xfree(fdl->work_fds);
         fdl->fds = pa_xnew0(struct pollfd, num_fds);
         fdl->work_fds = pa_xnew(struct pollfd, num_fds);
     }
@@ -487,10 +485,8 @@ void pa_alsa_fdlist_free(struct pa_alsa_fdlist *fdl) {
         pa_xfree(fdl->ios);
     }
 
-    if (fdl->fds)
-        pa_xfree(fdl->fds);
-    if (fdl->work_fds)
-        pa_xfree(fdl->work_fds);
+    pa_xfree(fdl->fds);
+    pa_xfree(fdl->work_fds);
 
     pa_xfree(fdl);
 }
@@ -743,8 +739,7 @@ static void element_free(pa_alsa_element *e) {
         option_free(o);
     }
 
-    if (e->db_fix)
-        decibel_fix_free(e->db_fix);
+    decibel_fix_free(e->db_fix);
 
     pa_xfree(e->alsa_id.name);
     pa_xfree(e);
@@ -3588,8 +3583,7 @@ finish:
     return ps;
 
 fail:
-    if (ps)
-        pa_alsa_path_set_free(ps);
+    pa_alsa_path_set_free(ps);
 
     return NULL;
 }
@@ -3897,10 +3891,8 @@ static void mapping_free(pa_alsa_mapping *m) {
     pa_xstrfreev(m->output_path_names);
     pa_xstrfreev(m->input_element);
     pa_xstrfreev(m->output_element);
-    if (m->input_path_set)
-        pa_alsa_path_set_free(m->input_path_set);
-    if (m->output_path_set)
-        pa_alsa_path_set_free(m->output_path_set);
+    pa_alsa_path_set_free(m->input_path_set);
+    pa_alsa_path_set_free(m->output_path_set);
 
     pa_assert(!m->input_pcm);
     pa_assert(!m->output_pcm);

@@ -724,8 +724,7 @@ fail:
     if (ma)
         pa_modargs_free(ma);
 
-    if (default_source_name)
-        pa_xfree(default_source_name);
+    pa_xfree(default_source_name);
 
     return -1;
 }
@@ -759,14 +758,11 @@ static void do_done(pa_module *m) {
     if (u->thread_mainloop)
         pa_mainloop_free(u->thread_mainloop);
 
-    if (u->cookie_file)
-        pa_xfree(u->cookie_file);
+    pa_xfree(u->cookie_file);
 
-    if (u->remote_source_name)
-        pa_xfree(u->remote_source_name);
+    pa_xfree(u->remote_source_name);
 
-    if (u->remote_server)
-        pa_xfree(u->remote_server);
+    pa_xfree(u->remote_server);
 
     if (u->source)
         pa_source_unref(u->source);
@@ -777,8 +773,7 @@ static void do_done(pa_module *m) {
     if (u->source_proplist)
         pa_proplist_free(u->source_proplist);
 
-    if (u->source_name)
-        pa_xfree(u->source_name);
+    pa_xfree(u->source_name);
 
     pa_xfree(u->msg);
 

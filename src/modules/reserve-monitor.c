@@ -201,8 +201,7 @@ fail:
 	if (&_error == error)
 		dbus_error_free(&_error);
 
-	if (m)
-		rm_release(m);
+	rm_release(m);
 
 	return r;
 }

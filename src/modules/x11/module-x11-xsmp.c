@@ -358,6 +358,5 @@ void pa__done(pa_module*m) {
         ice_in_use = false;
     }
 
-    if (u)
-        pa_xfree(u);
+    pa_xfree(u);
 }

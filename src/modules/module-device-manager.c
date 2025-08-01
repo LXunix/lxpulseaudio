@@ -336,10 +336,8 @@ static struct entry* entry_read(struct userdata *u, const char *name) {
 fail:
     pa_log_debug("Database contains invalid data for key: %s (probably pre-v1.0 data)", name);
 
-    if (e)
-        entry_free(e);
-    if (t)
-        pa_tagstruct_free(t);
+    entry_free(e);
+    pa_tagstruct_free(t);
 
 #ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
     pa_log_debug("Attempting to load legacy (pre-v1.0) data for key: %s", name);
@@ -1521,8 +1519,7 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
   fail:
 
-  if (reply)
-    pa_tagstruct_free(reply);
+  pa_tagstruct_free(reply);
 
   return -1;
 }

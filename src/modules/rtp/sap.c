@@ -230,8 +230,7 @@ int pa_sap_recv(pa_sap_context *c, bool *goodbye) {
         goto fail;
     }
 
-    if (c->sdp_data)
-        pa_xfree(c->sdp_data);
+    pa_xfree(c->sdp_data);
 
     c->sdp_data = pa_xstrndup(e, (unsigned) size);
     pa_xfree(buf);

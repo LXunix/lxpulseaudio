@@ -2537,11 +2537,9 @@ static void userdata_free(struct userdata *u) {
         pa_smoother_free(u->smoother);
 #endif
 
-    if (u->supported_formats)
-        pa_xfree(u->supported_formats);
+    pa_xfree(u->supported_formats);
 
-    if (u->supported_rates)
-        pa_xfree(u->supported_rates);
+    pa_xfree(u->supported_rates);
 
     reserve_done(u);
     monitor_done(u);

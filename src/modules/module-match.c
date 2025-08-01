@@ -285,8 +285,7 @@ void pa__done(pa_module*m) {
     if (u->sink_input_fixate_hook_slot)
         pa_hook_slot_free(u->sink_input_fixate_hook_slot);
 
-    if (u->property_key)
-        pa_xfree(u->property_key);
+    pa_xfree(u->property_key);
 
     for (r = u->rules; r; r = n) {
         n = r->next;

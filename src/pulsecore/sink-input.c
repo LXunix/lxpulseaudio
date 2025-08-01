@@ -317,8 +317,7 @@ void pa_sink_input_new_data_done(pa_sink_input_new_data *data) {
     if (data->volume_factor_sink_items)
         pa_hashmap_free(data->volume_factor_sink_items);
 
-    if (data->preferred_sink)
-        pa_xfree(data->preferred_sink);
+    pa_xfree(data->preferred_sink);
 
     pa_proplist_free(data->proplist);
 }
@@ -872,8 +871,7 @@ static void sink_input_free(pa_object *o) {
     if (i->volume_factor_sink_items)
         pa_hashmap_free(i->volume_factor_sink_items);
 
-    if (i->preferred_sink)
-        pa_xfree(i->preferred_sink);
+    pa_xfree(i->preferred_sink);
 
     pa_xfree(i->driver);
     pa_xfree(i);

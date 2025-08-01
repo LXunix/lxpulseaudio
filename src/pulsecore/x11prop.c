@@ -138,8 +138,7 @@ char* pa_x11_get_prop(xcb_connection_t *xcb, int screen, const char *name, char 
 
 finish:
 
-    if (prop)
-        free(prop);
+    free(prop);
 
     return ret;
 }

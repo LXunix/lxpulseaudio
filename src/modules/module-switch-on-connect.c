@@ -242,8 +242,7 @@ void pa__done(pa_module*m) {
     if (!(u = m->userdata))
         return;
 
-    if (u->blacklist)
-        pa_xfree(u->blacklist);
+    pa_xfree(u->blacklist);
 
     pa_xfree(u);
 }

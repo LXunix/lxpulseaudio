@@ -196,8 +196,7 @@ void pa_source_output_new_data_done(pa_source_output_new_data *data) {
     if (data->format)
         pa_format_info_free(data->format);
 
-    if (data->preferred_source)
-        pa_xfree(data->preferred_source);
+    pa_xfree(data->preferred_source);
 
     pa_proplist_free(data->proplist);
 }
@@ -668,8 +667,7 @@ static void source_output_free(pa_object* mo) {
     if (o->proplist)
         pa_proplist_free(o->proplist);
 
-    if (o->preferred_source)
-        pa_xfree(o->preferred_source);
+    pa_xfree(o->preferred_source);
 
     pa_xfree(o->driver);
     pa_xfree(o);

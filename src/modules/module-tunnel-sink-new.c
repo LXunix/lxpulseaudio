@@ -753,8 +753,7 @@ fail:
     if (ma)
         pa_modargs_free(ma);
 
-    if (default_sink_name)
-        pa_xfree(default_sink_name);
+    pa_xfree(default_sink_name);
 
     return -1;
 }
@@ -788,14 +787,11 @@ static void do_done(pa_module *m) {
     if (u->thread_mainloop)
         pa_mainloop_free(u->thread_mainloop);
 
-    if (u->cookie_file)
-        pa_xfree(u->cookie_file);
+    pa_xfree(u->cookie_file);
 
-    if (u->remote_sink_name)
-        pa_xfree(u->remote_sink_name);
+    pa_xfree(u->remote_sink_name);
 
-    if (u->remote_server)
-        pa_xfree(u->remote_server);
+    pa_xfree(u->remote_server);
 
     if (u->sink)
         pa_sink_unref(u->sink);
@@ -806,8 +802,7 @@ static void do_done(pa_module *m) {
     if (u->sink_proplist)
         pa_proplist_free(u->sink_proplist);
 
-    if (u->sink_name)
-        pa_xfree(u->sink_name);
+    pa_xfree(u->sink_name);
 
     pa_xfree(u->msg);
 

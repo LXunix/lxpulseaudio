@@ -993,8 +993,7 @@ static void userdata_free(struct userdata *u) {
 
     if (u->card)
         pa_card_free(u->card);
-    if (u->server)
-        pa_xfree(u->server);
+    pa_xfree(u->server);
 
     pa_xfree(u);
 }

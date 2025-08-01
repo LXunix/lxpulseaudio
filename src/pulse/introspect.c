@@ -795,10 +795,8 @@ static void card_info_free(pa_card_info* i) {
 
         for (j = 0; j < i->n_ports; j++) {
             if (i->ports[j]) {
-                if (i->ports[j]->profiles)
-                    pa_xfree(i->ports[j]->profiles);
-                if (i->ports[j]->profiles2)
-                    pa_xfree(i->ports[j]->profiles2);
+                pa_xfree(i->ports[j]->profiles);
+                pa_xfree(i->ports[j]->profiles2);
                 if (i->ports[j]->proplist)
                     pa_proplist_free(i->ports[j]->proplist);
             }

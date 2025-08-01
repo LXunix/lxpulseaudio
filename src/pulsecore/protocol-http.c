@@ -723,8 +723,7 @@ void pa_http_protocol_connect(pa_http_protocol *p, pa_iochannel *io, pa_module *
     return;
 
 fail:
-    if (c)
-        connection_unlink(c);
+    connection_unlink(c);
 }
 
 void pa_http_protocol_disconnect(pa_http_protocol *p, pa_module *m) {

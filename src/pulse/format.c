@@ -176,10 +176,8 @@ pa_format_info* pa_format_info_from_string(const char *str) {
     }
 
 out:
-    if (encoding)
-        pa_xfree(encoding);
-    if (properties)
-        pa_xfree(properties);
+    pa_xfree(encoding);
+    pa_xfree(properties);
     return f;
 
 error:

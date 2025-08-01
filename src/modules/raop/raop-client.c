@@ -1343,8 +1343,7 @@ static void rtsp_auth_cb(pa_rtsp_client *rtsp, pa_rtsp_state_t state, pa_rtsp_st
                 publ = pa_xstrdup(pa_headerlist_gets(headers, "Public"));
                 c->sci = pa_xstrdup(pa_rtsp_get_header(c->rtsp, "Client-Instance"));
 
-                if (c->password)
-                    pa_xfree(c->password);
+                pa_xfree(c->password);
                 pa_xfree(publ);
                 c->password = NULL;
             }
@@ -1394,8 +1393,7 @@ static void rtsp_auth_cb(pa_rtsp_client *rtsp, pa_rtsp_state_t state, pa_rtsp_st
             pa_rtsp_client_free(c->rtsp);
             c->rtsp = NULL;
 
-            if (c->sci)
-                pa_xfree(c->sci);
+            pa_xfree(c->sci);
             c->sci = NULL;
 
             break;
@@ -1423,8 +1421,7 @@ void pa_raop_client_disconnect(pa_raop_client *c) {
 
     if (c->rtsp)
         pa_rtsp_client_free(c->rtsp);
-    if (c->sid)
-        pa_xfree(c->sid);
+    pa_xfree(c->sid);
     c->rtsp = NULL;
     c->sid = NULL;
 

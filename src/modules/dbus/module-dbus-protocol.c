@@ -432,8 +432,7 @@ static struct server *start_server(struct userdata *u, const char *address, enum
     return s;
 
 fail:
-    if (s)
-        server_free(s);
+    server_free(s);
 
     dbus_error_free(&error);
 
@@ -594,11 +593,9 @@ void pa__done(pa_module *m) {
     if (u->cleanup_event)
         m->core->mainloop->defer_free(u->cleanup_event);
 
-    if (u->tcp_server)
-        server_free(u->tcp_server);
+    server_free(u->tcp_server);
 
-    if (u->local_server)
-        server_free(u->local_server);
+    server_free(u->local_server);
 
     if (u->dbus_protocol)
         pa_dbus_protocol_unref(u->dbus_protocol);

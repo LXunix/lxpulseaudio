@@ -2090,8 +2090,7 @@ static void set_sink_formats(pa_context *c, uint32_t sink, const char *str) {
     }
 
 done:
-    if (format)
-        pa_xfree(format);
+    pa_xfree(format);
     while (f_arr[i] && i--)
         pa_format_info_free(f_arr[i]);
 
