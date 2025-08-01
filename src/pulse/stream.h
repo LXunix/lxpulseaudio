@@ -312,7 +312,7 @@ pa_stream* pa_stream_new(
         pa_context *c                     /**< The context to create this stream in */,
         const char *name                  /**< A name for this stream */,
         const pa_sample_spec *ss          /**< The desired sample format */,
-        pa_channel_map *map         /**< The desired channel map, or NULL for default */);
+        const pa_channel_map *map         /**< The desired channel map, or NULL for default */);
 
 /** Create a new, unconnected stream with the specified name and
  * sample type, and specify the initial stream property
@@ -321,7 +321,7 @@ pa_stream* pa_stream_new_with_proplist(
         pa_context *c                     /**< The context to create this stream in */,
         const char *name                  /**< A name for this stream */,
         const pa_sample_spec *ss          /**< The desired sample format */,
-        pa_channel_map *map         /**< The desired channel map, or NULL for default */,
+        const pa_channel_map *map         /**< The desired channel map, or NULL for default */,
         pa_proplist *p                    /**< The initial property list */);
 
 /** Create a new, unconnected stream with the specified name, the set of formats

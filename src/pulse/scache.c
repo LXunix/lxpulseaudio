@@ -62,7 +62,7 @@ int pa_stream_connect_upload(pa_stream *s, size_t length) {
 
     pa_tagstruct_puts(t, name);
     pa_tagstruct_put_sample_spec(t, &s->sample_spec);
-    pa_tagstruct_put_channel_map(t, s->channel_map);
+    pa_tagstruct_put_channel_map(t, &s->channel_map);
     pa_tagstruct_putu32(t, (uint32_t) length);
 
     if (s->context->version >= 13)

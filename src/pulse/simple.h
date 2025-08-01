@@ -122,7 +122,7 @@ pa_simple* pa_simple_new(
     const char *dev,                    /**< Sink (resp. source) name, or NULL for default */
     const char *stream_name,            /**< A descriptive name for this stream (application name, song title, ...) */
     const pa_sample_spec *ss,           /**< The sample type to use */
-    pa_channel_map *map,          /**< The channel map to use, or NULL for default */
+    const pa_channel_map *map,          /**< The channel map to use, or NULL for default */
     const pa_buffer_attr *attr,         /**< Buffering attributes, or NULL for default */
     int *error                          /**< A pointer where the error code is stored when the routine returns NULL. It is OK to pass NULL here. */
     );

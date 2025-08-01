@@ -141,7 +141,7 @@ pa_simple* pa_simple_new(
         const char *dev,
         const char *stream_name,
         const pa_sample_spec *ss,
-        pa_channel_map *map,
+        const pa_channel_map *map,
         const pa_buffer_attr *attr,
         int *rerror) {
 

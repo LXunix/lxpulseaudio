@@ -163,7 +163,12 @@ struct pa_stream {
     pa_stream_flags_t flags;
 
     pa_sample_spec sample_spec;
+    pa_channel_map channel_map;
     uint8_t n_formats;
+    pa_format_info *req_formats[PA_MAX_FORMATS];
+    pa_format_info *format;
+
+    pa_proplist *proplist;
 
     bool channel_valid:1;
     bool suspended:1;
@@ -171,22 +176,15 @@ struct pa_stream {
     bool timing_info_valid:1;
     bool auto_timing_update_requested:1;
 
-
-    pa_channel_map *channel_map;
-    pa_format_info *req_formats[PA_MAX_FORMATS];
-    pa_format_info *format;
-
-    pa_proplist *proplist;
-
     uint32_t channel;
     uint32_t syncid;
     uint32_t stream_index;
 
-    uint32_t device_index;
-    char *device_name;
-
     int64_t requested_bytes;
     pa_buffer_attr buffer_attr;
+
+    uint32_t device_index;
+    char *device_name;
 
     /* playback */
     pa_memblock *write_memblock;
@@ -194,7 +192,7 @@ struct pa_stream {
     int64_t latest_underrun_at_index;
 
     /* recording */
-    pa_memchunk *peek_memchunk;
+    pa_memchunk peek_memchunk;
     void *peek_data;
     pa_memblockq *record_memblockq;
 
