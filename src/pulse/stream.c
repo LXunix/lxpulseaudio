@@ -126,7 +126,7 @@ static pa_stream *pa_stream_new_with_proplist_internal(
     if (formats) {
         s->n_formats = n_formats;
         for (i = 0; i < n_formats; i++)
-            s->req_formats[i] = pa_format_info_copy(formats[i]);
+            s->req_formats[i] = pa_format_info_copy_by_val(formats[i]);
     }
 
     /* We'll get the final negotiated format after connecting */
@@ -312,7 +312,7 @@ static void stream_free(pa_stream *s) {
 #endif
 
     for (i = 0; i < s->n_formats; i++)
-        pa_format_info_free(s->req_formats[i]);
+        pa_format_info_free(&s->req_formats[i]);
 
     if (s->format)
         pa_format_info_free(s->format);
@@ -1009,7 +1009,7 @@ static void patch_buffer_attr(pa_stream *s, pa_buffer_attr *attr, pa_stream_flag
         if (pa_sample_spec_valid(&s->sample_spec))
             ss = s->sample_spec;
         else if (s->n_formats == 1)
-            pa_format_info_to_sample_spec(s->req_formats[0], &ss, NULL);
+            pa_format_info_to_sample_spec(&s->req_formats[0], &ss, NULL);
 
         if (pa_atou(e, &ms) < 0 || ms <= 0)
             pa_log_debug("Failed to parse $PULSE_LATENCY_MSEC: %s", e);
@@ -1390,7 +1390,7 @@ static int create_stream(
 
         pa_tagstruct_putu8(t, s->n_formats);
         for (i = 0; i < s->n_formats; i++)
-            pa_tagstruct_put_format_info(t, s->req_formats[i]);
+            pa_tagstruct_put_format_info(t, &s->req_formats[i]);
     }
 
     if (s->context->version >= 22 && s->direction == PA_STREAM_RECORD) {

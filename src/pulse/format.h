@@ -110,6 +110,9 @@ pa_format_info* pa_format_info_new(void);
 /** Returns a new \a pa_format_info struct and representing the same format as \a src. \since 1.0 */
 pa_format_info* pa_format_info_copy(const pa_format_info *src);
 
+/** Returns a new \a pa_format_info struct and representing the same format as \a src. \since 1.0 */
+pa_format_info pa_format_info_copy_by_val(const pa_format_info* src);
+
 /** Frees a \a pa_format_info structure. \since 1.0 */
 void pa_format_info_free(pa_format_info *f);
 

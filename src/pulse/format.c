@@ -95,6 +95,23 @@ pa_format_info* pa_format_info_copy(const pa_format_info *src) {
     return dest;
 }
 
+pa_format_info pa_format_info_copy_by_val(const pa_format_info* src) {
+    pa_format_info *dest;
+
+    pa_assert(src);
+
+    dest = pa_xnew(pa_format_info, 1);
+
+    dest->encoding = src->encoding;
+
+    if (src->plist)
+        dest->plist = pa_proplist_copy(src->plist);
+    else
+        dest->plist = NULL;
+
+    return *dest;
+}
+
 void pa_format_info_free(pa_format_info *f) {
     pa_assert(f);
 
