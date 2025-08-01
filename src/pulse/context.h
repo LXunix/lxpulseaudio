@@ -207,7 +207,7 @@ pa_context_state_t pa_context_get_state(const pa_context *c);
  * specified in the structure are used when forking a new child
  * process. Returns negative on certain errors such as invalid state
  * or parameters. */
-int pa_context_connect(pa_context *c, const char *server, pa_context_flags_t flags, const pa_spawn_api *api);
+int pa_context_connect(pa_context *c, const char *server, pa_context_flags_t flags, pa_spawn_api *api);
 
 /** Terminate the context connection immediately */
 void pa_context_disconnect(pa_context *c);
