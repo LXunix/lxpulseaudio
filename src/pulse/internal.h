@@ -154,7 +154,7 @@ struct pa_stream {
     PA_LLIST_FIELDS(pa_stream);
 
     pa_context context;
-    pa_mainloop_api *mainloop;
+    pa_mainloop_api mainloop;
 
     uint32_t direct_on_input;
 

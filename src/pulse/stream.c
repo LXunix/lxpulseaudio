@@ -106,7 +106,7 @@ static pa_stream *pa_stream_new_with_proplist_internal(
     s = pa_xnew(pa_stream, 1);
     PA_REFCNT_INIT(s);
     s->context = *c;
-    s->mainloop = c->mainloop;
+    s->mainloop = *c->mainloop;
 
     s->direction = PA_STREAM_NODIRECTION;
     s->state = PA_STREAM_UNCONNECTED;
@@ -272,8 +272,8 @@ static void stream_unlink(pa_stream *s) {
     //s->context = NULL;
 
     if (s->auto_timing_update_event) {
-        pa_assert(s->mainloop);
-        s->mainloop->time_free(s->auto_timing_update_event);
+        pa_assert(&s->mainloop);
+        s->mainloop.time_free(s->auto_timing_update_event);
     }
 
     reset_callbacks(s);
@@ -403,8 +403,8 @@ static void request_auto_timing_update(pa_stream *s, bool force) {
 
     if (s->auto_timing_update_event) {
         if (s->suspended && !force) {
-            pa_assert(s->mainloop);
-            s->mainloop->time_free(s->auto_timing_update_event);
+            pa_assert(&s->mainloop);
+            s->mainloop.time_free(s->auto_timing_update_event);
             s->auto_timing_update_event = NULL;
         } else {
             if (force)
