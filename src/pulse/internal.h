@@ -197,7 +197,7 @@ struct pa_stream {
     int64_t latest_underrun_at_index;
 
     /* recording */
-    pa_memchunk peek_memchunk;
+    pa_memchunk *peek_memchunk;
     void *peek_data;
     pa_memblockq *record_memblockq;
 
