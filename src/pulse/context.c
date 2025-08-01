@@ -710,15 +710,15 @@ static int context_autospawn(pa_context *c) {
 
     pa_log_debug("Trying to autospawn...");
 
-    if (c->spawn_api->prefork)
-        c->spawn_api->prefork();
+    if (c->spawn_api.prefork)
+        c->spawn_api.prefork();
 
     if ((pid = fork()) < 0) {
         pa_log_error(_("fork(): %s"), pa_cstrerror(errno));
         pa_context_fail(c, PA_ERR_INTERNAL);
 
-        if (c->spawn_api->postfork)
-            c->spawn_api->postfork();
+        if (c->spawn_api.postfork)
+            c->spawn_api.postfork();
 
         goto fail;
     } else if (!pid) {
@@ -728,8 +728,8 @@ static int context_autospawn(pa_context *c) {
         const char * argv[32];
         unsigned n = 0;
 
-        if (c->spawn_api->atfork)
-            c->spawn_api->atfork();
+        if (c->spawn_api.atfork)
+            c->spawn_api.atfork();
 
         /* We leave most of the cleaning up of the process environment
          * to the executable. We only clean up the file descriptors to
@@ -759,8 +759,8 @@ static int context_autospawn(pa_context *c) {
 
     /* Parent */
 
-    if (c->spawn_api->postfork)
-        c->spawn_api->postfork();
+    if (c->spawn_api.postfork)
+        c->spawn_api.postfork();
 
     do {
         r = waitpid(pid, &status, 0);
@@ -979,7 +979,7 @@ int pa_context_connect(
         pa_context *c,
         const char *server,
         pa_context_flags_t flags,
-        pa_spawn_api *api) {
+        const pa_spawn_api *api) {
 
     int r = -1;
 
@@ -1058,7 +1058,7 @@ int pa_context_connect(
             c->do_autospawn = true;
 
             if (api)
-                c->spawn_api = api;
+                c->spawn_api = *api;
         }
 #endif
     }

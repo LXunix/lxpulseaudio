@@ -80,17 +80,18 @@ struct pa_context {
     pa_pstream *pstream;
     pa_pdispatch *pdispatch;
 
+    pa_srbchannel_template srb_template;
+    uint32_t srb_setup_tag;
+
     pa_hashmap *record_streams, *playback_streams;
     PA_LLIST_HEAD(pa_stream, streams);
     PA_LLIST_HEAD(pa_operation, operations);
-
-    pa_srbchannel_template srb_template;
-    uint32_t srb_setup_tag;
 
     uint32_t version;
     uint32_t ctag;
     uint32_t csyncid;
     pa_context_error *error;
+    pa_context_state_t state;
 
     pa_context_notify_cb_t state_callback;
     void *state_userdata;
@@ -101,8 +102,6 @@ struct pa_context {
 
     pa_mempool *mempool;
 
-    pa_context_state_t state : 3;
-
     bool is_local:1;
     bool do_shm:1;
     bool memfd_on_local:1;
@@ -111,12 +110,9 @@ struct pa_context {
     bool do_autospawn:1;
     bool use_rtclock:1;
     bool filter_added:1;
+    pa_spawn_api spawn_api;
 
-    pa_mem_type_t shm_type : 2;
-
-    uint32_t client_index;
-
-    pa_spawn_api *spawn_api;
+    pa_mem_type_t shm_type;
 
     pa_strlist *server_list;
 
@@ -124,6 +120,7 @@ struct pa_context {
 
     pa_client_conf *conf;
 
+    uint32_t client_index;
 
     /* Extension specific data */
     struct {
