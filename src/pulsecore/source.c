@@ -1157,7 +1157,7 @@ unsuspend:
 
 /* Called from main thread */
 pa_usec_t pa_source_get_latency(pa_source *s) {
-    int64_t usec;
+    int64_t usec = 0;
 
     pa_source_assert_ref(s);
     pa_assert_ctl_context();
@@ -1920,7 +1920,7 @@ bool pa_source_get_mute(pa_source *s, bool force_refresh) {
     pa_assert(PA_SOURCE_IS_LINKED(s->state));
 
     if ((s->refresh_muted || force_refresh) && s->get_mute) {
-        bool mute;
+        bool mute = false;
 
         if (s->flags & PA_SOURCE_DEFERRED_VOLUME) {
             if (pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SOURCE_MESSAGE_GET_MUTE, &mute, 0, NULL) >= 0)
@@ -2597,7 +2597,7 @@ void pa_source_set_fixed_latency(pa_source *s, pa_usec_t latency) {
 
 /* Called from main thread */
 pa_usec_t pa_source_get_fixed_latency(pa_source *s) {
-    pa_usec_t latency;
+    pa_usec_t latency = 0;
 
     pa_source_assert_ref(s);
     pa_assert_ctl_context();
@@ -2661,7 +2661,7 @@ void pa_source_set_port_latency_offset(pa_source *s, int64_t offset) {
 
 /* Called from main thread */
 size_t pa_source_get_max_rewind(pa_source *s) {
-    size_t r;
+    size_t r = 0;
     pa_assert_ctl_context();
     pa_source_assert_ref(s);
 
