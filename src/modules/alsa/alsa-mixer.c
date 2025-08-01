@@ -2534,7 +2534,7 @@ static int element_parse_override_map(pa_config_parser_state *state) {
         return -1;
     }
 
-    s = strstr(state->lvalue, ".");
+    s = strchr(state->lvalue, '.');
     if (s) {
         pa_atoi(s + 1, &channel_count);
         if (channel_count < 1 || channel_count > POSITION_MASK_CHANNELS) {
@@ -2559,7 +2559,7 @@ static int element_parse_override_map(pa_config_parser_state *state) {
         if (!*n)
             m = 0;
         else {
-            s = strstr(n, ":");
+            s = strchr(n, ':');
             if (s) {
                 *s = '\0';
                 s++;

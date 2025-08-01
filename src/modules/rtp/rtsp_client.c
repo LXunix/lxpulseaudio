@@ -280,7 +280,7 @@ static void line_callback(pa_ioline *line, const char *s, void *userdata) {
         c->header_buffer = NULL;
     }
 
-    delimpos = strstr(s2, ":");
+    delimpos = strchr(s2, ':');
     if (!delimpos) {
         pa_log_warn("Unexpected response when expecting header: %s", s);
         goto exit;

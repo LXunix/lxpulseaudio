@@ -1027,7 +1027,7 @@ connect_finish:
                 c->jack_status = JACK_STATUS_DISCONNECTED;
 
                 while ((token = pa_split(ajs, delimiters, &token_state))) {
-                    if ((pc = strstr(token, "="))) {
+                    if ((pc = strchr(token, '='))) {
                       *pc = 0;
                       if (pa_streq(token, "type") && pa_streq(pc + 1, "digital"))
                           c->jack_type = JACK_TYPE_DIGITAL;
@@ -1062,7 +1062,7 @@ connect_finish:
                 if (trs) {
                     /* Now parse out the server port component of the response. */
                     while ((token = pa_split(trs, delimiters, &token_state))) {
-                        if ((pc = strstr(token, "="))) {
+                        if ((pc = strchr(token, '='))) {
                             *pc = 0;
                             if (pa_streq(token, "control_port")) {
                                 if (pa_atou(pc + 1, &cport) < 0)
@@ -1291,7 +1291,7 @@ static void rtsp_auth_cb(pa_rtsp_client *rtsp, pa_rtsp_state_t state, pa_rtsp_st
                 if (wath) {
                     mth = pa_split(wath, space, &current);
                     while ((token = pa_split(wath, comma, &current))) {
-                        if ((val = strstr(token, "="))) {
+                        if ((val = strchr(token, '='))) {
                             if (NULL == realm && val > strstr(token, "realm"))
                                 realm = pa_xstrdup(val + 2);
                             else if (NULL == nonce && val > strstr(token, "nonce"))
