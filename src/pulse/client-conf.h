@@ -34,11 +34,15 @@ typedef struct pa_client_conf {
     char *default_dbus_server;
     char *cookie_file_from_env;
     uint8_t cookie_from_x11[PA_NATIVE_COOKIE_LENGTH];
-    bool cookie_from_x11_valid;
     char *cookie_file_from_application;
     char *cookie_file_from_client_conf;
-    bool autospawn, disable_shm, disable_memfd, auto_connect_localhost, auto_connect_display;
     size_t shm_size;
+    bool cookie_from_x11_valid;
+    bool autospawn;
+    bool disable_shm;
+    bool disable_memfd;
+    bool auto_connect_localhost;
+    bool auto_connect_display;
 } pa_client_conf;
 
 /* Create a new configuration data object and reset it to defaults */
