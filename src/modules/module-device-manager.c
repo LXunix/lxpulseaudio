@@ -210,7 +210,7 @@ static bool entry_write(struct userdata *u, const char *name, const struct entry
     pa_tagstruct_puts(t, e->description);
     pa_tagstruct_put_boolean(t, e->user_set_description);
     pa_tagstruct_puts(t, e->icon);
-    for (uint8_t i=0; i<ROLE_MAX; ++i)
+    for (int i=0; i<ROLE_MAX; ++i)
         pa_tagstruct_putu32(t, e->priority[i]);
 
     key.data = (char *) name;
@@ -320,7 +320,7 @@ static struct entry* entry_read(struct userdata *u, const char *name) {
     e->description = pa_xstrdup(description);
     e->icon = pa_xstrdup(icon);
 
-    for (uint8_t i=0; i<ROLE_MAX; ++i) {
+    for (int i=0; i<ROLE_MAX; ++i) {
         if (pa_tagstruct_getu32(t, &e->priority[i]) < 0)
             goto fail;
     }
@@ -415,7 +415,7 @@ static void dump_database(struct userdata *u) {
         pa_log_debug(" Highest priority devices per-role:");
 
         pa_log_debug("  Sinks:");
-        for (uint32_t role = ROLE_NONE; role < NUM_ROLES; ++role) {
+        for (int role = ROLE_NONE; role < NUM_ROLES; ++role) {
             char name[13];
             uint32_t len = PA_MIN(12u, strlen(role_names[role]));
             strncpy(name, role_names[role], len);
@@ -425,7 +425,7 @@ static void dump_database(struct userdata *u) {
         }
 
         pa_log_debug("  Sources:");
-        for (uint32_t role = ROLE_NONE; role < NUM_ROLES; ++role) {
+        for (int role = ROLE_NONE; role < NUM_ROLES; ++role) {
             char name[13];
             uint32_t len = PA_MIN(12u, strlen(role_names[role]));
             strncpy(name, role_names[role], len);
@@ -521,7 +521,7 @@ static inline struct entry *load_or_initialize_entry(struct userdata *u, struct 
                 name2 = pa_xstrndup(key.data, key.size);
 
                 if ((e = entry_read(u, name2))) {
-                    for (uint32_t i = 0; i < NUM_ROLES; ++i) {
+                    for (int i = 0; i < NUM_ROLES; ++i) {
                         max_priority[i] = PA_MAX(max_priority[i], e->priority[i]);
                     }
 
@@ -535,7 +535,7 @@ static inline struct entry *load_or_initialize_entry(struct userdata *u, struct 
         }
 
         /* Actually initialise our entry now we've calculated it */
-        for (uint32_t i = 0; i < NUM_ROLES; ++i) {
+        for (int i = 0; i < NUM_ROLES; ++i) {
             entry->priority[i] = max_priority[i] + 1;
         }
         entry->user_set_description = false;
@@ -547,7 +547,7 @@ static inline struct entry *load_or_initialize_entry(struct userdata *u, struct 
 static uint32_t get_role_index(const char* role) {
     pa_assert(role);
 
-    for (uint32_t i = ROLE_NONE; i < NUM_ROLES; ++i)
+    for (int i = ROLE_NONE; i < NUM_ROLES; ++i)
         if (pa_streq(role, role_names[i]))
             return i;
 
@@ -569,7 +569,7 @@ static void update_highest_priority_device_indexes(struct userdata *u, const cha
     else
         indexes = &u->preferred_sources;
 
-    for (uint32_t i = 0; i < NUM_ROLES; ++i) {
+    for (int i = 0; i < NUM_ROLES; ++i) {
         (*indexes)[i] = PA_INVALID_INDEX;
     }
     pa_zero(highest_priority_available);
@@ -590,7 +590,7 @@ static void update_highest_priority_device_indexes(struct userdata *u, const cha
             pa_assert_se(device_name = get_name(name, prefix));
 
             if ((e = entry_read(u, name))) {
-                for (uint32_t i = 0; i < NUM_ROLES; ++i) {
+                for (int i = 0; i < NUM_ROLES; ++i) {
                     if (!highest_priority_available[i] || e->priority[i] < highest_priority_available[i]) {
                         /* We've found a device with a higher priority than that we've currently got,
                            so see if it is currently available or not and update our list */
@@ -1221,7 +1221,7 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
             pa_tagstruct_putu32(reply, found_index);
             pa_tagstruct_putu32(reply, NUM_ROLES);
 
-            for (uint32_t i = ROLE_NONE; i < NUM_ROLES; ++i) {
+            for (int i = ROLE_NONE; i < NUM_ROLES; ++i) {
                 pa_tagstruct_puts(reply, role_names[i]);
                 pa_tagstruct_putu32(reply, e->priority[i]);
             }
@@ -1445,7 +1445,7 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
         /* Simple bubble sort */
         for (i = 0; i < n_devices; ++i) {
-            for (uint32_t j = i; j < n_devices; ++j) {
+            for (int j = i; j < n_devices; ++j) {
                 if (devices[i]->prio > devices[j]->prio) {
                     struct device_t *tmp;
                     tmp = devices[i];
@@ -1626,15 +1626,15 @@ int pa__init(pa_module*m) {
         }
         /* Bubble sort it (only really useful for first time creation) */
         if (i > 1)
-          for (uint32_t j = 0; j < i; ++j)
-              for (uint32_t k = 0; k < i; ++k)
+          for (int j = 0; j < i; ++j)
+              for (int k = 0; k < i; ++k)
                   if (p_i[j].priority > p_i[k].priority) {
                       struct prioritised_indexes tmp_pi = p_i[k];
                       p_i[k] = p_i[j];
                       p_i[j] = tmp_pi;
                   }
         /* Register it */
-        for (uint32_t j = 0; j < i; ++j)
+        for (int j = 0; j < i; ++j)
             subscribe_callback(m->core, PA_SUBSCRIPTION_EVENT_SINK|PA_SUBSCRIPTION_EVENT_NEW, p_i[j].index, u);
 
         /* We cycle over all the available sources so that they are added to our database if they are not in it yet */
@@ -1645,15 +1645,15 @@ int pa__init(pa_module*m) {
         }
         /* Bubble sort it (only really useful for first time creation) */
         if (i > 1)
-          for (uint32_t j = 0; j < i; ++j)
-              for (uint32_t k = 0; k < i; ++k)
+          for (int j = 0; j < i; ++j)
+              for (int k = 0; k < i; ++k)
                   if (p_i[j].priority > p_i[k].priority) {
                       struct prioritised_indexes tmp_pi = p_i[k];
                       p_i[k] = p_i[j];
                       p_i[j] = tmp_pi;
                   }
         /* Register it */
-        for (uint32_t j = 0; j < i; ++j)
+        for (int j = 0; j < i; ++j)
             subscribe_callback(m->core, PA_SUBSCRIPTION_EVENT_SOURCE|PA_SUBSCRIPTION_EVENT_NEW, p_i[j].index, u);
     }
     else if (total_devices > 0) {
@@ -1666,7 +1666,7 @@ int pa__init(pa_module*m) {
     }
 
     /* Perform the routing (if it's enabled) which will update our priority list cache too */
-    for (uint32_t i = 0; i < NUM_ROLES; ++i) {
+    for (int i = 0; i < NUM_ROLES; ++i) {
         u->preferred_sinks[i] = u->preferred_sources[i] = PA_INVALID_INDEX;
     }
 

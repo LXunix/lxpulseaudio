@@ -1177,7 +1177,7 @@ static int read_ports(struct userdata *u, pa_tagstruct *t) {
             return -PA_ERR_PROTOCOL;
         }
 
-        for (uint32_t j = 0; j < n_ports; j++) {
+        for (int j = 0; j < n_ports; j++) {
             uint32_t priority;
 
             if (pa_tagstruct_gets(t, &s) < 0 || /* name */
@@ -1218,7 +1218,7 @@ static int read_formats(struct userdata *u, pa_tagstruct *t) {
         return -PA_ERR_PROTOCOL;
     }
 
-    for (uint8_t j = 0; j < n_formats; j++) {
+    for (int j = 0; j < n_formats; j++) {
         format = pa_format_info_new();
         if (pa_tagstruct_get_format_info(t, format)) { /* format info */
             pa_format_info_free(format);
