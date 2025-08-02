@@ -43,9 +43,9 @@ typedef pa_hook_result_t (*pa_hook_cb_t)(
         void *slot_data);
 
 struct pa_hook_slot {
-    bool dead;
     pa_hook *hook;
-    pa_hook_priority_t priority;
+    bool dead : 1;
+    pa_hook_priority_t priority : 31;
     pa_hook_cb_t callback;
     void *data;
     PA_LLIST_FIELDS(pa_hook_slot);
