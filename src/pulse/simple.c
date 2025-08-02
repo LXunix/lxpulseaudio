@@ -36,15 +36,15 @@
 #include "simple.h"
 
 struct pa_simple {
+    size_t read_index, read_length;
+    const void *read_data;
+
     pa_threaded_mainloop *mainloop;
     pa_context *context;
     pa_stream *stream;
-    pa_stream_direction_t direction;
+    pa_stream_direction_t direction : 3;
 
-    const void *read_data;
-    size_t read_index, read_length;
-
-    int operation_success;
+    int8_t operation_success : 5;
 };
 
 #define CHECK_VALIDITY_RETURN_ANY(rerror, expression, error, ret)       \
