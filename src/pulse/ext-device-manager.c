@@ -285,7 +285,8 @@ fail:
         pa_operation_unref(o);
     }
 
-    pa_tagstruct_free(t);
+    if (t)
+        pa_tagstruct_free(t);
 
     pa_context_set_error(c, PA_ERR_INVALID);
     return NULL;

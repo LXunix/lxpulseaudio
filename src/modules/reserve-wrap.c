@@ -64,7 +64,8 @@ static void reserve_wrapper_free(pa_reserve_wrapper *r) {
     pa_assert(r);
 
 #ifdef HAVE_DBUS
-    rd_release(r->device);
+    if (r->device)
+        rd_release(r->device);
 
     if (r->connection)
         pa_dbus_connection_unref(r->connection);
@@ -205,7 +206,8 @@ static void reserve_monitor_wrapper_free(pa_reserve_monitor_wrapper *w) {
     pa_assert(w);
 
 #ifdef HAVE_DBUS
-    rm_release(w->monitor);
+    if (w->monitor)
+        rm_release(w->monitor);
 
     if (w->connection)
         pa_dbus_connection_unref(w->connection);

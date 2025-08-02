@@ -374,8 +374,10 @@ fail:
 
     pa_log_debug("Database contains invalid data for key: %s (probably pre-v1.0 data)", name);
 
-    entry_free(e);
-    pa_tagstruct_free(t);
+    if (e)
+        entry_free(e);
+    if (t)
+        pa_tagstruct_free(t);
 
 #ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
     pa_log_debug("Attempting to load legacy (pre-v1.0) data for key: %s", name);
@@ -423,7 +425,8 @@ static pa_hook_result_t card_put_hook_callback(pa_core *c, pa_card *card, struct
 
 finish:
     entry_free(entry);
-    entry_free(old);
+    if (old)
+        entry_free(old);
 
     return PA_HOOK_OK;
 }

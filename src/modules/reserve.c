@@ -549,7 +549,8 @@ fail:
 	if (&_error == error)
 		dbus_error_free(&_error);
 
-	rd_release(d);
+	if (d)
+		rd_release(d);
 
 	return r;
 }

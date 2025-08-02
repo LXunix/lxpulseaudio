@@ -1217,8 +1217,10 @@ static struct entry *entry_read(struct userdata *u, const char *name) {
     return e;
 
 fail:
-    entry_free(e);
-    pa_tagstruct_free(t);
+    if (e)
+        entry_free(e);
+    if (t)
+        pa_tagstruct_free(t);
 
     pa_datum_free(&data);
     return NULL;
@@ -1585,7 +1587,8 @@ static void update_preferred_device(struct userdata *u, const char *name, const 
 #endif
 
     entry_free(entry);
-    entry_free(old);
+    if (old)
+        entry_free(old);
 }
 
 static pa_hook_result_t sink_input_preferred_sink_changed_cb(pa_core *c, pa_sink_input *sink_input, struct userdata *u) {
@@ -2136,7 +2139,8 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
                 }
 
 #ifdef HAVE_DBUS
-                entry_free(old);
+                if (old)
+                    entry_free(old);
 #endif
                 entry_free(entry);
             }
@@ -2200,7 +2204,8 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
 fail:
 
-    pa_tagstruct_free(reply);
+    if (reply)
+        pa_tagstruct_free(reply);
 
     return -1;
 }

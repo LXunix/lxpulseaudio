@@ -250,8 +250,10 @@ fail:
 
     pa_log_debug("Database contains invalid data for key: %s (probably pre-v1.0 data)", name);
 
-    entry_free(e);
-    pa_tagstruct_free(t);
+    if (e)
+        entry_free(e);
+    if (t)
+        pa_tagstruct_free(t);
 
 #ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
 {
@@ -449,8 +451,10 @@ static struct perportentry* perportentry_read(struct userdata *u, const char *ba
 
 fail:
 
-    perportentry_free(e);
-    pa_tagstruct_free(t);
+    if (e)
+        perportentry_free(e);
+    if (t)
+        pa_tagstruct_free(t);
 
     pa_datum_free(&data);
 
@@ -1180,7 +1184,8 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
 fail:
 
-    pa_tagstruct_free(reply);
+    if (reply)
+        pa_tagstruct_free(reply);
 
     return -1;
 }

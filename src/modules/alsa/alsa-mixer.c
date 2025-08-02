@@ -739,7 +739,8 @@ static void element_free(pa_alsa_element *e) {
         option_free(o);
     }
 
-    decibel_fix_free(e->db_fix);
+    if (e->db_fix)
+        decibel_fix_free(e->db_fix);
 
     pa_xfree(e->alsa_id.name);
     pa_xfree(e);
@@ -3583,7 +3584,8 @@ finish:
     return ps;
 
 fail:
-    pa_alsa_path_set_free(ps);
+    if (ps)
+        pa_alsa_path_set_free(ps);
 
     return NULL;
 }
@@ -3891,8 +3893,10 @@ static void mapping_free(pa_alsa_mapping *m) {
     pa_xstrfreev(m->output_path_names);
     pa_xstrfreev(m->input_element);
     pa_xstrfreev(m->output_element);
-    pa_alsa_path_set_free(m->input_path_set);
-    pa_alsa_path_set_free(m->output_path_set);
+    if (m->input_path_set)
+        pa_alsa_path_set_free(m->input_path_set);
+    if (m->output_path_set)
+        pa_alsa_path_set_free(m->output_path_set);
 
     pa_assert(!m->input_pcm);
     pa_assert(!m->output_pcm);

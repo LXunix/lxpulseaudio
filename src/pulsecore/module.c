@@ -357,7 +357,8 @@ void pa_module_unload_all(pa_core *c) {
     i--;
     for (; i >= 0; i--) {
         m = pa_idxset_remove_by_index(c->modules, indices[i]);
-        pa_module_free(m);
+        if (m)
+            pa_module_free(m);
     }
     pa_xfree(indices);
 

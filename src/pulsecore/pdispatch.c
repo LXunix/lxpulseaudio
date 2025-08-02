@@ -357,7 +357,8 @@ int pa_pdispatch_run(pa_pdispatch *pd, pa_packet *packet, pa_cmsg_ancil_data *an
 finish:
     pd->ancil_data = NULL;
 
-    pa_tagstruct_free(ts);
+    if (ts)
+        pa_tagstruct_free(ts);
 
     pa_pdispatch_unref(pd);
 
