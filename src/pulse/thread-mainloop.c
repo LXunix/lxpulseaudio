@@ -43,7 +43,7 @@
 
 struct pa_threaded_mainloop {
     pa_mainloop *real_mainloop;
-    volatile int n_waiting, n_waiting_for_accept;
+    volatile short n_waiting, n_waiting_for_accept;
     pa_atomic_t in_once_unlocked;
 
     pa_thread* thread;
