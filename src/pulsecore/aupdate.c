@@ -34,10 +34,10 @@
 #define COUNTER(n) ((n) & ~MSB)
 
 struct pa_aupdate {
+    bool swapped : 1;
     pa_atomic_t read_lock;
     pa_mutex *write_lock;
     pa_semaphore *semaphore;
-    bool swapped;
 };
 
 pa_aupdate *pa_aupdate_new(void) {
