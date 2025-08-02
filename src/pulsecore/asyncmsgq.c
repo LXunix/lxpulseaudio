@@ -39,14 +39,14 @@ PA_STATIC_FLIST_DECLARE(asyncmsgq, 0, pa_xfree);
 PA_STATIC_FLIST_DECLARE(semaphores, 0, (void(*)(void*)) pa_semaphore_free);
 
 struct asyncmsgq_item {
-    int code;
+    int64_t offset : 48;
+    int8_t code : 8;
+    int8_t ret : 8;
     pa_msgobject *object;
     void *userdata;
     pa_free_cb_t free_cb;
-    int64_t offset;
     pa_memchunk memchunk;
     pa_semaphore *semaphore;
-    int ret;
 };
 
 struct pa_asyncmsgq {
