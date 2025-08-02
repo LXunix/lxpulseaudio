@@ -54,7 +54,7 @@ static unsigned trivial_resample(pa_resampler *r, const pa_memchunk *input, unsi
 
         pa_assert_fp(o_index * r->w_fz < pa_memblock_get_length(output->memblock));
 
-        memcpy((uint8_t*) dst + r->w_fz * o_index, (uint8_t*) src + r->w_fz * i_index, (int) r->w_fz);
+        memcpy((uint8_t*) dst + r->w_fz * o_index, (uint8_t*) src + r->w_fz * i_index, r->w_fz);
     }
 
     pa_memblock_release(input->memblock);

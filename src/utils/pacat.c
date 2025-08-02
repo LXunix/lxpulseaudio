@@ -610,8 +610,8 @@ static void stdout_callback(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_eve
         return;
     }
 
-    buffer_length -= (uint32_t) r;
-    buffer_index += (uint32_t) r;
+    buffer_length -= r;
+    buffer_index += r;
 
     if (!buffer_length) {
         pa_xfree(buffer);

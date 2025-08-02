@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
 
         assert(!revents || avail > 0);
 
-        if ((!cap && (avail >= fillrate)) || (cap && (unsigned)avail >= buffer_size)) {
+        if ((!cap && (avail >= fillrate)) || (cap && avail >= buffer_size)) {
             snd_pcm_sframes_t sframes;
 
             if (cap == 0)
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
         if (cap == 0)
           /** When this assert is hit, most likely something bad
            * happened, i.e. the avail jumped suddenly. */
-          assert((unsigned) avail <= buffer_size);
+          assert(avail <= buffer_size);
 
         last_avail = avail;
         last_delay = delay;

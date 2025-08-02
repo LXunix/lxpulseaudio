@@ -1216,16 +1216,16 @@ int pa__init(pa_module*m) {
 
     /* Create buffers */
     if (LADSPA_IS_INPLACE_BROKEN(d->Properties)) {
-        u->input = (LADSPA_Data**) pa_xnew(LADSPA_Data*, (unsigned) u->input_count);
+        u->input = (LADSPA_Data**) pa_xnew(LADSPA_Data*, u->input_count);
         for (c = 0; c < u->input_count; c++)
-            u->input[c] = (LADSPA_Data*) pa_xnew(uint8_t, (unsigned) u->block_size);
-        u->output = (LADSPA_Data**) pa_xnew(LADSPA_Data*, (unsigned) u->output_count);
+            u->input[c] = (LADSPA_Data*) pa_xnew(uint8_t, u->block_size);
+        u->output = (LADSPA_Data**) pa_xnew(LADSPA_Data*, u->output_count);
         for (c = 0; c < u->output_count; c++)
-            u->output[c] = (LADSPA_Data*) pa_xnew(uint8_t, (unsigned) u->block_size);
+            u->output[c] = (LADSPA_Data*) pa_xnew(uint8_t, u->block_size);
     } else {
-        u->input = (LADSPA_Data**) pa_xnew(LADSPA_Data*, (unsigned) u->max_ladspaport_count);
+        u->input = (LADSPA_Data**) pa_xnew(LADSPA_Data*, u->max_ladspaport_count);
         for (c = 0; c < u->max_ladspaport_count; c++)
-            u->input[c] = (LADSPA_Data*) pa_xnew(uint8_t, (unsigned) u->block_size);
+            u->input[c] = (LADSPA_Data*) pa_xnew(uint8_t, u->block_size);
         u->output = u->input;
     }
     /* Initialize plugin instances */
@@ -1248,12 +1248,12 @@ int pa__init(pa_module*m) {
         bool *use_default;
 
         /* temporary storage for parser */
-        control_values = pa_xnew(double, (unsigned) u->n_control);
-        use_default = pa_xnew(bool, (unsigned) u->n_control);
+        control_values = pa_xnew(double, u->n_control);
+        use_default = pa_xnew(bool, u->n_control);
 
         /* real storage */
-        u->control = pa_xnew(LADSPA_Data, (unsigned) u->n_control);
-        u->use_default = pa_xnew(bool, (unsigned) u->n_control);
+        u->control = pa_xnew(LADSPA_Data, u->n_control);
+        u->use_default = pa_xnew(bool, u->n_control);
 
         if ((parse_control_parameters(u, cdata, control_values, use_default) < 0) ||
             (write_control_parameters(u, control_values, use_default) < 0)) {

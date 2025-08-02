@@ -142,7 +142,7 @@ void pa_interleave(const void *src[], unsigned channels, void *dst, size_t ss, u
         d = (uint8_t*) dst + c * ss;
 
         for (j = 0; j < n; j ++) {
-            memcpy(d, s, (int) ss);
+            memcpy(d, s, ss);
             s = (uint8_t*) s + ss;
             d = (uint8_t*) d + fs;
         }
@@ -170,7 +170,7 @@ void pa_deinterleave(const void *src, void *dst[], unsigned channels, size_t ss,
         d = dst[c];
 
         for (j = 0; j < n; j ++) {
-            memcpy(d, s, (int) ss);
+            memcpy(d, s, ss);
             s = (uint8_t*) s + fs;
             d = (uint8_t*) d + ss;
         }

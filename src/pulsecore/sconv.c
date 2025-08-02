@@ -79,7 +79,7 @@ static void float32ne_to_float32ne(unsigned n, const float *a, float *b) {
     pa_assert(a);
     pa_assert(b);
 
-    memcpy(b, a, (int) (sizeof(float) * n));
+    memcpy(b, a, sizeof(float) * n);
 }
 
 static void float32re_to_float32ne(unsigned n, const float *a, float *b) {
@@ -96,7 +96,7 @@ static void s16ne_to_s16ne(unsigned n, const int16_t *a, int16_t *b) {
     pa_assert(a);
     pa_assert(b);
 
-    memcpy(b, a, (int) (sizeof(int16_t) * n));
+    memcpy(b, a, sizeof(int16_t) * n);
 }
 
 static void s16re_to_s16ne(unsigned n, const int16_t *a, int16_t *b) {

@@ -334,7 +334,7 @@ int pa_rtp_recv(pa_rtp_context *c, pa_memchunk *chunk, pa_mempool *pool, uint32_
         goto fail;
     }
 
-    if (c->memchunk.length < (unsigned) audio_length) {
+    if (c->memchunk.length < audio_length) {
         size_t l;
 
         if (c->memchunk.memblock)
