@@ -56,14 +56,15 @@ struct localq {
 };
 
 struct pa_asyncq {
-    unsigned size;
-    unsigned read_idx;
-    unsigned write_idx;
+    bool waiting_for_post : 1;
+
+    uint32_t size : 31;
+    uint16_t read_idx;
+    uint16_t write_idx;
     pa_fdsem *read_fdsem, *write_fdsem;
 
     PA_LLIST_HEAD(struct localq, localq);
     struct localq *last_localq;
-    bool waiting_for_post;
 };
 
 PA_STATIC_FLIST_DECLARE(localq, 0, pa_xfree);
