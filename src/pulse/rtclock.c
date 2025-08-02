@@ -21,8 +21,6 @@
 #include <config.h>
 #endif
 
-#include <sys/time.h>
-
 #include <pulse/timeval.h>
 
 #include <pulsecore/core-rtclock.h>

@@ -24,7 +24,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <string.h>
 
 #include <pulse/def.h>
 #include <pulse/timeval.h>
@@ -37,7 +36,6 @@
 #include <pulsecore/log.h>
 #include <pulsecore/hashmap.h>
 #include <pulsecore/macro.h>
-#include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-util.h>
 
 #include "internal.h"

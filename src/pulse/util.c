@@ -55,7 +55,6 @@
 #include <pulse/xmalloc.h>
 #include <pulse/timeval.h>
 
-#include <pulsecore/socket.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/macro.h>
