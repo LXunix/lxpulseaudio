@@ -219,7 +219,13 @@ struct pa_core {
     pa_time_event *exit_event;
     pa_time_event *scache_auto_unload_event;
 
-    int exit_idle_time, scache_idle_time;
+    short exit_idle_time, scache_idle_time;
+
+    pa_server_type_t server_type;
+    pa_cpu_info cpu_info;
+
+    pa_resample_method_t resample_method;
+    short realtime_priority;
 
     bool flat_volumes:1;
     bool rescue_streams:1;
@@ -233,12 +239,6 @@ struct pa_core {
     bool remixing_produce_lfe:1;
     bool remixing_consume_lfe:1;
     bool deferred_volume:1;
-
-    pa_resample_method_t resample_method;
-    int realtime_priority;
-
-    pa_server_type_t server_type;
-    pa_cpu_info cpu_info;
 
     /* hooks */
     pa_hook hooks[PA_CORE_HOOK_MAX];
