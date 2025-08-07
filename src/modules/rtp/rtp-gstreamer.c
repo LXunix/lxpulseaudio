@@ -57,13 +57,13 @@ struct pa_rtp_context {
     pa_fdsem *fdsem;
     pa_sample_spec ss;
 
+    bool first_buffer : 1;
+    uint32_t last_timestamp : 31;
+
     GstElement *pipeline;
     GstElement *appsrc;
     GstElement *appsink;
     GstCaps *meta_reference;
-
-    bool first_buffer;
-    uint32_t last_timestamp;
 
     uint8_t *send_buf;
     size_t mtu;
