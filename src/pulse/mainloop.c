@@ -101,23 +101,27 @@ struct pa_mainloop {
     PA_LLIST_HEAD(pa_time_event, time_events);
     PA_LLIST_HEAD(pa_defer_event, defer_events);
 
-    unsigned n_enabled_defer_events, n_enabled_time_events, n_io_events;
-    unsigned io_events_please_scan, time_events_please_scan, defer_events_please_scan;
+    unsigned short n_enabled_defer_events, n_enabled_time_events, n_io_events;
+    unsigned short io_events_please_scan, time_events_please_scan, defer_events_please_scan;
 
-    bool rebuild_pollfds:1;
-    struct pollfd *pollfds;
-    unsigned max_pollfds, n_pollfds;
+    int wakeup_pipe[2];
+    int wakeup_pipe_type;
 
     pa_usec_t prepared_timeout;
     pa_time_event *cached_next_time_event;
 
     pa_mainloop_api api;
 
-    int retval;
-    bool quit:1;
+    struct pollfd *pollfds;
+    unsigned short max_pollfds;
+    unsigned short n_pollfds;
 
-    int wakeup_pipe[2];
-    int wakeup_pipe_type;
+    short poll_func_ret : 6;
+
+    bool rebuild_pollfds:1;
+
+    short retval : 5;
+    bool quit : 1;
 
     enum {
         STATE_PASSIVE,
@@ -125,11 +129,10 @@ struct pa_mainloop {
         STATE_POLLING,
         STATE_POLLED,
         STATE_QUIT
-    } state;
+    } state : 3;
 
     pa_poll_func poll_func;
     void *poll_func_userdata;
-    int poll_func_ret;
 };
 
 static short map_flags_to_libc(pa_io_event_flags_t flags) {
