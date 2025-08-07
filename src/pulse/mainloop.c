@@ -57,8 +57,8 @@ struct pa_io_event {
     pa_mainloop *mainloop;
     bool dead:1;
 
+    pa_io_event_flags_t events : 31;
     int fd;
-    pa_io_event_flags_t events;
     struct pollfd *pollfd;
 
     pa_io_event_cb_t callback;
