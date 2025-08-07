@@ -55,10 +55,7 @@
 
 struct pa_rtp_context {
     pa_fdsem *fdsem;
-    pa_sample_spec ss;
-
-    bool first_buffer : 1;
-    uint32_t last_timestamp : 31;
+    pa_sample_spec *ss;
 
     GstElement *pipeline;
     GstElement *appsrc;
@@ -66,7 +63,10 @@ struct pa_rtp_context {
     GstCaps *meta_reference;
 
     uint8_t *send_buf;
-    size_t mtu;
+    uint32_t mtu;
+
+    bool first_buffer : 1;
+    uint32_t last_timestamp : 31;
 };
 
 static GstCaps* caps_from_sample_spec(const pa_sample_spec *ss, bool enable_opus) {
