@@ -250,12 +250,13 @@ typedef void (*pa_operation_cb_t)(void);
 struct pa_operation {
     PA_REFCNT_DECLARE;
 
+    pa_operation_state_t state;
+
     pa_context *context;
     pa_stream *stream;
 
     PA_LLIST_FIELDS(pa_operation);
 
-    pa_operation_state_t state;
     void *userdata;
     pa_operation_cb_t callback;
     void *state_userdata;
