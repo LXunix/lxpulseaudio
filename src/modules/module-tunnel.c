@@ -926,7 +926,7 @@ static void stream_get_latency_callback(pa_pdispatch *pd, uint32_t command, uint
     pa_sample_spec *ss;
     int64_t delay;
 #ifdef TUNNEL_SINK
-    uint64_t send_counter;
+    uint64_t send_counter = 0;
 #endif
 
     pa_assert(pd);
