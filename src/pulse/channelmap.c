@@ -168,8 +168,7 @@ pa_channel_map* pa_channel_map_init(pa_channel_map *m) {
 
     m->channels = 0;
 
-    for (c = 0; c < PA_CHANNELS_MAX; c++)
-        m->map[c] = PA_CHANNEL_POSITION_INVALID;
+    memset(m->map, PA_CHANNEL_POSITION_INVALID, sizeof(m->map));
 
     return m;
 }
@@ -394,7 +393,7 @@ pa_channel_map* pa_channel_map_init_auto(pa_channel_map *m, unsigned channels, p
 }
 
 pa_channel_map* pa_channel_map_init_extend(pa_channel_map *m, unsigned channels, pa_channel_map_def_t def) {
-    unsigned c;
+    unsigned c, i;
 
     pa_assert(m);
     pa_assert(pa_channels_valid(channels));
@@ -403,14 +402,9 @@ pa_channel_map* pa_channel_map_init_extend(pa_channel_map *m, unsigned channels,
     pa_channel_map_init(m);
 
     for (c = channels; c > 0; c--) {
-
         if (pa_channel_map_init_auto(m, c, def)) {
-            unsigned i = 0;
-
-            for (; c < channels; c++) {
-
-                m->map[c] = PA_CHANNEL_POSITION_AUX0 + i;
-                i++;
+            for (i = 0; c < channels; c++, i++) {
+                m->map[c] = (pa_channel_position_t)(PA_CHANNEL_POSITION_AUX0 + i);
             }
 
             m->channels = (uint8_t) channels;
@@ -508,7 +502,7 @@ pa_channel_position_t pa_channel_position_from_string(const char *p) {
         return PA_CHANNEL_POSITION_SUBWOOFER;
 
     for (i = 0; i < PA_CHANNEL_POSITION_MAX; i++)
-        if (pa_streq(p, table[i]))
+        if (table[i] && pa_streq(p, table[i]))
             return i;
 
     return PA_CHANNEL_POSITION_INVALID;
