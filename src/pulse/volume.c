@@ -81,22 +81,18 @@ pa_cvolume* pa_cvolume_init(pa_cvolume *a) {
 
 
 pa_cvolume* pa_cvolume_set(pa_cvolume *a, unsigned channels, pa_volume_t v) {
+    int i;
+
     pa_assert(a);
     pa_assert(pa_channels_valid(channels));
 
     a->channels = (uint8_t) channels;
 
-#if defined(__i386__) || defined(__x86_64__)
-    /* On x86, memset is often optimized to use SIMD instructions */
-    if (a->channels > 0)
-        memset(a->values, PA_CLAMP_VOLUME(v), a->channels * sizeof(pa_volume_t));
-#else
-    int i;
     for (i = 0; i < a->channels; i++)
         /* Clamp in case there is stale data that exceeds the current
          * PA_VOLUME_MAX */
         a->values[i] = PA_CLAMP_VOLUME(v);
-#endif
+
     return a;
 }
 
