@@ -27,8 +27,8 @@
 #include <pulsecore/memchunk.h>
 
 typedef struct pa_sap_context {
-    int fd;
     char *sdp_data;
+    int fd;
 
     uint16_t msg_id_hash;
 } pa_sap_context;
