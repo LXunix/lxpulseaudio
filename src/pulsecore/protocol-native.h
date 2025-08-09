@@ -39,10 +39,11 @@ typedef struct pa_native_connection pa_native_connection;
 typedef struct pa_native_options {
     PA_REFCNT_DECLARE;
 
-    pa_module *module;
-
     bool auth_anonymous;
     bool srbchannel;
+
+    pa_module *module;
+
     char *auth_group;
     pa_ip_acl *auth_ip_acl;
     pa_auth_cookie *auth_cookie;
