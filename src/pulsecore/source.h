@@ -122,7 +122,7 @@ struct pa_source {
     /* The latency offset is inherited from the currently active port */
     int64_t port_latency_offset;
 
-    unsigned priority;
+    uint32_t priority;
 
     bool set_mute_in_progress;
 

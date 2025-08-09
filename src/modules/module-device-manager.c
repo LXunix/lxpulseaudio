@@ -1317,7 +1317,8 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
         struct device_t { uint32_t prio; char *device; };
         struct device_t *device;
         struct device_t **devices;
-        uint32_t i, idx, offset;
+        int i;
+        uint32_t idx, offset;
         pa_hashmap *h;
         /*void *state;*/
         bool first;
@@ -1539,7 +1540,7 @@ static pa_hook_result_t connection_unlink_hook_cb(pa_native_protocol *p, pa_nati
 
 struct prioritised_indexes {
     uint32_t index;
-    int32_t priority;
+    uint32_t priority;
 };
 
 int pa__init(pa_module*m) {
