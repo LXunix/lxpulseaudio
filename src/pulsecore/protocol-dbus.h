@@ -100,12 +100,12 @@ typedef struct pa_dbus_property_handler {
 typedef struct pa_dbus_interface_info {
     const char* name;
     const pa_dbus_method_handler *method_handlers; /* NULL, if the interface has no methods. */
-    unsigned n_method_handlers;
     const pa_dbus_property_handler *property_handlers; /* NULL, if the interface has no properties. */
-    unsigned n_property_handlers;
+    uint16_t n_method_handlers;
+    uint16_t n_property_handlers;
+    uint16_t n_signals;
     const pa_dbus_receive_cb_t get_all_properties_cb; /* May be NULL, in which case GetAll returns an error. */
     const pa_dbus_signal_info *signals; /* NULL, if the interface has no signals. */
-    unsigned n_signals;
 } pa_dbus_interface_info;
 
 /* The following functions may only be called from the main thread. */
