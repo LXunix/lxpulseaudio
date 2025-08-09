@@ -387,6 +387,9 @@ void *pa_idxset_reverse_iterate(pa_idxset *s, void **state, uint32_t *idx) {
     pa_assert(s);
     pa_assert(state);
 
+    if (!s)
+        goto at_end;
+
     if (*state == (void*) -1)
         goto at_end;
 
@@ -394,6 +397,9 @@ void *pa_idxset_reverse_iterate(pa_idxset *s, void **state, uint32_t *idx) {
         goto at_end;
 
     e = *state ? *state : s->iterate_list_tail;
+
+    if (!e)
+        goto at_end;
 
     if (e->iterate_previous)
         *state = e->iterate_previous;

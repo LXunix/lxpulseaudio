@@ -270,6 +270,9 @@ void *pa_hashmap_iterate_backwards(const pa_hashmap *h, void **state, const void
     pa_assert(h);
     pa_assert(state);
 
+    if (!h)
+        goto at_beginning;
+
     if (*state == (void*) -1)
         goto at_beginning;
 
@@ -277,6 +280,9 @@ void *pa_hashmap_iterate_backwards(const pa_hashmap *h, void **state, const void
         goto at_beginning;
 
     e = *state ? *state : h->iterate_list_tail;
+
+    if (!e)
+        goto at_beginning;
 
     if (e->iterate_previous)
         *state = e->iterate_previous;
