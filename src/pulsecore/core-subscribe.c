@@ -39,11 +39,11 @@
 
 struct pa_subscription {
     pa_core *core;
-    bool dead;
+    bool dead : 1;
 
+    pa_subscription_mask_t mask : 10;
     pa_subscription_cb_t callback;
     void *userdata;
-    pa_subscription_mask_t mask;
 
     PA_LLIST_FIELDS(pa_subscription);
 };
