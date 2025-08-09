@@ -363,8 +363,8 @@ static void pstream_packet_callback(pa_pstream *p, pa_packet *packet, pa_cmsg_an
 
     if (pa_pdispatch_run(c->pdispatch, packet, ancil_data, c) < 0)
         pa_context_fail(c, PA_ERR_PROTOCOL);
-
-    pa_context_unref(c);
+    else
+        pa_context_unref(c);
 }
 
 static void handle_srbchannel_memblock(pa_context *c, pa_memblock *memblock) {
@@ -507,7 +507,6 @@ static void setup_complete_callback(pa_pdispatch *pd, uint32_t command, uint32_t
             if (pa_tagstruct_getu32(t, &c->version) < 0 ||
                 !pa_tagstruct_eof(t)) {
                 pa_context_fail(c, PA_ERR_PROTOCOL);
-                goto finish;
             }
 
             /* Minimum supported version */
@@ -667,8 +666,6 @@ static void setup_context(pa_context *c, pa_iochannel *io) {
     pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, setup_complete_callback, c, NULL);
 
     pa_context_set_state(c, PA_CONTEXT_AUTHORIZING);
-
-    pa_context_unref(c);
 }
 
 static pa_strlist *prepend_per_user(pa_strlist *l) {
@@ -695,7 +692,7 @@ static int context_autospawn(pa_context *c) {
     if (sigaction(SIGCHLD, NULL, &sa) < 0) {
         pa_log_debug("sigaction() failed: %s", pa_cstrerror(errno));
         pa_context_fail(c, PA_ERR_INTERNAL);
-        goto fail;
+        return -1;
     }
 
 #ifdef SA_NOCLDWAIT
@@ -931,7 +928,6 @@ static void on_connection(pa_socket_client *client, pa_iochannel*io, void *userd
         }
 
         pa_context_fail(c, PA_ERR_CONNECTIONREFUSED);
-        goto finish;
     }
 
     setup_context(c, io);
@@ -1005,7 +1001,6 @@ int pa_context_connect(
     if (server) {
         if (!(c->server_list = pa_strlist_parse(server))) {
             pa_context_fail(c, PA_ERR_INVALIDSERVER);
-            goto finish;
         }
 
     } else {
@@ -1469,7 +1464,6 @@ void pa_command_extension(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_t
 
     if (c->version < 15) {
         pa_context_fail(c, PA_ERR_PROTOCOL);
-        goto finish;
     }
 
     if (pa_tagstruct_getu32(t, &idx) < 0 ||
@@ -1600,7 +1594,8 @@ void pa_command_client_event(pa_pdispatch *pd, uint32_t command, uint32_t tag, p
         pa_tagstruct_get_proplist(t, pl) < 0 ||
         !pa_tagstruct_eof(t) || !event) {
         pa_context_fail(c, PA_ERR_PROTOCOL);
-        goto finish;
+        if (pl)
+            pa_proplist_free(pl);
     }
 
     if (c->event_callback)

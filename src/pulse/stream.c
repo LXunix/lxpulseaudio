@@ -1065,7 +1065,6 @@ void pa_create_stream_callback(pa_pdispatch *pd, uint32_t command, uint32_t tag,
             goto finish;
 
         pa_stream_set_state(s, PA_STREAM_FAILED);
-        goto finish;
     }
 
     if (pa_tagstruct_getu32(t, &s->channel) < 0 ||
@@ -1404,7 +1403,6 @@ static int create_stream(
 
     pa_stream_set_state(s, PA_STREAM_CREATING);
 
-    pa_stream_unref(s);
     return 0;
 }
 
@@ -2081,7 +2079,6 @@ void pa_stream_disconnect_callback(pa_pdispatch *pd, uint32_t command, uint32_t 
         goto finish;
     } else if (!pa_tagstruct_eof(t)) {
         pa_context_fail(&s->context, PA_ERR_PROTOCOL);
-        goto finish;
     }
 
     pa_stream_set_state(s, PA_STREAM_TERMINATED);

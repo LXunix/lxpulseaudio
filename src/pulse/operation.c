@@ -114,8 +114,8 @@ static void operation_set_state(pa_operation *o, pa_operation_state_t st) {
 
     if ((o->state == PA_OPERATION_DONE) || (o->state == PA_OPERATION_CANCELED))
         operation_unlink(o);
-
-    pa_operation_unref(o);
+    else
+        pa_operation_unref(o);
 }
 
 void pa_operation_cancel(pa_operation *o) {
