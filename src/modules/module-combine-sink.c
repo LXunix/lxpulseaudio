@@ -249,6 +249,8 @@ static uint32_t rate_controller(
 static void adjust_rates(struct userdata *u) {
     struct output *o;
     struct sink_snapshot rdata;
+    rdata.timestamp = 0UL;
+    rdata.send_counter = 0UL;
     pa_usec_t avg_total_latency = 0;
     pa_usec_t target_latency = 0;
     pa_usec_t max_sink_latency = 0;

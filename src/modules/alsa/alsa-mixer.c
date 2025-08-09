@@ -1107,8 +1107,8 @@ static long decibel_fix_get_step(pa_alsa_decibel_fix *db_fix, long *db_value, in
 static int element_get_nearest_alsa_dB(snd_mixer_elem_t *me, snd_mixer_selem_channel_id_t c, pa_alsa_direction_t d, long *value_dB) {
 
     long alsa_val;
-    long value_high;
-    long value_low;
+    long value_high = 0L;
+    long value_low = 0L;
     int r = -1;
 
     pa_assert(me);
