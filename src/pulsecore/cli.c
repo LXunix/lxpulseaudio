@@ -50,10 +50,11 @@ struct pa_cli {
 
     pa_client *client;
 
-    bool fail, kill_requested;
-    int defer_kill;
+    bool fail;
+    int defer_kill : 30;
+    bool kill_requested : 1;
 
-    bool interactive;
+    bool interactive : 1;
     char *last_line;
 };
 
