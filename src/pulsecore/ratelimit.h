@@ -27,7 +27,7 @@
 typedef struct pa_ratelimit {
     pa_usec_t interval;
     unsigned burst;
-    unsigned n_printed, n_missed;
+    uint16_t n_printed, n_missed;
     pa_usec_t begin;
 } pa_ratelimit;
 
