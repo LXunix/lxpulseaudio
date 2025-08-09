@@ -261,11 +261,11 @@ static void switch_to_port(pa_device_port *port, struct port_pointers pp) {
 }
 
 /* Switches away from a port, switching profiles if necessary or preferred */
-static void switch_from_port(pa_device_port *port, struct port_pointers pp) {
+static void switch_from_port(pa_device_port *port, const struct port_pointers *pp) {
     pa_device_port *p, *best_port = NULL;
     void *state;
 
-    if (!pp.is_port_active)
+    if (!pp->is_port_active)
         return; /* Already deselected */
 
     /* Try to find a good enough port to switch to */
@@ -357,7 +357,7 @@ static pa_hook_result_t port_available_hook_callback(pa_core *c, pa_device_port 
         switch_to_port(port, pp);
         break;
     case PA_AVAILABLE_NO:
-        switch_from_port(port, pp);
+        switch_from_port(port, &pp);
         break;
     default:
         break;
