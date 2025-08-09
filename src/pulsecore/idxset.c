@@ -49,8 +49,8 @@ struct pa_idxset {
 
     uint32_t current_index;
 
-    struct idxset_entry *iterate_list_head, *iterate_list_tail;
     unsigned n_entries;
+    struct idxset_entry *iterate_list_head, *iterate_list_tail;
 };
 
 #define BY_DATA(i) ((struct idxset_entry**) ((uint8_t*) (i) + PA_ALIGN(sizeof(pa_idxset))))
