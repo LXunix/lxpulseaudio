@@ -47,12 +47,12 @@ struct pa_creds {
  * over unix pipes. Supports sending and receiving credentials and file descriptors. */
 struct pa_cmsg_ancil_data {
     pa_creds creds;
-    bool creds_valid;
-    int nfd;
+    int nfd : 30;
+    bool creds_valid : 1;
 
     /* Don't close these fds by your own. Check pa_cmsg_ancil_data_close_fds() */
+    bool close_fds_on_cleanup : 1;
     int fds[MAX_ANCIL_DATA_FDS];
-    bool close_fds_on_cleanup;
 };
 
 void pa_cmsg_ancil_data_close_fds(struct pa_cmsg_ancil_data *ancil);
