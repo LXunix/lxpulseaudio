@@ -779,11 +779,14 @@ static char *pa_json_escape(const char *p) {
 }
 
 static void json_write_string_escaped(pa_json_encoder *encoder, const char *value) {
-    char *escaped_value;
+    char *escaped_value = NULL;
 
     pa_assert(encoder);
 
     escaped_value = pa_json_escape(value);
+    if (!escaped_value)
+        return;
+
     pa_strbuf_printf(encoder->buffer, "\"%s\"", escaped_value);
     pa_xfree(escaped_value);
 }
