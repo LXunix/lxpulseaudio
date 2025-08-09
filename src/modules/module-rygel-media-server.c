@@ -354,13 +354,13 @@ static void append_variant_urls(DBusMessage *m, DBusMessageIter *iter, const str
 }
 
 static void append_variant_mime_type(DBusMessage *m, DBusMessageIter *iter, pa_sink *sink, pa_source *source) {
-    char *mime_type;
+    char *mime_type = NULL;
 
     pa_assert(sink || source);
 
     if (sink)
         mime_type = pa_sample_spec_to_mime_type_mimefy(&sink->sample_spec, &sink->channel_map);
-    else
+    else if (source)
         mime_type = pa_sample_spec_to_mime_type_mimefy(&source->sample_spec, &source->channel_map);
 
     append_variant_string(m, iter, mime_type);
