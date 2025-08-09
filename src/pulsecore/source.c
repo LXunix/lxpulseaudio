@@ -1835,6 +1835,9 @@ void pa_source_update_volume_and_mute(pa_source *s) {
     pa_assert(s);
     pa_source_assert_io_context(s);
 
+    if (!pa_thread_mq_get())
+        return;
+
     pa_asyncmsgq_post(pa_thread_mq_get()->outq, PA_MSGOBJECT(s), PA_SOURCE_MESSAGE_UPDATE_VOLUME_AND_MUTE, NULL, 0, NULL, NULL);
 }
 
