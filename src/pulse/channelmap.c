@@ -163,7 +163,6 @@ static const char *const pretty_table[PA_CHANNEL_POSITION_MAX] = {
 };
 
 pa_channel_map* pa_channel_map_init(pa_channel_map *m) {
-    unsigned c;
     pa_assert(m);
 
     m->channels = 0;
