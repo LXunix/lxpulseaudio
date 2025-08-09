@@ -174,8 +174,8 @@ struct userdata {
     struct {
         PA_LLIST_HEAD(struct output, active_outputs); /* managed in IO thread context */
         pa_atomic_t running;  /* we cache that value here, so that every thread can query it cheaply */
+        bool in_null_mode : 1;
         pa_usec_t timestamp;
-        bool in_null_mode;
 #ifdef USE_SMOOTHER_2
         pa_smoother_2 *smoother;
 #else
