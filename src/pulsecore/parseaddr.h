@@ -32,8 +32,8 @@ typedef enum pa_parsed_address_type {
 } pa_parsed_address_type_t;
 
 typedef struct pa_parsed_address {
-    pa_parsed_address_type_t type;
     char *path_or_host;
+    pa_parsed_address_type_t type : 3;
     uint16_t port;
 } pa_parsed_address;
 
