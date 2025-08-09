@@ -416,7 +416,7 @@ static void dump_database(struct userdata *u) {
         pa_log_debug("  Sinks:");
         for (int role = ROLE_NONE; role < NUM_ROLES; ++role) {
             char name[13];
-            uint32_t len = PA_MIN(12u, strlen(role_names[role]));
+            size_t len = PA_MIN(12zu, strlen(role_names[role]));
             strncpy(name, role_names[role], len);
             for (int i = len+1; i < 12; ++i) name[i] = ' ';
             name[len] = ':'; name[0] -= 32; name[12] = '\0';
