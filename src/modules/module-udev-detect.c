@@ -51,10 +51,10 @@ PA_MODULE_USAGE(
 
 struct device {
     char *path;
-    bool need_verify;
-    bool ignore;
     char *card_name;
     char *args;
+    bool need_verify : 1;
+    bool ignore : 1;
     uint32_t module;
     pa_ratelimit ratelimit;
 };
