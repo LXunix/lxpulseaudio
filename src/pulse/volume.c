@@ -102,6 +102,8 @@ pa_volume_t pa_cvolume_avg(const pa_cvolume *a) {
 
     pa_assert(a);
     pa_return_val_if_fail(pa_cvolume_valid(a), PA_VOLUME_MUTED);
+    if (a->channels == 0)
+        return PA_VOLUME_MUTED;
 
     for (c = 0; c < a->channels; c++)
         sum += a->values[c];
