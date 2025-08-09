@@ -154,22 +154,22 @@ struct userdata {
     pa_time_event *time_event;
     pa_usec_t adjust_time;
 
-    bool automatic;
-    bool auto_desc;
+    bool automatic : 1;
+    bool auto_desc : 1;
+
+    pa_resample_method_t resample_method : 6;
+
+    bool remix;
 
     pa_strlist *unlinked_slaves;
 
     pa_hook_slot *sink_put_slot, *sink_unlink_slot, *sink_state_changed_slot;
-
-    pa_resample_method_t resample_method;
 
     pa_usec_t block_usec;
     pa_usec_t default_min_latency;
     pa_usec_t default_max_latency;
 
     pa_idxset* outputs; /* managed in main context */
-
-    bool remix;
 
     struct {
         PA_LLIST_HEAD(struct output, active_outputs); /* managed in IO thread context */
