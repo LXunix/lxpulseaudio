@@ -1098,7 +1098,7 @@ connect_finish:
                  * and accepts the incoming timing packets.
                  */
                 send_initial_udp_timing_packet(c);
-                pa_log_debug("Sent initial timing packet to UDP port %d", tport);
+                pa_log_debug("Sent initial timing packet to UDP port %u", tport);
 
                 if (c->state_callback)
                     c->state_callback(PA_RAOP_CONNECTED, c->state_userdata);

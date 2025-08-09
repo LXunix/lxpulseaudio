@@ -785,7 +785,7 @@ static void fix_metrics(fd_info *i) {
     }
 
     debug(DEBUG_LEVEL_NORMAL, __FILE__": sample spec: %s\n", pa_sample_spec_snprint(t, sizeof(t), &i->sample_spec));
-    debug(DEBUG_LEVEL_NORMAL, __FILE__": fixated metrics to %i fragments, %li bytes each.\n", i->n_fragments, (long)i->fragment_size);
+    debug(DEBUG_LEVEL_NORMAL, __FILE__": fixated metrics to %u fragments, %zd bytes each.\n", i->n_fragments, i->fragment_size);
 }
 
 static void stream_request_cb(pa_stream *s, size_t length, void *userdata) {

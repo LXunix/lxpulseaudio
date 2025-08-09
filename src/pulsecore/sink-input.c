@@ -2216,7 +2216,7 @@ int pa_sink_input_finish_move(pa_sink_input *i, pa_sink *dest, bool save) {
     /* Reset move variable */
     i->origin_rewind_bytes = 0;
 
-    pa_log_debug("Successfully moved sink input %i to %s.", i->index, dest->name);
+    pa_log_debug("Successfully moved sink input %u to %s.", i->index, dest->name);
 
     /* Notify everyone */
     pa_hook_fire(&i->core->hooks[PA_CORE_HOOK_SINK_INPUT_MOVE_FINISH], i);

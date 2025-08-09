@@ -2800,11 +2800,18 @@ void pa_source_volume_change_push(pa_source *s) {
         PA_LLIST_INSERT_AFTER(pa_source_volume_change, s->thread_info.volume_changes, c, nc);
     }
 
-    pa_log_debug("Volume going %s to %d at %llu", direction, pa_cvolume_avg(&nc->hw_volume), (long long unsigned) nc->at);
+    if (!direction)
+    {
+        pa_log_debug("Volume not changing");
+        pa_source_volume_change_free(nc);
+        return;
+    }
+
+    pa_log_debug("Volume going %s to %u at %" PRIu64, direction, pa_cvolume_avg(&nc->hw_volume), nc->at);
 
     /* We can ignore volume events that came earlier but should happen later than this. */
     PA_LLIST_FOREACH_SAFE(c, pc, nc->next) {
-        pa_log_debug("Volume change to %d at %llu was dropped", pa_cvolume_avg(&c->hw_volume), (long long unsigned) c->at);
+        pa_log_debug("Volume change to %u at %" PRIu64 " was dropped", pa_cvolume_avg(&c->hw_volume), c->at);
         pa_source_volume_change_free(c);
     }
     nc->next = NULL;

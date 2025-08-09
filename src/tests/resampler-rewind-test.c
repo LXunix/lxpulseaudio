@@ -407,7 +407,7 @@ int main(int argc, char *argv[]) {
     /* Check for leftover samples in the resampler buffer */
     in_resampler_buffer = lround((delay_after - delay_expected) * (double)b.rate / (double)a.rate);
     if (in_resampler_buffer != 0) {
-        pa_log_debug("%li output frames still in resampler buffer", in_resampler_buffer);
+        pa_log_debug("%zd output frames still in resampler buffer", in_resampler_buffer);
     }
 
     pa_log_info("Second resampler run took %llu usec.", (long long unsigned)(pa_rtclock_now() - ts));
