@@ -453,7 +453,7 @@ int pa_shm_cleanup(void) {
 #if defined(__sun)
         if (strncmp(de->d_name, ".SHMDpulse-shm-", SHM_ID_LEN))
 #else
-        if (strncmp(de->d_name, "pulse-shm-", SHM_ID_LEN))
+        if (strncmp(de->d_name, "pulse-shm-", SHM_ID_LEN) != 0)
 #endif
             continue;
 

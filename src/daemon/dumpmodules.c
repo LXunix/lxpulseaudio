@@ -113,7 +113,7 @@ static int callback(const char *path, lt_ptr data) {
 
     e = pa_path_get_filename(path);
 
-    if (strlen(e) <= sizeof(PREFIX)-1 || strncmp(e, PREFIX, sizeof(PREFIX)-1))
+    if (strlen(e) <= sizeof(PREFIX)-1 || strncmp(e, PREFIX, sizeof(PREFIX)-1) != 0)
         return 0;
 
     if (is_preloaded(e))
@@ -139,7 +139,7 @@ void pa_dump_modules(pa_daemon_conf *c, int argc, char * const argv[]) {
             if (l->address)
                 continue;
 
-            if (strlen(l->name) <= sizeof(PREFIX)-1 || strncmp(l->name, PREFIX, sizeof(PREFIX)-1))
+            if (strlen(l->name) <= sizeof(PREFIX)-1 || strncmp(l->name, PREFIX, sizeof(PREFIX)-1) != 0)
                 continue;
 
             pa_snprintf(buf, sizeof(buf), "%s", l->name);
