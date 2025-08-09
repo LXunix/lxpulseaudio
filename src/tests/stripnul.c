@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
             pa_assert_se(fwrite(buffer, granularity, k, o) == k);
         else {
             for (p = buffer; ((size_t) (p-buffer)/granularity) < k; p += granularity)
-                if (memcmp(p, zero, granularity)) {
+                if (memcmp(p, zero, granularity) != 0) {
                     size_t left;
                     found = true;
                     left = (size_t) (k - (size_t) (p-buffer)/granularity);
