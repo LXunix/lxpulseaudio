@@ -33,17 +33,17 @@
 struct pa_smoother_2 {
     /* Values set when the smoother is created */
     pa_usec_t smoother_window_time;
-    uint32_t rate;
     uint32_t frame_size;
+    uint16_t rate;
 
     /* USB hack parameters */
-    bool usb_hack;
-    bool enable_usb_hack;
-    uint32_t hack_threshold;
+    uint16_t hack_threshold : 12;
+    bool usb_hack : 1;
+    bool enable_usb_hack : 1;
 
     /* Smoother state */
-    bool init;
-    bool paused;
+    bool init : 1;
+    bool paused : 1;
 
     /* Current byte count start value */
     double start_pos;
