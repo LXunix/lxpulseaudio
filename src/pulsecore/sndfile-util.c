@@ -422,6 +422,7 @@ int pa_sndfile_format_from_string(const char *name) {
 
     pa_assert_se(sf_command(NULL, SFC_GET_FORMAT_MAJOR_COUNT, &count, sizeof(int)) == 0);
 
+    size_t name_len = strlen(name);
     for (i = 0; i < count; i++) {
         SF_FORMAT_INFO fi;
         pa_zero(fi);
@@ -438,7 +439,7 @@ int pa_sndfile_format_from_string(const char *name) {
             return fi.format;
 
         /* Then, try to match via the start of the type string */
-        if (strncasecmp(name, fi.name, strlen(name)) == 0)
+        if (strncasecmp(name, fi.name, name_len) == 0)
             return fi.format;
     }
 

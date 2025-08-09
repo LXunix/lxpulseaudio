@@ -479,10 +479,11 @@ static bool entries_equal(const struct entry *a, const struct entry *b) {
 static char *get_name(const char *key, const char *prefix) {
     char *t;
 
-    if (strncmp(key, prefix, strlen(prefix)))
+    const size_t prefix_len = strlen(prefix);
+    if (strncmp(key, prefix, prefix_len) != 0)
         return NULL;
 
-    t = pa_xstrdup(key + strlen(prefix));
+    t = pa_xstrdup(key + prefix_len);
     return t;
 }
 
@@ -508,12 +509,13 @@ static inline struct entry *load_or_initialize_entry(struct userdata *u, struct 
         done = !pa_database_first(u->database, &key, NULL);
 
         /* Find all existing devices with the same prefix so we calculate the current max priority for each role */
+        size_t prefix_len = strlen(prefix);
         while (!done) {
             pa_datum next_key;
 
             done = !pa_database_next(u->database, &key, &next_key, NULL);
 
-            if (key.size > strlen(prefix) && strncmp(key.data, prefix, strlen(prefix)) == 0) {
+            if (key.size > prefix_len && strncmp(key.data, prefix, prefix_len) == 0) {
                 char *name2;
                 struct entry *e;
 
@@ -576,12 +578,13 @@ static void update_highest_priority_device_indexes(struct userdata *u, const cha
     done = !pa_database_first(u->database, &key, NULL);
 
     /* Find all existing devices with the same prefix so we find the highest priority device for each role */
+    size_t prefix_len = strlen(prefix);
     while (!done) {
         pa_datum next_key;
 
         done = !pa_database_next(u->database, &key, &next_key, NULL);
 
-        if (key.size > strlen(prefix) && strncmp(key.data, prefix, strlen(prefix)) == 0) {
+        if (key.size > prefix_len && strncmp(key.data, prefix, prefix_len) == 0) {
             char *name, *device_name;
             struct entry *e;
 

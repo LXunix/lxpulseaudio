@@ -58,6 +58,7 @@ pa_database* pa_database_open(const char *path, const char *fn, bool prependmid,
     database_dir = opendir(path);
 
     if (database_dir) {
+        size_t prefix_len = strlen(filename_prefix);
         for (;;) {
             errno = 0;
             de = readdir(database_dir);
@@ -71,8 +72,8 @@ pa_database* pa_database_open(const char *path, const char *fn, bool prependmid,
             }
 
             if (pa_startswith(de->d_name, filename_prefix)
-                && de->d_name[strlen(filename_prefix)] == '.'
-                && pa_endswith(de->d_name + strlen(filename_prefix) + 1, filename_suffix)) {
+                && de->d_name[prefix_len] == '.'
+                && pa_endswith(de->d_name + prefix_len + 1, filename_suffix)) {
 
                 /* candidate filename found, replace filename_prefix with this one */
 
