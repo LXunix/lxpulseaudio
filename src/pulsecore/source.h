@@ -34,8 +34,6 @@
 #include <pulsecore/core.h>
 #include <pulsecore/idxset.h>
 #include <pulsecore/memchunk.h>
-#include <pulsecore/sink.h>
-#include <pulsecore/module.h>
 #include <pulsecore/asyncmsgq.h>
 #include <pulsecore/msgobject.h>
 #include <pulsecore/rtpoll.h>
