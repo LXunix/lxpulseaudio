@@ -177,6 +177,7 @@ simd = import('unstable-simd')
 simd_variants = [
   { 'mmx' : ['remap_mmx.c', 'svolume_mmx.c'] },
   { 'sse' : ['remap_sse.c', 'sconv_sse.c', 'svolume_sse.c'] },
+  { 'avx' : ['remap_avx.c'] },
   { 'neon' : ['remap_neon.c', 'sconv_neon.c', 'mix_neon.c'] },
 ]
 

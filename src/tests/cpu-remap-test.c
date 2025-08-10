@@ -410,6 +410,32 @@ START_TEST (remap_sse2_test) {
 END_TEST
 #endif /* (defined (__i386__) || defined (__amd64__)) && defined (HAVE_SSE) */
 
+#if (defined (__i386__) || defined (__amd64__)) && defined (HAVE_AVX)
+START_TEST (remap_avx_test) {
+    pa_cpu_x86_flag_t flags = 0;
+    pa_init_remap_func_t init_func, orig_init_func;
+
+    pa_cpu_get_x86_flags(&flags);
+    if (!(flags & PA_CPU_X86_AVX)) {
+        pa_log_info("AVX not supported. Skipping");
+        return;
+    }
+
+    pa_log_debug("Checking AVX remap (float, mono->stereo)");
+    orig_init_func = pa_get_init_remap_func();
+    pa_remap_func_init_avx(flags);
+    init_func = pa_get_init_remap_func();
+    remap_init_test_channels(init_func, orig_init_func, PA_SAMPLE_FLOAT32NE, 1, 2, false);
+
+    pa_log_debug("Checking AVX remap (s32, mono->stereo)");
+    remap_init_test_channels(init_func, orig_init_func, PA_SAMPLE_S32NE, 1, 2, false);
+
+    pa_log_debug("Checking AVX remap (s16, mono->stereo)");
+    remap_init_test_channels(init_func, orig_init_func, PA_SAMPLE_S16NE, 1, 2, false);
+}
+END_TEST
+#endif /* (defined (__i386__) || defined (__amd64__)) && defined (HAVE_SSE) */
+
 #if defined (__arm__) && defined (__linux__) && defined (HAVE_NEON)
 START_TEST (remap_neon_test) {
     pa_cpu_arm_flag_t flags = 0;
@@ -520,6 +546,9 @@ int main(int argc, char *argv[]) {
 #endif
 #if (defined (__i386__) || defined (__amd64__)) && defined (HAVE_SSE)
     tcase_add_test(tc, remap_sse2_test);
+#endif
+#if (defined (__i386__) || defined (__amd64__)) && defined (HAVE_AVX)
+    tcase_add_test(tc, remap_avx_test);
 #endif
 #if defined (__arm__) && defined (__linux__) && defined (HAVE_NEON)
     tcase_add_test(tc, remap_neon_test);

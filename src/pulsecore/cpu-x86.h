@@ -56,6 +56,7 @@ void pa_volume_func_init_sse(pa_cpu_x86_flag_t flags);
 
 void pa_remap_func_init_mmx(pa_cpu_x86_flag_t flags);
 void pa_remap_func_init_sse(pa_cpu_x86_flag_t flags);
+void pa_remap_func_init_avx(pa_cpu_x86_flag_t flags);
 
 void pa_convert_func_init_sse (pa_cpu_x86_flag_t flags);
 

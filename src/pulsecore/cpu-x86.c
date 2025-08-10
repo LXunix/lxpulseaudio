@@ -141,6 +141,14 @@ bool pa_cpu_init_x86(pa_cpu_x86_flag_t *flags) {
     }
 #endif
 
+#ifdef HAVE_AVX
+    if (*flags & (PA_CPU_X86_AVX | PA_CPU_X86_AVX2 | PA_CPU_X86_AVX512F)) {
+        //pa_volume_func_init_avx(*flags);
+        pa_remap_func_init_avx(*flags);
+        //pa_convert_func_init_avx(*flags);
+    }
+#endif
+
     return true;
 #else /* defined (__i386__) || defined (__amd64__) */
     return false;
