@@ -204,13 +204,13 @@ static inline size_t PA_ALIGN(size_t l) {
         }                                          \
     } while (false)
 
-#define PA_PTR_TO_UINT(p) ((unsigned int) ((uintptr_t) (p)))
+#define PA_PTR_TO_UINT(p) ((uint64_t) ((uintptr_t) (p)))
 #define PA_UINT_TO_PTR(u) ((void*) ((uintptr_t) (u)))
 
 #define PA_PTR_TO_UINT32(p) ((uint32_t) ((uintptr_t) (p)))
 #define PA_UINT32_TO_PTR(u) ((void*) ((uintptr_t) (u)))
 
-#define PA_PTR_TO_INT(p) ((int) ((intptr_t) (p)))
+#define PA_PTR_TO_INT(p) ((int64_t) ((intptr_t) (p)))
 #define PA_INT_TO_PTR(u) ((void*) ((intptr_t) (u)))
 
 #define PA_PTR_TO_INT32(p) ((int32_t) ((intptr_t) (p)))
