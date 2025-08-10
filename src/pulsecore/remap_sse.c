@@ -99,7 +99,7 @@
                 "4:                             \n\t"
 
 #if defined (__i386__) || defined (__amd64__)
-static void remap_mono_to_stereo_s16ne_sse2(pa_remap_t *m, int16_t *dst, const int16_t *src, unsigned n) {
+static void remap_mono_to_stereo_s16ne_sse2(pa_remap_t *m, const int16_t *dst, const int16_t *src, unsigned n) {
     pa_reg_x86 temp, temp2;
 
     __asm__ __volatile__ (
@@ -111,7 +111,7 @@ static void remap_mono_to_stereo_s16ne_sse2(pa_remap_t *m, int16_t *dst, const i
 }
 
 /* Works for both S32NE and FLOAT32NE */
-static void remap_mono_to_stereo_any32ne_sse2(pa_remap_t *m, float *dst, const float *src, unsigned n) {
+static void remap_mono_to_stereo_any32ne_sse2(pa_remap_t *m, const float *dst, const float *src, unsigned n) {
     pa_reg_x86 temp, temp2;
 
     __asm__ __volatile__ (
