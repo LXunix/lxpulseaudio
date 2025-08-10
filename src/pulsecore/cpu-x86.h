@@ -35,7 +35,10 @@ typedef enum pa_cpu_x86_flag {
     PA_CPU_X86_SSE4_2    = (1 << 7),
     PA_CPU_X86_3DNOW     = (1 << 8),
     PA_CPU_X86_3DNOWEXT  = (1 << 9),
-    PA_CPU_X86_CMOV      = (1 << 10)
+    PA_CPU_X86_CMOV      = (1 << 10),
+    PA_CPU_X86_AVX       = (1 << 11),
+    PA_CPU_X86_AVX2      = (1 << 12),
+    PA_CPU_X86_AVX512F   = (1 << 13)
 } pa_cpu_x86_flag_t;
 
 void pa_cpu_get_x86_flags(pa_cpu_x86_flag_t *flags);

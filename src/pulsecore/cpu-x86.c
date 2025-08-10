@@ -70,6 +70,15 @@ void pa_cpu_get_x86_flags(pa_cpu_x86_flag_t *flags) {
 
         if (ecx & (1<<20))
           *flags |= PA_CPU_X86_SSE4_2;
+
+        if (ecx & (1<<28))
+          *flags |= PA_CPU_X86_AVX;
+
+        if (ebx & (1<<5))
+          *flags |= PA_CPU_X86_AVX2;
+
+        if (ebx & (1<<16))
+          *flags |= PA_CPU_X86_AVX512F;
     }
 
     /* get extended level */
@@ -94,7 +103,7 @@ void pa_cpu_get_x86_flags(pa_cpu_x86_flag_t *flags) {
     }
 
 finish:
-    pa_log_info("CPU flags: %s%s%s%s%s%s%s%s%s%s%s",
+    pa_log_info("CPU flags: %s%s%s%s%s%s%s%s%s%s%s%s%s%s",
     (*flags & PA_CPU_X86_CMOV) ? "CMOV " : "",
     (*flags & PA_CPU_X86_MMX) ? "MMX " : "",
     (*flags & PA_CPU_X86_SSE) ? "SSE " : "",
@@ -104,8 +113,11 @@ finish:
     (*flags & PA_CPU_X86_SSE4_1) ? "SSE4_1 " : "",
     (*flags & PA_CPU_X86_SSE4_2) ? "SSE4_2 " : "",
     (*flags & PA_CPU_X86_MMXEXT) ? "MMXEXT " : "",
+    (*flags & PA_CPU_X86_3DNOWEXT) ? "3DNOWEXT " : "",
     (*flags & PA_CPU_X86_3DNOW) ? "3DNOW " : "",
-    (*flags & PA_CPU_X86_3DNOWEXT) ? "3DNOWEXT " : "");
+    (*flags & PA_CPU_X86_AVX) ? "AVX " : "",
+    (*flags & PA_CPU_X86_AVX2) ? "AVX2 " : "",
+    (*flags & PA_CPU_X86_AVX512F) ? "AVX512F " : "");
 #endif /* (defined(__i386__) || defined(__amd64__)) && defined(HAVE_CPUID_H) */
 }
 
