@@ -404,6 +404,16 @@ int pa_tagstruct_getu32(pa_tagstruct*t, uint32_t *i) {
     return read_u32(t, i);
 }
 
+int pa_tagstruct_getu16(pa_tagstruct*t, uint16_t *c) {
+    pa_assert(t);
+    pa_assert(c);
+
+    if (read_tag(t, PA_TAG_U16) < 0)
+        return -1;
+
+    return read_u8(t, c);
+}
+
 int pa_tagstruct_getu8(pa_tagstruct*t, uint8_t *c) {
     pa_assert(t);
     pa_assert(c);

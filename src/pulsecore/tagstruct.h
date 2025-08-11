@@ -41,9 +41,10 @@ typedef struct pa_tagstruct pa_tagstruct;
 enum {
     PA_TAG_INVALID = 0,
     PA_TAG_STRING = 't',
-    PA_TAG_STRING_NULL = 'N',
-    PA_TAG_U32 = 'L',
-    PA_TAG_U8 = 'B',
+    PA_TAG_STRING_NULL = 'N', // NULL
+    PA_TAG_U32 = 'L', // LONG
+    PA_TAG_U16 = 'S', // SHORT
+    PA_TAG_U8 = 'B', // BYTE
     PA_TAG_U64 = 'R',
     PA_TAG_S64 = 'r',
     PA_TAG_SAMPLE_SPEC = 'a',
@@ -51,13 +52,13 @@ enum {
     PA_TAG_BOOLEAN_TRUE = '1',
     PA_TAG_BOOLEAN_FALSE = '0',
     PA_TAG_BOOLEAN = PA_TAG_BOOLEAN_TRUE,
-    PA_TAG_TIMEVAL = 'T',
-    PA_TAG_USEC = 'U'  /* 64bit unsigned */,
-    PA_TAG_CHANNEL_MAP = 'm',
-    PA_TAG_CVOLUME = 'v',
-    PA_TAG_PROPLIST = 'P',
-    PA_TAG_VOLUME = 'V',
-    PA_TAG_FORMAT_INFO = 'f',
+    PA_TAG_TIMEVAL = 'T', // TIME
+    PA_TAG_USEC = 'U', // USEC /* 64bit unsigned */
+    PA_TAG_CHANNEL_MAP = 'm', // map
+    PA_TAG_CVOLUME = 'v', // volume
+    PA_TAG_PROPLIST = 'P', // PROPLIST
+    PA_TAG_VOLUME = 'V', // VOLUME
+    PA_TAG_FORMAT_INFO = 'f', // format
 };
 
 pa_tagstruct *pa_tagstruct_new(void);
@@ -89,6 +90,7 @@ int pa_tagstruct_get(pa_tagstruct *t, ...);
 
 int pa_tagstruct_gets(pa_tagstruct*t, const char **s);
 int pa_tagstruct_getu8(pa_tagstruct*t, uint8_t *c);
+int pa_tagstruct_getu16(pa_tagstruct*t, uint16_t *i);
 int pa_tagstruct_getu32(pa_tagstruct*t, uint32_t *i);
 int pa_tagstruct_getu64(pa_tagstruct*t, uint64_t *i);
 int pa_tagstruct_gets64(pa_tagstruct*t, int64_t *i);
