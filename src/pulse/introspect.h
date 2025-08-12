@@ -512,8 +512,8 @@ pa_operation* pa_context_send_message_to_object(pa_context *c, const char *recip
  * can be extended as part of evolutionary API updates at any time in
  * any new release. */
 typedef struct pa_client_info {
-    const char *name;                    /**< Name of this client */
     uint32_t index;                      /**< Index of this client */
+    const char *name;                    /**< Name of this client */
     uint32_t owner_module;               /**< Index of the owning module, or PA_INVALID_INDEX. */
     const char *driver;                  /**< Driver name */
     pa_proplist *proplist;               /**< Property list \since 0.9.11 */
