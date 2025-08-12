@@ -91,10 +91,10 @@ struct connection {
     pa_memblockq *output_memblockq;
     pa_source_output *source_output;
     pa_client *client;
-    enum state state;
-    char *url;
-    enum method method;
     pa_module *module;
+    char *url;
+    enum state state : 2;
+    enum method method : 1;
 };
 
 struct pa_http_protocol {
