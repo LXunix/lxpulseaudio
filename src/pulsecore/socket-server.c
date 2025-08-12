@@ -80,9 +80,14 @@ int deny_severity = LOG_WARNING;
 
 struct pa_socket_server {
     PA_REFCNT_DECLARE;
-    int fd;
+    int fd : 29;
+    bool activated : 1;
+    enum {
+        SOCKET_SERVER_IPV4,
+        SOCKET_SERVER_UNIX,
+        SOCKET_SERVER_IPV6
+    } type : 2;
     char *filename;
-    bool activated;
     char *tcpwrap_service;
 
     pa_socket_server_on_connection_cb_t on_connection;
@@ -90,11 +95,6 @@ struct pa_socket_server {
 
     pa_io_event *io_event;
     pa_mainloop_api *mainloop;
-    enum {
-        SOCKET_SERVER_IPV4,
-        SOCKET_SERVER_UNIX,
-        SOCKET_SERVER_IPV6
-    } type;
 };
 
 static void callback(pa_mainloop_api *mainloop, pa_io_event *e, int fd, pa_io_event_flags_t f, void *userdata) {
