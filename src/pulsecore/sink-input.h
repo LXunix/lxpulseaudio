@@ -64,10 +64,28 @@ struct pa_sink_input {
     pa_msgobject parent;
 
     uint32_t index;
-    pa_core *core;
+    pa_sink_input_state_t state : 2;
+    pa_sink_input_flags_t flags : 12;
+    /* This is set to true when creating the sink input if the sink was
+    * requested by the application that created the sink input. This is
+    * sometimes useful for determining whether the sink input should be
+    * moved by some automatic policy. If the sink input is moved away from the
+    * sink that the application requested, this flag is reset to false. */
+    bool sink_requested_by_application : 1;
 
-    pa_sink_input_state_t state;
-    pa_sink_input_flags_t flags;
+    bool volume_writable:1;
+
+    bool muted:1;
+
+    /* if true then the volume and the mute state of this sink-input
+     * are worth remembering, module-stream-restore looks for
+     * this.*/
+    bool save_volume:1, save_muted:1;
+
+    pa_resample_method_t requested_resample_method : 6;
+    pa_resample_method_t actual_resample_method : 6;
+
+    pa_core *core;
 
     char *driver;                       /* may be NULL */
     pa_proplist *proplist;
@@ -76,13 +94,6 @@ struct pa_sink_input {
     pa_client *client;                  /* may be NULL */
 
     pa_sink *sink;                      /* NULL while we are being moved */
-
-    /* This is set to true when creating the sink input if the sink was
-     * requested by the application that created the sink input. This is
-     * sometimes useful for determining whether the sink input should be
-     * moved by some automatic policy. If the sink input is moved away from the
-     * sink that the application requested, this flag is reset to false. */
-    bool sink_requested_by_application;
 
     pa_sink *origin_sink;               /* only set by filter sinks */
 
@@ -115,22 +126,11 @@ struct pa_sink_input {
     pa_cvolume volume_factor_sink; /* A second volume factor in format of the sink this stream is connected to. */
     pa_hashmap *volume_factor_sink_items;
 
-    bool volume_writable:1;
-
-    bool muted:1;
-
-    /* if true then the volume and the mute state of this sink-input
-     * are worth remembering, module-stream-restore looks for
-     * this.*/
-    bool save_volume:1, save_muted:1;
-
     /* if users move the sink-input to a sink, and the sink is not default_sink,
      * the sink->name will be saved in preferred_sink. And later if sink-input
      * is moved to other sinks for some reason, it still can be restored to the
      * preferred_sink at an appropriate time */
     char *preferred_sink;
-
-    pa_resample_method_t requested_resample_method, actual_resample_method;
 
     /* Returns the chunk of audio data and drops it from the
      * queue. Returns -1 on failure. Called from IO thread context. If
@@ -242,7 +242,7 @@ struct pa_sink_input {
     size_t origin_rewind_bytes;    /* In sink input sample spec */
 
     struct {
-        pa_sink_input_state_t state;
+        pa_sink_input_state_t state : 2;
 
         pa_cvolume soft_volume;
         bool muted:1;
@@ -316,7 +316,7 @@ typedef struct pa_sink_input_new_data {
     bool sink_requested_by_application;
     pa_sink *origin_sink;
 
-    pa_resample_method_t resample_method;
+    pa_resample_method_t resample_method : 6;
 
     pa_sink_input *sync_base;
 
