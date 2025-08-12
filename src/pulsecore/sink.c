@@ -67,7 +67,7 @@ struct pa_sink_volume_change {
 
 struct set_state_data {
     pa_sink_state_t state;
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 };
 
 static void sink_free(pa_object *s);

@@ -69,7 +69,7 @@ struct pa_source {
     bool unlink_requested;
 
     pa_source_flags_t flags;
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 
     char *name;
     char *driver;                             /* may be NULL */
@@ -299,7 +299,7 @@ typedef enum pa_source_message {
 } pa_source_message_t;
 
 typedef struct pa_source_new_data {
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 
     char *name;
     pa_proplist *proplist;

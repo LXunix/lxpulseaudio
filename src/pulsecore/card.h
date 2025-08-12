@@ -85,9 +85,9 @@ struct pa_card {
     bool save_profile:1;
     bool profile_is_sticky:1;
 
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 
-    bool linked;
+    bool linked : 1;
 
     void *userdata;
 

@@ -70,7 +70,7 @@ struct pa_sink {
     bool unlink_requested;
 
     pa_sink_flags_t flags;
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 
     char *name;
     char *driver;                           /* may be NULL */
@@ -367,7 +367,7 @@ typedef enum pa_sink_message {
 } pa_sink_message_t;
 
 typedef struct pa_sink_new_data {
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 
     char *name;
     pa_proplist *proplist;

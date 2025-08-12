@@ -58,7 +58,7 @@ struct pa_source_volume_change {
 
 struct set_state_data {
     pa_source_state_t state;
-    pa_suspend_cause_t suspend_cause;
+    pa_suspend_cause_t suspend_cause : 8;
 };
 
 static void source_free(pa_object *o);
