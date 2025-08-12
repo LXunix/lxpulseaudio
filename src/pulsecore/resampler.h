@@ -80,9 +80,6 @@ typedef enum pa_resample_flags {
 #define PA_RESAMPLER_MAX_DELAY_USEC 33000
 
 struct pa_resampler {
-    pa_resample_method_t method;
-    pa_resample_flags_t flags;
-
     pa_sample_spec i_ss, o_ss;
     pa_channel_map i_cm, o_cm;
     size_t i_fz, o_fz, w_fz, w_sz;
@@ -106,22 +103,26 @@ struct pa_resampler {
     bool leftover_in_remap;
     bool leftover_in_to_work;
 
-    pa_sample_format_t work_format;
+    pa_resample_method_t method : 6;
+    pa_resample_flags_t flags : 7;
+
+    bool map_required : 1; // 14
+
+    pa_sample_format_t work_format : 5; // 19
     uint8_t work_channels;
+
+    unsigned gcd;
+    double in_frames;
+    double out_frames;
+
+    pa_remap_t remap;
+
+    pa_resampler_impl impl;
 
     pa_convert_func_t to_work_format_func;
     pa_convert_func_t from_work_format_func;
 
-    pa_remap_t remap;
-    bool map_required;
-
-    double in_frames;
-    double out_frames;
-    unsigned gcd;
-
     pa_lfe_filter_t *lfe_filter;
-
-    pa_resampler_impl impl;
 };
 
 pa_resampler* pa_resampler_new(
