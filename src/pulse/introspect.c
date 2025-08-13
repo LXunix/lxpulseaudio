@@ -199,8 +199,8 @@ static void context_get_sink_info_callback(pa_pdispatch *pd, uint32_t command, u
 
             if (o->context->version >= 16) {
                 if (i.n_ports > 0) {
-                    i.ports = pa_xnew(pa_sink_port_info*, i.n_ports+1);
-                    i.ports[0] = pa_xnew(pa_sink_port_info, i.n_ports);
+                    i.ports = pa_xmalloc(PA_ALIGN(sizeof(pa_sink_port_info*) * i.n_ports+1));
+                    i.ports[0] = pa_xmalloc(PA_ALIGN(sizeof(pa_sink_port_info) * i.n_ports));
 
                     for (j = 0; j < i.n_ports; j++) {
                         i.ports[j] = &i.ports[0][j];

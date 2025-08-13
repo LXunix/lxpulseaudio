@@ -224,7 +224,7 @@ static pa_io_event* glib_io_new(
 
     g = m->userdata;
 
-    e = pa_xnew(pa_io_event, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(pa_io_event)));
     e->mainloop = g;
     e->dead = 0;
 
@@ -288,7 +288,7 @@ static pa_time_event* glib_time_new(
 
     g = m->userdata;
 
-    e = pa_xnew(pa_time_event, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(pa_time_event)));
     e->mainloop = g;
     e->dead = 0;
 
@@ -374,7 +374,7 @@ static pa_defer_event* glib_defer_new(
 
     g = m->userdata;
 
-    e = pa_xnew(pa_defer_event, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(pa_defer_event)));
     e->mainloop = g;
     e->dead = 0;
 

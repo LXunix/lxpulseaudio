@@ -101,7 +101,7 @@ static pa_stream *pa_stream_new_with_proplist_internal(
     PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, name || (p && pa_proplist_contains(p, PA_PROP_MEDIA_NAME)), PA_ERR_INVALID);
 
-    s = pa_xnew(pa_stream, 1);
+    s = pa_xmalloc(PA_ALIGN(sizeof(pa_stream)));
     PA_REFCNT_INIT(s);
     s->context = *c;
     s->mainloop = *c->mainloop;

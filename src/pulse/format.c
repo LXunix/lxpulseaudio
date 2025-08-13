@@ -70,7 +70,7 @@ pa_encoding_t pa_encoding_from_string(const char *encoding) {
 }
 
 pa_format_info* pa_format_info_new(void) {
-    pa_format_info *f = pa_xnew(pa_format_info, 1);
+    pa_format_info *f = pa_xmalloc(PA_ALIGN(sizeof(pa_format_info)));
 
     f->encoding = PA_ENCODING_INVALID;
     f->plist = pa_proplist_new();
@@ -83,7 +83,7 @@ pa_format_info* pa_format_info_copy(const pa_format_info *src) {
 
     pa_assert(src);
 
-    dest = pa_xnew(pa_format_info, 1);
+    dest = pa_xmalloc(PA_ALIGN(sizeof(pa_format_info)));
 
     dest->encoding = src->encoding;
 
@@ -100,7 +100,7 @@ pa_format_info pa_format_info_copy_by_val(const pa_format_info* src) {
 
     pa_assert(src);
 
-    dest = pa_xnew(pa_format_info, 1);
+    dest = pa_xmalloc(PA_ALIGN(sizeof(pa_format_info)));
 
     dest->encoding = src->encoding;
 
@@ -422,7 +422,7 @@ int pa_format_info_get_prop_int_array(const pa_format_info *f, const char *key, 
         goto out;
 
     *n_values = pa_json_object_get_array_length(o);
-    *values = pa_xnew(int, *n_values);
+    *values = pa_xmalloc(PA_ALIGN(sizeof(int) * (*n_values)));
 
     for (i = 0; i < *n_values; i++) {
         o1 = pa_json_object_get_array_member(o, i);
@@ -499,7 +499,7 @@ int pa_format_info_get_prop_string_array(const pa_format_info *f, const char *ke
         goto out;
 
     *n_values = pa_json_object_get_array_length(o);
-    *values = pa_xnew(char *, *n_values);
+    *values = pa_xmalloc(PA_ALIGN(sizeof(char *) * (*n_values)));
 
     for (i = 0; i < *n_values; i++) {
         o1 = pa_json_object_get_array_member(o, i);

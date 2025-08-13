@@ -254,7 +254,7 @@ int pa_proplist_set(pa_proplist *p, const char *key, const void *data, size_t nb
         return -1;
 
     if (!(prop = pa_hashmap_get(MAKE_HASHMAP_CONST(p), key))) {
-        prop = pa_xnew(struct property, 1);
+        prop = pa_xmalloc(PA_ALIGN(sizeof(struct property)));
         prop->key = pa_xstrdup(key);
         add = true;
     } else
