@@ -1752,7 +1752,7 @@ static void context_get_sample_info_callback(pa_pdispatch *pd, uint32_t command,
                 goto finish;
             }
 
-            i.lazy = (int) lazy;
+            i.lazy = lazy;
 
             if (o->callback) {
                 pa_sample_info_cb_t cb = (pa_sample_info_cb_t) o->callback;

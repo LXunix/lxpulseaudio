@@ -770,13 +770,13 @@ pa_operation* pa_context_stat(pa_context *c, pa_stat_info_cb_t cb, void *userdat
  * any new release. */
 typedef struct pa_sample_info {
     uint32_t index;                       /**< Index of this entry */
+    _Bool lazy : 1;                        /**< Non-zero when this is a lazy cache entry. */
     const char *name;                     /**< Name of this entry */
     pa_cvolume volume;                    /**< Default volume of this entry */
     pa_sample_spec sample_spec;           /**< Sample specification of the sample */
     pa_channel_map channel_map;           /**< The channel map */
-    pa_usec_t duration;                   /**< Duration of this entry */
     uint32_t bytes;                       /**< Length of this sample in bytes. */
-    int lazy;                             /**< Non-zero when this is a lazy cache entry. */
+    pa_usec_t duration;                   /**< Duration of this entry */
     const char *filename;                 /**< In case this is a lazy cache entry, the filename for the sound file to be loaded on demand. */
     pa_proplist *proplist;                /**< Property list for this sample. \since 0.9.11 */
 } pa_sample_info;
