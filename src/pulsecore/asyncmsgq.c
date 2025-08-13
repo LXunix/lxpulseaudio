@@ -65,7 +65,7 @@ pa_asyncmsgq *pa_asyncmsgq_new(unsigned size) {
     if (!asyncq)
         return NULL;
 
-    a = pa_xnew(pa_asyncmsgq, 1);
+    a = pa_xmalloc(PA_ALIGN(sizeof(pa_asyncmsgq)));
 
     PA_REFCNT_INIT(a);
     a->asyncq = asyncq;

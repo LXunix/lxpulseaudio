@@ -169,7 +169,7 @@ void pa_ioline_puts(pa_ioline *l, const char *c) {
         /* In case the allocated buffer is too small, enlarge it. */
         if (l->wbuf_valid_length + len > l->wbuf_length) {
             size_t n = l->wbuf_valid_length+len;
-            char *new = pa_xnew(char, n);
+            char *new = pa_xmalloc(PA_ALIGN(sizeof(char) * n));
 
             if (l->wbuf) {
                 memcpy(new, l->wbuf+l->wbuf_index, l->wbuf_valid_length);
@@ -301,7 +301,7 @@ static int do_read(pa_ioline *l) {
                     memmove(l->rbuf, l->rbuf+l->rbuf_index, l->rbuf_valid_length);
             } else {
                 /* Enlarge the buffer */
-                char *new = pa_xnew(char, n);
+                char *new = pa_xmalloc(PA_ALIGN(sizeof(char) * n));
                 if (l->rbuf_valid_length)
                     memcpy(new, l->rbuf+l->rbuf_index, l->rbuf_valid_length);
                 pa_xfree(l->rbuf);

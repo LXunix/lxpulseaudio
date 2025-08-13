@@ -96,7 +96,7 @@ char* pa_namereg_make_valid_name(const char *name) {
     if (*name == 0)
         return NULL;
 
-    n = pa_xnew(char, strlen(name)+1);
+    n = pa_xmalloc(PA_ALIGN(sizeof(char) * strlen(name)+1));
 
     for (a = name, b = n; *a && (a-name < PA_NAME_MAX); a++, b++)
         *b = (char) (is_valid_char(*a) ? *a : '_');

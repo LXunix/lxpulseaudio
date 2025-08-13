@@ -430,7 +430,7 @@ pa_memblock *pa_memblock_new_fixed(pa_mempool *p, void *d, size_t length, bool r
     pa_assert(length);
 
     if (!(b = pa_flist_pop(PA_STATIC_FLIST_GET(unused_memblocks))))
-        b = pa_xnew(pa_memblock, 1);
+        b = pa_xmalloc(PA_ALIGN(sizeof(pa_memblock)));
 
     PA_REFCNT_INIT(b);
     b->pool = p;
@@ -464,7 +464,7 @@ pa_memblock *pa_memblock_new_user(
     pa_assert(free_cb);
 
     if (!(b = pa_flist_pop(PA_STATIC_FLIST_GET(unused_memblocks))))
-        b = pa_xnew(pa_memblock, 1);
+        b = pa_xmalloc(PA_ALIGN(sizeof(pa_memblock)));
 
     PA_REFCNT_INIT(b);
     b->pool = p;
@@ -1090,7 +1090,7 @@ pa_memimport* pa_memimport_new(pa_mempool *p, pa_memimport_release_cb_t cb, void
     pa_assert(p);
     pa_assert(cb);
 
-    i = pa_xnew(pa_memimport, 1);
+    i = pa_xmalloc(PA_ALIGN(sizeof(pa_memimport)));
     i->mutex = pa_mutex_new(true, true);
     i->pool = p;
     pa_mempool_ref(i->pool);
@@ -1266,7 +1266,7 @@ pa_memblock* pa_memimport_get(pa_memimport *i, pa_mem_type_t type, uint32_t bloc
         goto finish;
 
     if (!(b = pa_flist_pop(PA_STATIC_FLIST_GET(unused_memblocks))))
-        b = pa_xnew(pa_memblock, 1);
+        b = pa_xmalloc(PA_ALIGN(sizeof(pa_memblock)));
 
     PA_REFCNT_INIT(b);
     b->pool = i->pool;
@@ -1325,7 +1325,7 @@ pa_memexport* pa_memexport_new(pa_mempool *p, pa_memexport_revoke_cb_t cb, void 
     if (!pa_mempool_is_shared(p))
         return NULL;
 
-    e = pa_xnew(pa_memexport, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(pa_memexport)));
     e->mutex = pa_mutex_new(true, true);
     e->pool = p;
     pa_mempool_ref(e->pool);

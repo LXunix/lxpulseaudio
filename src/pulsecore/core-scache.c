@@ -108,7 +108,7 @@ static pa_scache_entry* scache_add_item(pa_core *c, const char *name, bool *new_
         pa_subscription_post(c, PA_SUBSCRIPTION_EVENT_SAMPLE_CACHE|PA_SUBSCRIPTION_EVENT_CHANGE, e->index);
         *new_sample = false;
     } else {
-        e = pa_xnew(pa_scache_entry, 1);
+        e = pa_xmalloc(PA_ALIGN(sizeof(pa_scache_entry)));
 
         if (!pa_namereg_register(c, name, PA_NAMEREG_SAMPLE, e, true)) {
             pa_xfree(e);
