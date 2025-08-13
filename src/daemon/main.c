@@ -598,7 +598,7 @@ int main(int argc, char *argv[]) {
     if (n_fds > 0) {
         int i = n_fds;
 
-        passed_fds = pa_xnew(int, n_fds+2);
+        passed_fds = pa_xmalloc(PA_ALIGN(sizeof(int) * (n_fds+2)));
         passed_fds[n_fds] = passed_fds[n_fds+1] = -1;
         while (i--)
             passed_fds[i] = SD_LISTEN_FDS_START + i;
@@ -607,7 +607,7 @@ int main(int argc, char *argv[]) {
 
     if (!passed_fds) {
         n_fds = 0;
-        passed_fds = pa_xnew(int, 2);
+        passed_fds = pa_xmalloc(PA_ALIGN(sizeof(int) * 2));
         passed_fds[0] = passed_fds[1] = -1;
     }
 

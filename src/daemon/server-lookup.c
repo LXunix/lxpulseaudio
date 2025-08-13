@@ -450,7 +450,7 @@ pa_dbusobj_server_lookup *pa_dbusobj_server_lookup_new(pa_core *c) {
 
     dbus_error_init(&error);
 
-    sl = pa_xnew(pa_dbusobj_server_lookup, 1);
+    sl = pa_xmalloc(PA_ALIGN(sizeof(pa_dbusobj_server_lookup)));
     sl->core = c;
     sl->path_registered = false;
 
