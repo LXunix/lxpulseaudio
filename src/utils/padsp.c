@@ -73,21 +73,29 @@ typedef struct fd_info fd_info;
 struct fd_info {
     pthread_mutex_t mutex;
     int ref;
-    int unusable;
+    short unusable;
 
-    fd_info_type_t type;
-    int app_fd, thread_fd;
+    short operation_success : 15;
 
+    fd_info_type_t type : 1;
+    short app_fd, thread_fd;
+
+    unsigned n_fragments;
     pa_sample_spec sample_spec;
     size_t fragment_size;
-    unsigned n_fragments;
 
     pa_threaded_mainloop *mainloop;
     pa_context *context;
     pa_stream *play_stream;
     pa_stream *rec_stream;
-    int play_precork;
-    int rec_precork;
+    short play_precork;
+    short rec_precork;
+
+    short optr_n_blocks;
+
+    short volume_modify_count;
+    pa_cvolume sink_volume, source_volume;
+    uint32_t sink_index, source_index;
 
     pa_io_event *io_event;
     pa_io_event_flags_t io_flags;
@@ -95,14 +103,6 @@ struct fd_info {
     void *buf;
     size_t leftover;
     size_t rec_offset;
-
-    int operation_success;
-
-    pa_cvolume sink_volume, source_volume;
-    uint32_t sink_index, source_index;
-    int volume_modify_count;
-
-    int optr_n_blocks;
 
     PA_LLIST_FIELDS(fd_info);
 };
