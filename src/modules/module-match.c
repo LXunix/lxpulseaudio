@@ -68,8 +68,8 @@ static const char* const valid_modargs[] = {
 struct rule {
     regex_t regex;
     pa_volume_t volume;
+    pa_update_mode_t mode : 2;
     pa_proplist *proplist;
-    pa_update_mode_t mode;
     struct rule *next;
 };
 
