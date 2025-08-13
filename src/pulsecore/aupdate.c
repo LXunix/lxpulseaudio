@@ -43,7 +43,7 @@ struct pa_aupdate {
 pa_aupdate *pa_aupdate_new(void) {
     pa_aupdate *a;
 
-    a = pa_xnew(pa_aupdate, 1);
+    a = pa_xmalloc(PA_ALIGN(sizeof(pa_aupdate)));
     pa_atomic_store(&a->read_lock, 0);
     a->write_lock = pa_mutex_new(false, false);
     a->semaphore = pa_semaphore_new(0);

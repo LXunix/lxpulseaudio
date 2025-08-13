@@ -42,7 +42,7 @@ struct pa_queue {
 };
 
 pa_queue* pa_queue_new(void) {
-    pa_queue *q = pa_xnew(pa_queue, 1);
+    pa_queue *q = pa_xmalloc(PA_ALIGN(sizeof(pa_queue)));
 
     q->front = q->back = NULL;
     q->length = 0;

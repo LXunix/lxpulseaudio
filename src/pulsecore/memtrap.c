@@ -141,7 +141,7 @@ pa_memtrap* pa_memtrap_add(const void *start, size_t size) {
     start = PA_PAGE_ALIGN_PTR(start);
     size = PA_PAGE_ALIGN(size);
 
-    m = pa_xnew(pa_memtrap, 1);
+    m = pa_xmalloc(PA_ALIGN(sizeof(pa_memtrap)));
     m->start = (void*) start;
     m->size = size;
     pa_atomic_store(&m->bad, 0);

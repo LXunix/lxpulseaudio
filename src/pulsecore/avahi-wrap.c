@@ -78,7 +78,7 @@ static AvahiWatch* watch_new(const AvahiPoll *api, int fd, AvahiWatchEvent event
     pa_assert(callback);
     pa_assert_se(p = api->userdata);
 
-    w = pa_xnew(AvahiWatch, 1);
+    w = pa_xmalloc(PA_ALIGN(sizeof(AvahiWatch)));
     w->avahi_poll = p;
     w->current_event = 0;
     w->callback = callback;
@@ -168,7 +168,7 @@ AvahiPoll* pa_avahi_poll_new(pa_mainloop_api *m) {
 
     pa_assert(m);
 
-    p = pa_xnew(pa_avahi_poll, 1);
+    p = pa_xmalloc(PA_ALIGN(sizeof(pa_avahi_poll)));
 
     p->api.userdata = p;
     p->api.watch_new = watch_new;

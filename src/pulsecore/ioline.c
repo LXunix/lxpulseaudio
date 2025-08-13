@@ -70,7 +70,7 @@ pa_ioline* pa_ioline_new(pa_iochannel *io) {
     pa_ioline *l;
     pa_assert(io);
 
-    l = pa_xnew(pa_ioline, 1);
+    l = pa_xmalloc(PA_ALIGN(sizeof(pa_ioline)));
     PA_REFCNT_INIT(l);
     l->io = io;
 

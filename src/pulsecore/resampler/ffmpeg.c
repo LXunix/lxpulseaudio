@@ -112,7 +112,7 @@ int pa_resampler_ffmpeg_init(pa_resampler *r) {
 
     pa_assert(r);
 
-    ffmpeg_data = pa_xnew(struct ffmpeg_data, 1);
+    ffmpeg_data = pa_xmalloc(PA_ALIGN(sizeof(struct ffmpeg_data)));
 
     /* We could probably implement different quality levels by
      * adjusting the filter parameters here. However, ffmpeg

@@ -39,7 +39,7 @@ struct pa_dbus_connection {
 static pa_dbus_connection* dbus_connection_new(pa_core *c, pa_dbus_wrap_connection *conn, const char *name) {
     pa_dbus_connection *pconn;
 
-    pconn = pa_xnew(pa_dbus_connection, 1);
+    pconn = pa_xmalloc(PA_ALIGN(sizeof(pa_dbus_connection)));
     PA_REFCNT_INIT(pconn);
     pconn->core = c;
     pconn->property_name = name;

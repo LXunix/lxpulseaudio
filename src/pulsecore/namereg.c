@@ -161,7 +161,7 @@ const char *pa_namereg_register(pa_core *c, const char *name, pa_namereg_type_t 
         n = k;
     }
 
-    e = pa_xnew(struct namereg_entry, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(struct namereg_entry)));
     e->type = type;
     e->name = n ? n : pa_xstrdup(name);
     e->data = data;

@@ -38,7 +38,7 @@ static pa_shared* shared_new(const char *name, void *data) {
     pa_assert(name);
     pa_assert(data);
 
-    p = pa_xnew(pa_shared, 1);
+    p = pa_xmalloc(PA_ALIGN(sizeof(pa_shared)));
     p->name = pa_xstrdup(name);
     p->data = data;
 

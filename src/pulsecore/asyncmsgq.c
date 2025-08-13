@@ -120,7 +120,7 @@ void pa_asyncmsgq_post(pa_asyncmsgq *a, pa_msgobject *object, int code, const vo
     pa_assert(PA_REFCNT_VALUE(a) > 0);
 
     if (!(i = pa_flist_pop(PA_STATIC_FLIST_GET(asyncmsgq))))
-        i = pa_xnew(struct asyncmsgq_item, 1);
+        i = pa_xmalloc(PA_ALIGN(sizeof(struct asyncmsgq_item)));
 
     i->code = code;
     i->object = object ? pa_msgobject_ref(object) : NULL;

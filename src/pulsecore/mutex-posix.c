@@ -58,7 +58,7 @@ pa_mutex* pa_mutex_new(bool recursive, bool inherit_priority) {
     }
 #endif
 
-    m = pa_xnew(pa_mutex, 1);
+    m = pa_xmalloc(PA_ALIGN(sizeof(pa_mutex)));
 
 #ifndef HAVE_PTHREAD_PRIO_INHERIT
     pa_assert_se(pthread_mutex_init(&m->mutex, &attr) == 0);
@@ -118,7 +118,7 @@ void pa_mutex_unlock(pa_mutex *m) {
 pa_cond *pa_cond_new(void) {
     pa_cond *c;
 
-    c = pa_xnew(pa_cond, 1);
+    c = pa_xmalloc(PA_ALIGN(sizeof(pa_cond)));
     pa_assert_se(pthread_cond_init(&c->cond, NULL) == 0);
     return c;
 }

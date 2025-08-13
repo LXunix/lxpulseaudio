@@ -210,7 +210,7 @@ void pa_asyncq_post(pa_asyncq*l, void *p) {
         pa_log_warn("q overrun, queuing locally");
 
     if (!(q = pa_flist_pop(PA_STATIC_FLIST_GET(localq))))
-        q = pa_xnew(struct localq, 1);
+        q = pa_xmalloc(PA_ALIGN(sizeof(struct localq)));
 
     q->data = p;
     PA_LLIST_PREPEND(struct localq, l->localq, q);

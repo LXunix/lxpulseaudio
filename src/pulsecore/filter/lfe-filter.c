@@ -124,7 +124,7 @@ pa_memchunk * pa_lfe_filter_process(pa_lfe_filter_t *f, pa_memchunk *buf) {
 
     /* Insert our existing state into the flist */
     if ((s = pa_flist_pop(PA_STATIC_FLIST_GET(lfe_state))) == NULL)
-        s = pa_xnew(struct saved_state, 1);
+        s = pa_xmalloc(PA_ALIGN(sizeof(struct saved_state)));
     PA_LLIST_INIT(struct saved_state, s);
 
     /* TODO: This actually memcpys the entire chunk into a new allocation, because we need to retain the original

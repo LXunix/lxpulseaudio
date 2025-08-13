@@ -397,7 +397,7 @@ pa_memblock *pa_memblock_new_pool(pa_mempool *p, size_t length) {
             return NULL;
 
         if (!(b = pa_flist_pop(PA_STATIC_FLIST_GET(unused_memblocks))))
-            b = pa_xnew(pa_memblock, 1);
+            b = pa_xmalloc(PA_ALIGN(sizeof(pa_memblock)));
 
         b->type = PA_MEMBLOCK_POOL_EXTERNAL;
         pa_atomic_ptr_store(&b->data, mempool_slot_data(slot));

@@ -48,7 +48,7 @@ struct pa_strbuf {
 pa_strbuf *pa_strbuf_new(void) {
     pa_strbuf *sb;
 
-    sb = pa_xnew(pa_strbuf, 1);
+    sb = pa_xmalloc(PA_ALIGN(sizeof(pa_strbuf)));
     sb->length = 0;
     sb->head = sb->tail = NULL;
 

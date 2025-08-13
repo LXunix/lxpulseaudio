@@ -39,7 +39,7 @@ struct pa_cond {
 pa_mutex* pa_mutex_new(bool recursive, bool inherit_priority) {
     pa_mutex *m;
 
-    m = pa_xnew(pa_mutex, 1);
+    m = pa_xmalloc(PA_ALIGN(sizeof(pa_mutex)));
 
     InitializeCriticalSection(&m->mutex);
 

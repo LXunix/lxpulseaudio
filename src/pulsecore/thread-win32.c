@@ -74,7 +74,7 @@ pa_thread* pa_thread_new(const char *name, pa_thread_func_t thread_func, void *u
 
     assert(thread_func);
 
-    t = pa_xnew(pa_thread, 1);
+    t = pa_xmalloc(PA_ALIGN(sizeof(pa_thread)));
     t->thread_func = thread_func;
     t->userdata = userdata;
 
