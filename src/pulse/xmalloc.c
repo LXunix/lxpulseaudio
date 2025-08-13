@@ -90,11 +90,14 @@ void *pa_xrealloc(void *ptr, size_t size) {
 void* pa_xmemdup(const void *p, size_t l) {
     if (!p)
         return NULL;
-    else {
-        char *r = pa_xmalloc(l);
-        memcpy(r, p, l);
-        return r;
-    }
+
+    /* memdup(NULL, 0) is valid, but memdup(ptr, 0) is not useful */
+    if (l == 0)
+        return NULL;
+
+    char *r = pa_xmalloc(l);
+    memcpy(r, p, l);
+    return r;
 }
 
 char *pa_xstrdup(const char *s) {
