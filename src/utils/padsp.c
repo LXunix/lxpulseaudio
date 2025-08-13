@@ -293,7 +293,7 @@ static void debug(int level, const char *format, ...) {
     if (!dlevel_s)
         return;
 
-    dlevel = atoi(dlevel_s);
+    dlevel = (int) strtol(dlevel_s, NULL, 10);
 
     if (dlevel < level)
         return;
