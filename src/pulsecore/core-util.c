@@ -126,7 +126,6 @@
 #include <pulsecore/strbuf.h>
 #include <pulsecore/usergroup.h>
 #include <pulsecore/strlist.h>
-#include <pulsecore/pipe.h>
 #include <pulsecore/once.h>
 
 #include "core-util.h"
@@ -884,7 +883,7 @@ int pa_parse_boolean(const char *v) {
 /* Try to parse a volume string to pa_volume_t. The allowed formats are:
  * db, % and unsigned integer */
 int pa_parse_volume(const char *v, pa_volume_t *volume) {
-    int len;
+    size_t len;
     uint32_t i;
     double d;
     char str[64];
