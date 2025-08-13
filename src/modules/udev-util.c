@@ -82,7 +82,7 @@ static void proplist_sets_unescape(pa_proplist *p, const char *prop, const char 
     } state = TEXT;
 
     /* The resulting string is definitely shorter than the source string */
-    r = pa_xnew(char, strlen(s)+1);
+    r = pa_xmalloc(PA_ALIGN(sizeof(char) * strlen(s)+1));
 
     for (f = s, t = r; *f; f++) {
 

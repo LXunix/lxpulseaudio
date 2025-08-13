@@ -97,7 +97,7 @@ static void add_session(struct userdata *u, const char *id) {
     if ((uid_t) uid != getuid())
         goto fail;
 
-    session = pa_xnew(struct session, 1);
+    session = pa_xmalloc(PA_ALIGN(sizeof(struct session)));
     session->id = pa_xstrdup(id);
 
     pa_client_new_data_init(&data);

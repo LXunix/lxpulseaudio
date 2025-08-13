@@ -405,7 +405,7 @@ static struct service *get_service(struct userdata *u, pa_object *device) {
     if ((s = pa_hashmap_get(u->services, device)))
         goto out;
 
-    s = pa_xnew(struct service, 1);
+    s = pa_xmalloc(PA_ALIGN(sizeof(struct service)));
     s->key = device;
     s->userdata = u;
     s->entry_group = NULL;
