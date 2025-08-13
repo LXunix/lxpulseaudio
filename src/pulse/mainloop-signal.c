@@ -167,7 +167,7 @@ pa_signal_event* pa_signal_new(int sig, pa_signal_cb_t _callback, void *userdata
         if (e->sig == sig)
             return NULL;
 
-    e = pa_xnew(pa_signal_event, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(pa_signal_event)));
     e->sig = sig;
     e->callback = _callback;
     e->userdata = userdata;

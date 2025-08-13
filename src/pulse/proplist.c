@@ -85,7 +85,7 @@ int pa_proplist_sets(pa_proplist *p, const char *key, const char *value) {
         return -1;
 
     if (!(prop = pa_hashmap_get(MAKE_HASHMAP_CONST(p), key))) {
-        prop = pa_xnew(struct property, 1);
+        prop = pa_xmalloc(PA_ALIGN(sizeof(struct property)));
         prop->key = pa_xstrdup(key);
         add = true;
     } else
@@ -120,7 +120,7 @@ static int proplist_setn(pa_proplist *p, const char *key, size_t key_length, con
     }
 
     if (!(prop = pa_hashmap_get(MAKE_HASHMAP_CONST(p), k))) {
-        prop = pa_xnew(struct property, 1);
+        prop = pa_xmalloc(PA_ALIGN(sizeof(struct property)));
         prop->key = k;
         add = true;
     } else {
@@ -183,7 +183,7 @@ static int proplist_sethex(pa_proplist *p, const char *key, size_t key_length, c
     pa_xfree(v);
 
     if (!(prop = pa_hashmap_get(MAKE_HASHMAP_CONST(p), k))) {
-        prop = pa_xnew(struct property, 1);
+        prop = pa_xmalloc(PA_ALIGN(sizeof(struct property)));
         prop->key = k;
         add = true;
     } else {
@@ -223,7 +223,7 @@ int pa_proplist_setf(pa_proplist *p, const char *key, const char *format, ...) {
         goto fail;
 
     if (!(prop = pa_hashmap_get(MAKE_HASHMAP_CONST(p), key))) {
-        prop = pa_xnew(struct property, 1);
+        prop = pa_xmalloc(PA_ALIGN(sizeof(struct property)));
         prop->key = pa_xstrdup(key);
         add = true;
     } else

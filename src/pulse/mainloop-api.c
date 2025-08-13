@@ -65,7 +65,7 @@ void pa_mainloop_api_once(pa_mainloop_api* m, void (*callback)(pa_mainloop_api *
 
     pa_init_i18n();
 
-    i = pa_xnew(struct once_info, 1);
+    i = pa_xmalloc(PA_ALIGN(sizeof(struct once_info)));
     i->callback = callback;
     i->userdata = userdata;
 

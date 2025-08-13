@@ -36,7 +36,7 @@ pa_operation *pa_operation_new(pa_context *c, pa_stream *s, pa_operation_cb_t cb
     pa_assert(c);
 
     if (!(o = pa_flist_pop(PA_STATIC_FLIST_GET(operations))))
-        o = pa_xnew(pa_operation, 1);
+        o = pa_xmalloc(PA_ALIGN(sizeof(pa_operation)));
 
     pa_zero(*o);
 
