@@ -665,8 +665,8 @@ void pa_set_mix_func(pa_sample_format_t f, pa_do_mix_func_t func) {
 }
 
 typedef union {
-  float f;
-  uint32_t i;
+  _Float16 f;
+  uint16_t i;
 } volume_val;
 
 typedef void (*pa_calc_volume_func_t) (void *volumes, const pa_cvolume *volume);
