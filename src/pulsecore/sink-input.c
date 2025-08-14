@@ -120,7 +120,7 @@ static struct volume_factor_entry *volume_factor_entry_new(const char *key, cons
     pa_assert(key);
     pa_assert(volume);
 
-    entry = pa_xnew(struct volume_factor_entry, 1);
+    entry = pa_xmalloc(PA_ALIGN(sizeof(struct volume_factor_entry)));
     entry->key = pa_xstrdup(key);
 
     entry->volume = *volume;

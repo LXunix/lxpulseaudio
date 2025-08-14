@@ -349,7 +349,7 @@ void pa_module_unload_all(pa_core *c) {
         return;
 
     /* Unload modules in reverse order by default */
-    indices = pa_xnew(uint32_t, pa_idxset_size(c->modules));
+    indices = pa_xmalloc(PA_ALIGN(sizeof(uint32_t) * pa_idxset_size(c->modules)));
     i = 0;
     PA_IDXSET_FOREACH(m, c->modules, state)
         indices[i++] = state;

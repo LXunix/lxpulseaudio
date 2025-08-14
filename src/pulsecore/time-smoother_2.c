@@ -80,7 +80,7 @@ pa_smoother_2* pa_smoother_2_new(pa_usec_t window, pa_usec_t time_stamp, uint32_
 
     pa_assert(window > 0);
 
-    s = pa_xnew(pa_smoother_2, 1);
+    s = pa_xmalloc(PA_ALIGN(sizeof(pa_smoother_2)));
     s->enable_usb_hack = false;
     s->usb_hack = false;
     s->hack_threshold = 0;

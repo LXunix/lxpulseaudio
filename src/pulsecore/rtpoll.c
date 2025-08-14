@@ -92,8 +92,8 @@ pa_rtpoll *pa_rtpoll_new(void) {
     p = pa_xnew0(pa_rtpoll, 1);
 
     p->n_pollfd_alloc = 32;
-    p->pollfd = pa_xnew(struct pollfd, p->n_pollfd_alloc);
-    p->pollfd2 = pa_xnew(struct pollfd, p->n_pollfd_alloc);
+    p->pollfd = pa_xmalloc(PA_ALIGN(sizeof(struct pollfd) * p->n_pollfd_alloc));
+    p->pollfd2 = pa_xmalloc(PA_ALIGN(sizeof(struct pollfd) * p->n_pollfd_alloc));
 
 #ifdef DEBUG_TIMING
     p->timestamp = pa_rtclock_now();

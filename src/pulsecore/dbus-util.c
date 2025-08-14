@@ -200,7 +200,7 @@ static dbus_bool_t add_timeout(DBusTimeout *timeout, void *data) {
     if (!dbus_timeout_get_enabled(timeout))
         return FALSE;
 
-    d = pa_xnew(struct timeout_data, 1);
+    d = pa_xmalloc(PA_ALIGN(sizeof(struct timeout_data)));
     d->connection = c;
     d->timeout = timeout;
     ev = c->mainloop->time_new(c->mainloop, pa_timeval_rtstore(&tv, pa_rtclock_now() + dbus_timeout_get_interval(timeout) * PA_USEC_PER_MSEC, c->use_rtclock), handle_time_event, d);
@@ -261,7 +261,7 @@ pa_dbus_wrap_connection* pa_dbus_wrap_connection_new(pa_mainloop_api *m, bool us
     if (!(conn = dbus_bus_get_private(type, error)))
         return NULL;
 
-    pconn = pa_xnew(pa_dbus_wrap_connection, 1);
+    pconn = pa_xmalloc(PA_ALIGN(sizeof(pa_dbus_wrap_connection)));
     pconn->mainloop = m;
     pconn->connection = conn;
     pconn->use_rtclock = use_rtclock;

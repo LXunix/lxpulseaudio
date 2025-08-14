@@ -741,7 +741,7 @@ static pa_dbus_signal_info *copy_signals(const pa_dbus_interface_info *info) {
 
     pa_assert(info->signals);
 
-    dst = pa_xnew(pa_dbus_signal_info, info->n_signals);
+    dst = pa_xmalloc(PA_ALIGN(sizeof(pa_dbus_signal_info) * info->n_signals));
 
     for (i = 0; i < info->n_signals; ++i) {
         dst[i].name = pa_xstrdup(info->signals[i].name);
@@ -1084,7 +1084,7 @@ const char **pa_dbus_protocol_get_extensions(pa_dbus_protocol *p, unsigned *n) {
     if (*n <= 0)
         return NULL;
 
-    extensions = pa_xnew(const char *, *n);
+    extensions = pa_xmalloc(PA_ALIGN(sizeof(const char *) * (*n)));
 
     while ((ext_name = pa_idxset_iterate(p->extensions, &state, NULL)))
         extensions[i++] = ext_name;

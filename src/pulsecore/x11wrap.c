@@ -213,7 +213,7 @@ static pa_x11_wrapper* x11_wrapper_new(pa_core *c, const char *name, const char 
         return NULL;
     }
 
-    w = pa_xnew(pa_x11_wrapper, 1);
+    w = pa_xmalloc(PA_ALIGN(sizeof(pa_x11_wrapper)));
     PA_REFCNT_INIT(w);
     w->core = c;
     w->property_name = pa_xstrdup(t);
@@ -341,7 +341,7 @@ pa_x11_client* pa_x11_client_new(pa_x11_wrapper *w, pa_x11_event_cb_t event_cb, 
     pa_assert(w);
     pa_assert(PA_REFCNT_VALUE(w) >= 1);
 
-    c = pa_xnew(pa_x11_client, 1);
+    c = pa_xmalloc(PA_ALIGN(sizeof(pa_x11_client)));
     c->wrapper = w;
     c->event_cb = event_cb;
     c->kill_cb = kill_cb;

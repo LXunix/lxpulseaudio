@@ -189,7 +189,7 @@ int pa_sndfile_read_channel_map(SNDFILE *sf, pa_channel_map *cm) {
         return -1;
     }
 
-    channels = pa_xnew(int, sfi.channels);
+    channels = pa_xmalloc(PA_ALIGN(sizeof(int) * sfi.channels));
     if (!sf_command(sf, SFC_GET_CHANNEL_MAP_INFO, channels, sizeof(channels[0]) * sfi.channels)) {
         pa_xfree(channels);
         return -1;
@@ -293,7 +293,7 @@ int pa_sndfile_write_channel_map(SNDFILE *sf, pa_channel_map *cm) {
         cm->map[1] == PA_CHANNEL_POSITION_FRONT_RIGHT)
         return 0;
 
-    channels = pa_xnew(int, cm->channels);
+    channels = pa_xmalloc(PA_ALIGN(sizeof(int) * cm->channels));
     for (c = 0; c < cm->channels; c++) {
 
         if (cm->map[c] < 0 ||

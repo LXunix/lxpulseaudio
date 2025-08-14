@@ -218,7 +218,7 @@ void *pa_tls_set(pa_tls *t, void *userdata) {
         if (!m) {
             HANDLE thread;
 
-            m = pa_xnew(struct pa_tls_monitor, 1);
+            m = pa_xmalloc(PA_ALIGN(sizeof(struct pa_tls_monitor)));
 
             DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
                 GetCurrentProcess(), &m->thread, 0, FALSE,

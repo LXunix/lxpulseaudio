@@ -2759,7 +2759,7 @@ int pa_close_all(int except_fd, ...) {
 
     va_end(ap);
 
-    p = pa_xnew(int, n+1);
+    p = pa_xmalloc(PA_ALIGN(sizeof(int) * n+1));
 
     va_start(ap, except_fd);
 
@@ -2890,7 +2890,7 @@ int pa_unblock_sigs(int except, ...) {
 
     va_end(ap);
 
-    p = pa_xnew(int, n+1);
+    p = pa_xmalloc(PA_ALIGN(sizeof(int) * n+1));
 
     va_start(ap, except);
 
@@ -2943,7 +2943,7 @@ int pa_reset_sigs(int except, ...) {
 
     va_end(ap);
 
-    p = pa_xnew(int, n+1);
+    p = pa_xmalloc(PA_ALIGN(sizeof(int) * n+1));
 
     va_start(ap, except);
 
@@ -3159,7 +3159,7 @@ char *pa_get_user_name_malloc(void) {
 #endif
         k = 32;
 
-    u = pa_xnew(char, k+1);
+    u = pa_xmalloc(PA_ALIGN(sizeof(char) * k+1));
 
     if (!(pa_get_user_name(u, k))) {
         pa_xfree(u);
@@ -3506,7 +3506,7 @@ char **pa_split_spaces_strv(const char *s) {
     unsigned i = 0, n = 8;
     const char *state = NULL;
 
-    t = pa_xnew(char*, n);
+    t = pa_xmalloc(PA_ALIGN(sizeof(char*) * n));
     while ((e = pa_split_spaces(s, &state))) {
         t[i++] = e;
 

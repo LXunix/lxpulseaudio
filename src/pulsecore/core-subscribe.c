@@ -67,7 +67,7 @@ pa_subscription* pa_subscription_new(pa_core *c, pa_subscription_mask_t m, pa_su
     pa_assert(m);
     pa_assert(callback);
 
-    s = pa_xnew(pa_subscription, 1);
+    s = pa_xmalloc(PA_ALIGN(sizeof(pa_subscription)));
     s->core = c;
     s->dead = false;
     s->callback = callback;
@@ -246,7 +246,7 @@ void pa_subscription_post(pa_core *c, pa_subscription_event_type_t t, uint32_t i
         }
     }
 
-    e = pa_xnew(pa_subscription_event, 1);
+    e = pa_xmalloc(PA_ALIGN(sizeof(pa_subscription_event)));
     e->core = c;
     e->type = t;
     e->index = idx;

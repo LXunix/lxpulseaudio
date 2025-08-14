@@ -2137,7 +2137,7 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
 
                             closedir(d);
                             if ((count = pa_dynarray_size(files))) {
-                                sorted_files = pa_xnew(char*, count);
+                                sorted_files = pa_xmalloc(PA_ALIGN(sizeof(char*) * count));
                                 for (i = 0; i < count; ++i)
                                     sorted_files[i] = pa_dynarray_get(files, i);
                                 pa_dynarray_free(files);

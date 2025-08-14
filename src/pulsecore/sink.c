@@ -3715,7 +3715,7 @@ PA_STATIC_FLIST_DECLARE(pa_sink_volume_change, 0, pa_xfree);
 static pa_sink_volume_change *pa_sink_volume_change_new(pa_sink *s) {
     pa_sink_volume_change *c;
     if (!(c = pa_flist_pop(PA_STATIC_FLIST_GET(pa_sink_volume_change))))
-        c = pa_xnew(pa_sink_volume_change, 1);
+        c = pa_xmalloc(PA_ALIGN(sizeof(pa_sink_volume_change)));
 
     PA_LLIST_INIT(pa_sink_volume_change, c);
     c->at = 0;

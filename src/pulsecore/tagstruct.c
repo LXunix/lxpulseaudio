@@ -64,7 +64,7 @@ pa_tagstruct *pa_tagstruct_new(void) {
     pa_tagstruct*t;
 
     if (!(t = pa_flist_pop(PA_STATIC_FLIST_GET(tagstructs))))
-        t = pa_xnew(pa_tagstruct, 1);
+        t = pa_xmalloc(PA_ALIGN(sizeof(pa_tagstruct)));
     t->data = t->per_type.appended;
     t->allocated = MAX_APPENDED_SIZE;
     t->length = t->rindex = 0;
@@ -79,7 +79,7 @@ pa_tagstruct *pa_tagstruct_new_fixed(const uint8_t* data, size_t length) {
     pa_assert(data && length);
 
     if (!(t = pa_flist_pop(PA_STATIC_FLIST_GET(tagstructs))))
-        t = pa_xnew(pa_tagstruct, 1);
+        t = pa_xmalloc(PA_ALIGN(sizeof(pa_tagstruct)));
     t->data = (uint8_t*) data;
     t->allocated = t->length = length;
     t->rindex = 0;

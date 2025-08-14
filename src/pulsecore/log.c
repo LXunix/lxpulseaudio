@@ -261,7 +261,7 @@ static char* get_backtrace(unsigned show_nframes) {
         a += strlen(pa_path_get_filename(symbols[j]));
     }
 
-    r = pa_xnew(char, a);
+    r = pa_xmalloc(PA_ALIGN(sizeof(char) * a));
 
     strcpy(r, " (");
     e = r + 2;

@@ -104,7 +104,7 @@ pa_smoother* pa_smoother_new(
     pa_assert(min_history >= 2);
     pa_assert(min_history <= HISTORY_MAX);
 
-    s = pa_xnew(pa_smoother, 1);
+    s = pa_xmalloc(PA_ALIGN(sizeof(pa_smoother)));
     s->adjust_time = adjust_time;
     s->history_time = history_time;
     s->min_history = min_history;

@@ -131,7 +131,7 @@ static AvahiTimeout* timeout_new(const AvahiPoll *api, const struct timeval *tv,
     pa_assert(callback);
     pa_assert_se(p = api->userdata);
 
-    t = pa_xnew(AvahiTimeout, 1);
+    t = pa_xmalloc(PA_ALIGN(sizeof(AvahiTimeout)));
     t->avahi_poll = p;
     t->callback = callback;
     t->userdata = userdata;
