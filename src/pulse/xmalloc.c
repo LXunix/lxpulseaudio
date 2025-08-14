@@ -36,6 +36,17 @@
 /* Make sure not to allocate more than this much memory. */
 #define MAX_ALLOC_SIZE (1024*1024*96) /* 96MB */
 
+// todo: AVX-512 must have 64 bytes alignment
+#ifdef HAVE_AVX
+#define ALIGNMENT 32 // AVX2, AVX
+#elif  HAVE_SSE
+#define ALIGNMENT 16 // SSE4.2, SSSE3, SSE2, SSE
+#else
+#define ALIGNMENT 8 // MMX
+#endif
+
+
+
 /* #undef malloc */
 /* #undef free */
 /* #undef realloc */
@@ -60,8 +71,14 @@ void* pa_xmalloc(size_t size) {
     pa_assert(size > 0);
     pa_assert(size < MAX_ALLOC_SIZE);
 
+#ifdef _POSIX_VERSION
+    int result = posix_memalign(&p, ALIGNMENT, size);
+    if (result != 0)
+        oom();
+#else
     if (!(p = malloc(size)))
         oom();
+#endif
 
     return p;
 }
