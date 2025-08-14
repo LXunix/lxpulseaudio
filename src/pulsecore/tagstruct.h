@@ -72,6 +72,7 @@ void pa_tagstruct_put(pa_tagstruct *t, ...);
 
 void pa_tagstruct_puts(pa_tagstruct*t, const char *s);
 void pa_tagstruct_putu8(pa_tagstruct*t, uint8_t c);
+void pa_tagstruct_putu16(pa_tagstruct*t, uint16_t c);
 void pa_tagstruct_putu32(pa_tagstruct*t, uint32_t i);
 void pa_tagstruct_putu64(pa_tagstruct*t, uint64_t i);
 void pa_tagstruct_puts64(pa_tagstruct*t, int64_t i);

@@ -126,6 +126,24 @@ static int read_u8(pa_tagstruct *t, uint8_t *u) {
     return 0;
 }
 
+static void write_u16(pa_tagstruct *t, uint16_t u) {
+    extend(t, 2);
+    u = htonl(u);
+    memcpy(t->data + t->length, &u, 2);
+    t->length += 2;
+}
+
+static int read_u16(pa_tagstruct *t, uint16_t *u) {
+    if (t->rindex + 2 > t->length)
+        return -1;
+
+    memcpy(u, t->data + t->rindex, 2);
+    *u = ntohl(*u);
+    t->rindex += 2;
+
+    return 0;
+}
+
 static void write_u32(pa_tagstruct *t, uint32_t u) {
     extend(t, 4);
     u = htonl(u);
@@ -214,6 +232,13 @@ void pa_tagstruct_putu32(pa_tagstruct*t, uint32_t i) {
 
     write_u8(t, PA_TAG_U32);
     write_u32(t, i);
+}
+
+void pa_tagstruct_putu16(pa_tagstruct*t, uint16_t i) {
+    pa_assert(t);
+
+    write_u8(t, PA_TAG_U16);
+    write_u16(t, i);
 }
 
 void pa_tagstruct_putu8(pa_tagstruct*t, uint8_t c) {
@@ -411,7 +436,7 @@ int pa_tagstruct_getu16(pa_tagstruct*t, uint16_t *c) {
     if (read_tag(t, PA_TAG_U16) < 0)
         return -1;
 
-    return read_u8(t, c);
+    return read_u16(t, c);
 }
 
 int pa_tagstruct_getu8(pa_tagstruct*t, uint8_t *c) {
