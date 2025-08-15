@@ -615,14 +615,14 @@ static void append_sink_or_source_item_properties(
     pa_assert_se(dbus_message_iter_close_container(iter, &sub));
 }
 
-static const char *array_root_containers[] = { OBJECT_SINKS, OBJECT_SOURCES };
-static const char *array_no_children[] = { };
-
 static DBusHandlerResult root_handler(DBusConnection *c, DBusMessage *m, void *userdata) {
     struct userdata *u = userdata;
-    DBusMessage *r = NULL;
 
     pa_assert(u);
+
+    static const char *array_root_containers[] = { OBJECT_SINKS, OBJECT_SOURCES };
+    static const char *array_no_children[] = { };
+    DBusMessage *r = NULL;
 
     if (message_is_property_get(m, "org.gnome.UPnP.MediaContainer2", "ChildCount")) {
         pa_assert_se(r = dbus_message_new_method_return(m));
