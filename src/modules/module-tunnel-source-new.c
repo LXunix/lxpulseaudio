@@ -593,7 +593,8 @@ finish:
      * created (even if we failed, we still notify the thread, so they can
      * either handle or kill the thread, rather than deadlock waiting for a
      * message that will never come */
-    pa_asyncmsgq_send(u->source->asyncmsgq, PA_MSGOBJECT(u->source), TUNNEL_MESSAGE_SOURCE_CREATED, u, 0, NULL);
+    if (u->source)
+        pa_asyncmsgq_send(u->source->asyncmsgq, PA_MSGOBJECT(u->source), TUNNEL_MESSAGE_SOURCE_CREATED, u, 0, NULL);
 }
 
 /* Runs in PA mainloop context */

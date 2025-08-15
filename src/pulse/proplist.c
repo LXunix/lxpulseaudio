@@ -261,7 +261,7 @@ int pa_proplist_set(pa_proplist *p, const char *key, const void *data, size_t nb
         pa_xfree(prop->value);
 
     prop->value = pa_xmalloc(nbytes+1);
-    if (nbytes > 0)
+    if (data && nbytes > 0)
         memcpy(prop->value, data, nbytes);
     ((char*) prop->value)[nbytes] = 0;
     prop->nbytes = nbytes;
