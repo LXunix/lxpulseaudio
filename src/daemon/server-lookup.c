@@ -406,6 +406,7 @@ finish:
 }
 
 static DBusHandlerResult message_cb(DBusConnection *conn, DBusMessage *msg, void *user_data) {
+    pa_assert(user_data);
     pa_dbusobj_server_lookup *sl = user_data;
 
     pa_assert(conn);

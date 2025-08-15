@@ -492,6 +492,7 @@ static enum find_result_t find_handler(struct call_info *call_info) {
 }
 
 static DBusHandlerResult handle_message_cb(DBusConnection *connection, DBusMessage *message, void *user_data) {
+    pa_assert(user_data);
     pa_dbus_protocol *p = user_data;
     struct call_info call_info;
     call_info.property_sig = NULL;
