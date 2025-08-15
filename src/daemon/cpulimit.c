@@ -109,10 +109,10 @@ static void write_err(const char *p) {
 
 /* The signal handler, called on every SIGXCPU */
 static void signal_handler(int sig) {
+    pa_assert(sig == SIGXCPU);
     int saved_errno;
 
     saved_errno = errno;
-    pa_assert(sig == SIGXCPU);
 
     if (phase == PHASE_IDLE) {
         pa_usec_t now, elapsed;
@@ -156,12 +156,12 @@ static void signal_handler(int sig) {
 
 /* Callback for IO events on the FIFO */
 static void callback(pa_mainloop_api*m, pa_io_event*e, int fd, pa_io_event_flags_t f, void *userdata) {
-    char c;
     pa_assert(m);
     pa_assert(e);
     pa_assert(f == PA_IO_EVENT_INPUT);
     pa_assert(e == io_event);
     pa_assert(fd == the_pipe[0]);
+    char c;
 
     pa_log("Received request to terminate due to CPU overload.");
 
@@ -171,14 +171,13 @@ static void callback(pa_mainloop_api*m, pa_io_event*e, int fd, pa_io_event_flags
 
 /* Initializes CPU load limiter */
 int pa_cpu_limit_init(pa_mainloop_api *m) {
-    struct sigaction sa;
-
     pa_assert(m);
     pa_assert(!api);
     pa_assert(!io_event);
     pa_assert(the_pipe[0] == -1);
     pa_assert(the_pipe[1] == -1);
     pa_assert(!installed);
+    struct sigaction sa;
 
     last_time = pa_rtclock_now();
 

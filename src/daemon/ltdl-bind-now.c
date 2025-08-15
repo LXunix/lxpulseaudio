@@ -67,9 +67,8 @@
 */
 
 static lt_module bind_now_open(lt_user_data d, const char *fname, lt_dladvise advise) {
-    lt_module m;
-
     pa_assert(fname);
+    lt_module m;
 
     if (!(m = dlopen(fname, PA_BIND_NOW))) {
         pa_log(_("Failed to open module %s: %s"), fname, dlerror());
@@ -81,7 +80,6 @@ static lt_module bind_now_open(lt_user_data d, const char *fname, lt_dladvise ad
 }
 
 static int bind_now_close(lt_user_data d, lt_module m) {
-
     pa_assert(m);
 
     if (dlclose(m) != 0) {
@@ -93,10 +91,9 @@ static int bind_now_close(lt_user_data d, lt_module m) {
 }
 
 static lt_ptr bind_now_find_sym(lt_user_data d, lt_module m, const char *symbol) {
-    lt_ptr ptr;
-
     pa_assert(m);
     pa_assert(symbol);
+    lt_ptr ptr;
 
     if (!(ptr = dlsym(m, symbol))) {
         lt_dlseterror(LT_ERROR_SYMBOL_NOT_FOUND);

@@ -366,8 +366,8 @@ static int change_user(void) {
 #ifdef HAVE_SYS_RESOURCE_H
 
 static int set_one_rlimit(const pa_rlimit *r, int resource, const char *name) {
-    struct rlimit rl;
     pa_assert(r);
+    struct rlimit rl;
 
     if (!r->is_set)
         return 0;

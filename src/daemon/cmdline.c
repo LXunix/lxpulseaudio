@@ -169,13 +169,13 @@ void pa_cmdline_help(const char *argv0) {
 }
 
 int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d) {
-    pa_strbuf *buf = NULL;
-    int c;
-    int b;
-
     pa_assert(conf);
     pa_assert(argc > 0);
     pa_assert(argv);
+
+    pa_strbuf *buf = NULL;
+    int c;
+    int b;
 
     buf = pa_strbuf_new();
 

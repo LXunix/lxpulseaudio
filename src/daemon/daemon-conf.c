@@ -188,10 +188,10 @@ void pa_daemon_conf_free(pa_daemon_conf *c) {
 }
 
 int pa_daemon_conf_set_log_target(pa_daemon_conf *c, const char *string) {
-    pa_log_target *log_target = NULL;
-
     pa_assert(c);
     pa_assert(string);
+
+    pa_log_target *log_target = NULL;
 
     if (!pa_streq(string, "auto")) {
         log_target = pa_log_parse_target(string);
@@ -206,9 +206,9 @@ int pa_daemon_conf_set_log_target(pa_daemon_conf *c, const char *string) {
 }
 
 int pa_daemon_conf_set_log_level(pa_daemon_conf *c, const char *string) {
-    uint32_t u;
     pa_assert(c);
     pa_assert(string);
+    uint32_t u;
 
     if (pa_atou(string, &u) >= 0) {
         if (u >= PA_LOG_LEVEL_MAX)
@@ -232,9 +232,9 @@ int pa_daemon_conf_set_log_level(pa_daemon_conf *c, const char *string) {
 }
 
 int pa_daemon_conf_set_resample_method(pa_daemon_conf *c, const char *string) {
-    int m;
     pa_assert(c);
     pa_assert(string);
+    int m;
 
     if ((m = pa_parse_resample_method(string)) < 0)
         return -1;
@@ -260,9 +260,8 @@ int pa_daemon_conf_set_local_server_type(pa_daemon_conf *c, const char *string) 
 }
 
 static int parse_log_target(pa_config_parser_state *state) {
-    pa_daemon_conf *c;
-
     pa_assert(state);
+    pa_daemon_conf *c;
 
     c = state->data;
 
@@ -275,9 +274,8 @@ static int parse_log_target(pa_config_parser_state *state) {
 }
 
 static int parse_log_level(pa_config_parser_state *state) {
-    pa_daemon_conf *c;
-
     pa_assert(state);
+    pa_daemon_conf *c;
 
     c = state->data;
 
@@ -290,9 +288,8 @@ static int parse_log_level(pa_config_parser_state *state) {
 }
 
 static int parse_resample_method(pa_config_parser_state *state) {
-    pa_daemon_conf *c;
-
     pa_assert(state);
+    pa_daemon_conf *c;
 
     c = state->data;
 
@@ -306,9 +303,8 @@ static int parse_resample_method(pa_config_parser_state *state) {
 
 #ifdef HAVE_SYS_RESOURCE_H
 static int parse_rlimit(pa_config_parser_state *state) {
-    struct pa_rlimit *r;
-
     pa_assert(state);
+    struct pa_rlimit *r;
 
     r = state->data;
 
@@ -331,10 +327,10 @@ static int parse_rlimit(pa_config_parser_state *state) {
 #endif
 
 static int parse_sample_format(pa_config_parser_state *state) {
+    pa_assert(state);
+
     pa_daemon_conf *c;
     pa_sample_format_t f;
-
-    pa_assert(state);
 
     c = state->data;
 
@@ -348,10 +344,9 @@ static int parse_sample_format(pa_config_parser_state *state) {
 }
 
 static int parse_sample_rate(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     uint32_t r;
-
-    pa_assert(state);
 
     c = state->data;
 
@@ -365,10 +360,9 @@ static int parse_sample_rate(pa_config_parser_state *state) {
 }
 
 static int parse_alternate_sample_rate(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     uint32_t r;
-
-    pa_assert(state);
 
     c = state->data;
 
@@ -388,10 +382,9 @@ struct channel_conf_info {
 };
 
 static int parse_sample_channels(pa_config_parser_state *state) {
+    pa_assert(state);
     struct channel_conf_info *i;
     int32_t n;
-
-    pa_assert(state);
 
     i = state->data;
 
@@ -406,9 +399,8 @@ static int parse_sample_channels(pa_config_parser_state *state) {
 }
 
 static int parse_channel_map(pa_config_parser_state *state) {
-    struct channel_conf_info *i;
-
     pa_assert(state);
+    struct channel_conf_info *i;
 
     i = state->data;
 
@@ -422,10 +414,9 @@ static int parse_channel_map(pa_config_parser_state *state) {
 }
 
 static int parse_fragments(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     int32_t n;
-
-    pa_assert(state);
 
     c = state->data;
 
@@ -439,10 +430,9 @@ static int parse_fragments(pa_config_parser_state *state) {
 }
 
 static int parse_fragment_size_msec(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     int32_t n;
-
-    pa_assert(state);
 
     c = state->data;
 
@@ -456,10 +446,9 @@ static int parse_fragment_size_msec(pa_config_parser_state *state) {
 }
 
 static int parse_nice_level(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     int32_t level;
-
-    pa_assert(state);
 
     c = state->data;
 
@@ -473,12 +462,11 @@ static int parse_nice_level(pa_config_parser_state *state) {
 }
 
 static int parse_rtprio(pa_config_parser_state *state) {
+    pa_assert(state);
 #if !defined(OS_IS_WIN32) && defined(HAVE_SCHED_H)
     pa_daemon_conf *c;
     int32_t rtprio;
 #endif
-
-    pa_assert(state);
 
 #ifdef OS_IS_WIN32
     pa_log("[%s:%u] Realtime priority not available on win32.", state->filename, state->lineno);
@@ -499,10 +487,10 @@ static int parse_rtprio(pa_config_parser_state *state) {
 }
 
 static int parse_disable_lfe_remix(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     int k;
 
-    pa_assert(state);
     c = state->data;
 
     if ((k = pa_parse_boolean(state->rvalue)) < 0) {
@@ -520,10 +508,10 @@ static int parse_disable_lfe_remix(pa_config_parser_state *state) {
 }
 
 static int parse_enable_lfe_remix(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
     int k;
 
-    pa_assert(state);
     c = state->data;
 
     if ((k = pa_parse_boolean(state->rvalue)) < 0) {
@@ -542,9 +530,9 @@ static int parse_enable_lfe_remix(pa_config_parser_state *state) {
 
 #ifdef HAVE_DBUS
 static int parse_server_type(pa_config_parser_state *state) {
+    pa_assert(state);
     pa_daemon_conf *c;
 
-    pa_assert(state);
 
     c = state->data;
 
@@ -715,8 +703,8 @@ finish:
 }
 
 int pa_daemon_conf_env(pa_daemon_conf *c) {
-    char *e;
     pa_assert(c);
+    char *e;
 
     if ((e = getenv(ENV_DL_SEARCH_PATH))) {
         pa_xfree(c->dl_search_path);
@@ -744,8 +732,8 @@ const char *pa_daemon_conf_get_default_script_file(pa_daemon_conf *c) {
 }
 
 FILE *pa_daemon_conf_open_default_script_file(pa_daemon_conf *c) {
-    FILE *f;
     pa_assert(c);
+    FILE *f;
 
     if (!c->default_script_file) {
         if (c->system_instance)
@@ -759,6 +747,9 @@ FILE *pa_daemon_conf_open_default_script_file(pa_daemon_conf *c) {
 }
 
 char *pa_daemon_conf_dump(pa_daemon_conf *c) {
+    pa_assert(c);
+    pa_assert(c->log_level < PA_LOG_LEVEL_MAX);
+
     static const char* const log_level_to_string[] = {
         [PA_LOG_DEBUG] = "debug",
         [PA_LOG_INFO] = "info",
@@ -780,14 +771,10 @@ char *pa_daemon_conf_dump(pa_daemon_conf *c) {
     char cm[PA_CHANNEL_MAP_SNPRINT_MAX];
     char *log_target = NULL;
 
-    pa_assert(c);
-
     s = pa_strbuf_new();
 
     if (c->config_file)
         pa_strbuf_printf(s, _("### Read from configuration file: %s ###\n"), c->config_file);
-
-    pa_assert(c->log_level < PA_LOG_LEVEL_MAX);
 
     if (c->log_target)
         log_target = pa_log_target_to_string(c->log_target);

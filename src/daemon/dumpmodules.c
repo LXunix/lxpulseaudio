@@ -45,9 +45,9 @@ static void short_info(const char *name, const char *path, pa_modinfo *i) {
 }
 
 static void long_info(const char *name, const char *path, pa_modinfo *i) {
-    static int nl = 0;
     pa_assert(name);
     pa_assert(i);
+    static int nl = 0;
 
     if (nl)
         printf("\n");
@@ -77,9 +77,8 @@ static void long_info(const char *name, const char *path, pa_modinfo *i) {
 }
 
 static void show_info(const char *name, const char *path, void (*info)(const char *name, const char *path, pa_modinfo*i)) {
-    pa_modinfo *i;
-
     pa_assert(name);
+    pa_modinfo *i;
 
     if ((i = pa_modinfo_get_by_name(path ? path : name))) {
         info(name, path, i);
