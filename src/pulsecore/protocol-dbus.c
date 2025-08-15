@@ -990,28 +990,31 @@ void pa_dbus_protocol_add_signal_listener(
      * currently false, the idxset is empty already so this does nothing. */
     pa_idxset_remove_all(conn_entry->all_signals_objects, pa_xfree);
 
-    if (signal_name) {
-        conn_entry->listening_for_all_signals = false;
+    if (objects)
+    {
+        if (signal_name) {
+            conn_entry->listening_for_all_signals = false;
 
-        /* Replace the old signal paths entry for this signal with a new
-         * one. */
-        pa_hashmap_remove_and_free(conn_entry->listening_signals, signal_name);
-        signal_paths_entry = signal_paths_entry_new(signal_name);
+            /* Replace the old signal paths entry for this signal with a new
+             * one. */
+            pa_hashmap_remove_and_free(conn_entry->listening_signals, signal_name);
+            signal_paths_entry = signal_paths_entry_new(signal_name);
 
-        for (i = 0; i < n_objects; ++i)
-            pa_idxset_put(signal_paths_entry->paths, pa_xstrdup(objects[i]), NULL);
+            for (i = 0; i < n_objects; ++i)
+                pa_idxset_put(signal_paths_entry->paths, pa_xstrdup(objects[i]), NULL);
 
-        pa_hashmap_put(conn_entry->listening_signals, signal_paths_entry->signal, signal_paths_entry);
+            pa_hashmap_put(conn_entry->listening_signals, signal_paths_entry->signal, signal_paths_entry);
 
-    } else {
-        conn_entry->listening_for_all_signals = true;
+        } else {
+            conn_entry->listening_for_all_signals = true;
 
-        /* We're not interested in individual signals anymore, so let's empty
-         * listening_signals. */
-        pa_hashmap_remove_all(conn_entry->listening_signals);
+            /* We're not interested in individual signals anymore, so let's empty
+             * listening_signals. */
+            pa_hashmap_remove_all(conn_entry->listening_signals);
 
-        for (i = 0; i < n_objects; ++i)
-            pa_idxset_put(conn_entry->all_signals_objects, pa_xstrdup(objects[i]), NULL);
+            for (i = 0; i < n_objects; ++i)
+                pa_idxset_put(conn_entry->all_signals_objects, pa_xstrdup(objects[i]), NULL);
+        }
     }
 }
 

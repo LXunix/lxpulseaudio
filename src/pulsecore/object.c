@@ -50,14 +50,19 @@ pa_object *pa_object_new_internal(size_t size, const char *type_id, bool (*check
 pa_object *pa_object_ref(pa_object *o) {
     pa_object_assert_ref(o);
 
-    PA_REFCNT_INC(o);
-    return o;
+    if (o)
+    {
+        PA_REFCNT_INC(o);
+        return o;
+    }
+
+    return NULL;
 }
 
 void pa_object_unref(pa_object *o) {
     pa_object_assert_ref(o);
 
-    if (PA_REFCNT_DEC(o) <= 0) {
+    if (o && PA_REFCNT_DEC(o) <= 0) {
         pa_assert(o->free);
         o->free(o);
     }

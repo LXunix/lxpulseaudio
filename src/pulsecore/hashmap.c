@@ -245,7 +245,7 @@ void *pa_hashmap_iterate(const pa_hashmap *h, void **state, const void **key) {
 
     e = *state ? *state : h->iterate_list_head;
 
-    if (e->iterate_next)
+    if (e && e->iterate_next)
         *state = e->iterate_next;
     else
         *state = (void*) -1;

@@ -600,8 +600,9 @@ void pa_dbus_append_basic_array(DBusMessageIter *iter, int item_type, const void
 
     pa_assert_se(dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY, signature_from_basic_type(item_type), &array_iter));
 
-    for (i = 0; i < n; ++i)
-        pa_assert_se(dbus_message_iter_append_basic(&array_iter, item_type, &((uint8_t*) array)[i * item_size]));
+    if (array)
+        for (i = 0; i < n; ++i)
+            pa_assert_se(dbus_message_iter_append_basic(&array_iter, item_type, &((uint8_t*) array)[i * item_size]));
 
     pa_assert_se(dbus_message_iter_close_container(iter, &array_iter));
 }
