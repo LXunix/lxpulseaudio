@@ -75,6 +75,7 @@ static const char introspection[] =
     "</node>\n";
 
 static void unregister_cb(DBusConnection *conn, void *user_data) {
+    pa_assert(user_data);
     pa_dbusobj_server_lookup *sl = user_data;
 
     pa_assert(sl);
