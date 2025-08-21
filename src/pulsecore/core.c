@@ -39,7 +39,6 @@
 #include <pulsecore/random.h>
 #include <pulsecore/log.h>
 #include <pulsecore/macro.h>
-#include <pulsecore/strbuf.h>
 #include <pulsecore/namereg.h>
 
 #include "core.h"
@@ -51,21 +50,18 @@ static int core_process_msg(pa_msgobject *o, int code, void *userdata, int64_t o
 
     pa_core_assert_ref(c);
 
-    switch (code) {
-
-        case PA_CORE_MESSAGE_UNLOAD_MODULE:
-            pa_module_unload(userdata, true);
-            return 0;
-
-        default:
-            return -1;
+    if (code == PA_CORE_MESSAGE_UNLOAD_MODULE) {
+        pa_module_unload(userdata, true);
+        return 0;
     }
+
+    return -1;
 }
 
 static void core_free(pa_object *o);
 
 /* Returns a list of handlers. */
-static char *message_handler_list(pa_core *c) {
+static char *message_handler_list(const pa_core *c) {
     pa_json_encoder *encoder;
     void *state = NULL;
     struct pa_message_handler *handler;
@@ -87,6 +83,7 @@ static char *message_handler_list(pa_core *c) {
 }
 
 static int core_message_handler(const char *object_path, const char *message, const pa_json_object *parameters, char **response, void *userdata) {
+    pa_assert(userdata);
     pa_core *c = userdata;
 
     pa_assert(c);
@@ -94,7 +91,7 @@ static int core_message_handler(const char *object_path, const char *message, co
     pa_assert(response);
     pa_assert(pa_safe_streq(object_path, "/core"));
 
-    if (pa_streq(message, "list-handlers")) {
+    if (response && pa_streq(message, "list-handlers")) {
         *response = message_handler_list(c);
         return PA_OK;
     }
@@ -104,14 +101,13 @@ static int core_message_handler(const char *object_path, const char *message, co
 
 pa_core* pa_core_new(pa_mainloop_api *m, bool shared, bool enable_memfd, size_t shm_size) {
     pa_core* c;
-    pa_mempool *pool;
-    pa_mem_type_t type;
+    pa_mempool *pool = NULL;
     int j;
 
     pa_assert(m);
 
     if (shared) {
-        type = (enable_memfd) ? PA_MEM_TYPE_SHARED_MEMFD : PA_MEM_TYPE_SHARED_POSIX;
+        pa_mem_type_t type = (enable_memfd) ? PA_MEM_TYPE_SHARED_MEMFD : PA_MEM_TYPE_SHARED_POSIX;
         if (!(pool = pa_mempool_new(type, shm_size, false))) {
             pa_log_warn("Failed to allocate %s memory pool. Falling back to a normal memory pool.",
                         pa_mem_type_to_string(type));
@@ -423,7 +419,7 @@ finish:
 /* a  < b  ->  return -1
  * a == b  ->  return  0
  * a  > b  ->  return  1 */
-static int compare_sinks(pa_sink *a, pa_sink *b) {
+static int compare_sinks(const pa_sink *a, const pa_sink *b) {
     pa_core *core;
 
     core = a->core;
@@ -511,7 +507,7 @@ void pa_core_update_default_sink(pa_core *core) {
 /* a  < b  ->  return -1
  * a == b  ->  return  0
  * a  > b  ->  return  1 */
-static int compare_sources(pa_source *a, pa_source *b) {
+static int compare_sources(const pa_source *a, const pa_source *b) {
     pa_core *core;
 
     core = a->core;
@@ -600,7 +596,7 @@ void pa_core_update_default_source(pa_core *core) {
 	pa_source_move_streams_to_default_source(core, old_default_source, true);
 }
 
-void pa_core_set_exit_idle_time(pa_core *core, int time) {
+void pa_core_set_exit_idle_time(pa_core *core, short time) {
     pa_assert(core);
 
     if (time == core->exit_idle_time)
@@ -610,7 +606,7 @@ void pa_core_set_exit_idle_time(pa_core *core, int time) {
     core->exit_idle_time = time;
 }
 
-static void exit_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void exit_callback(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     pa_core *c = userdata;
     pa_assert(c->exit_event == e);
 

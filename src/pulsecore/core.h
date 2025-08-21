@@ -271,7 +271,7 @@ void pa_core_set_policy_default_source(pa_core *core, const char *source);
 void pa_core_update_default_sink(pa_core *core);
 void pa_core_update_default_source(pa_core *core);
 
-void pa_core_set_exit_idle_time(pa_core *core, int time);
+void pa_core_set_exit_idle_time(pa_core *core, short time);
 
 /* Check whether no one is connected to this core */
 void pa_core_check_idle(pa_core *c);
