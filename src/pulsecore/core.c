@@ -156,7 +156,7 @@ pa_core* pa_core_new(pa_mainloop_api *m, bool shared, bool enable_memfd, size_t 
     c->policy_default_sink = NULL;
 
     c->default_sample_spec.format = PA_SAMPLE_S16NE;
-    c->default_sample_spec.rate = 44100;
+    c->default_sample_spec.rate = 48000;
     c->default_sample_spec.channels = 2;
     pa_channel_map_init_extend(&c->default_channel_map, c->default_sample_spec.channels, PA_CHANNEL_MAP_DEFAULT);
 #ifdef HAVE_AVX

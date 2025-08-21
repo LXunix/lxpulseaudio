@@ -111,7 +111,7 @@ static const pa_daemon_conf default_conf = {
 #endif
     .deferred_volume_safety_margin_usec = 8000,
     .deferred_volume_extra_delay_usec = 0,
-    .default_sample_spec = { .format = PA_SAMPLE_S16NE, .rate = 44100, .channels = 2 },
+    .default_sample_spec = { .format = PA_SAMPLE_S16NE, .rate = 48000, .channels = 2 },
     .alternate_sample_rate = 48000,
     .default_channel_map = &(pa_channel_map){ .channels = 2, .map = { PA_CHANNEL_POSITION_LEFT, PA_CHANNEL_POSITION_RIGHT } },
     .shm_size = 0
