@@ -99,8 +99,16 @@ static const pa_daemon_conf default_conf = {
     .disable_memfd = false,
     .lock_memory = false,
     .deferred_volume = true,
+#ifdef HAVE_AVX
+    .default_n_fragments = 8,
+    .default_fragment_size_msec = 8,
+#elif HAVE_SSE
     .default_n_fragments = 4,
-    .default_fragment_size_msec = 25,
+    .default_fragment_size_msec = 16,
+#elif HAVE_MMX
+    .default_n_fragments = 2,
+    .default_fragment_size_msec = 32,
+#endif
     .deferred_volume_safety_margin_usec = 8000,
     .deferred_volume_extra_delay_usec = 0,
     .default_sample_spec = { .format = PA_SAMPLE_S16NE, .rate = 44100, .channels = 2 },

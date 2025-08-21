@@ -159,8 +159,16 @@ pa_core* pa_core_new(pa_mainloop_api *m, bool shared, bool enable_memfd, size_t 
     c->default_sample_spec.rate = 44100;
     c->default_sample_spec.channels = 2;
     pa_channel_map_init_extend(&c->default_channel_map, c->default_sample_spec.channels, PA_CHANNEL_MAP_DEFAULT);
+#ifdef HAVE_AVX
+    c->default_n_fragments = 8;
+    c->default_fragment_size_msec = 8;
+#elif HAVE_SSE
     c->default_n_fragments = 4;
-    c->default_fragment_size_msec = 25;
+    c->default_fragment_size_msec = 16;
+#elif HAVE_MMX
+    c->default_n_fragments = 2;
+    c->default_fragment_size_msec = 32;
+#endif
 
     c->deferred_volume_safety_margin_usec = 8000;
     c->deferred_volume_extra_delay_usec = 0;
