@@ -109,7 +109,7 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
     <option>
       <p><opt>--rate</opt><arg>=SAMPLERATE</arg></p>
 
-      <optdesc><p>Capture or play back audio with the specified sample rate. Defaults to 44100 Hz.</p></optdesc>
+      <optdesc><p>Capture or play back audio with the specified sample rate. Defaults to 48000 Hz.</p></optdesc>
     </option>
 
     <option>

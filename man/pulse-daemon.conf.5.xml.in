@@ -487,7 +487,7 @@ License along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 
     <p>Most drivers try to open the audio device with these settings
     and then fall back to lower settings. The default settings are CD
-    quality: 16bit native endian, 2 channels, 44100 Hz sampling.</p>
+    quality: 16bit native endian, 2 channels, 48000 Hz sampling.</p>
 
     <option>
       <p><opt>default-sample-format=</opt> The default sampling
