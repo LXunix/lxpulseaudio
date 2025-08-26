@@ -23,7 +23,7 @@ namespace PulseAudio {
         class Simple {
                 public Simple(string? server = null, string? name = null, Stream.Direction dir = Stream.Direction.PLAYBACK,
                               string? dev = null, string stream_name = "",
-                              SampleSpec ss = SampleSpec(){ format = SampleFormat.S16NE, rate = 44100, channels = 2 },
+                              SampleSpec ss = SampleSpec(){ format = SampleFormat.S16NE, rate = 48000, channels = 2 },
                               ChannelMap? map = null, Stream.BufferAttr? attr = null, out int error = null);
                 public int write(void* data, size_t bytes, out int error = null);
                 public int drain(out int error = null);

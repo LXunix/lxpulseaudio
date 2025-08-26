@@ -92,7 +92,7 @@ static bool volume_is_set = false;
 
 static pa_sample_spec sample_spec = {
     .format = PA_SAMPLE_S16LE,
-    .rate = 44100,
+    .rate = 48000, // 48000 Hz default sample rate
     .channels = 2
 };
 static bool sample_spec_set = false;
