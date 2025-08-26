@@ -192,7 +192,7 @@ static uint8_t fill_capabilities(uint8_t capabilities_buffer[MAX_A2DP_CAPS_SIZE]
     capabilities->subbands = SBC_SUBBANDS_4 | SBC_SUBBANDS_8;
     capabilities->block_length = SBC_BLOCK_LENGTH_4 | SBC_BLOCK_LENGTH_8 | SBC_BLOCK_LENGTH_12 | SBC_BLOCK_LENGTH_16;
     capabilities->min_bitpool = SBC_MIN_BITPOOL;
-    capabilities->max_bitpool = SBC_BITPOOL_HQ_JOINT_STEREO_44100;
+    capabilities->max_bitpool = SBC_BITPOOL_HQ_JOINT_STEREO_48000; // 48000 Hz default sample rate
 
     return sizeof(*capabilities);
 }

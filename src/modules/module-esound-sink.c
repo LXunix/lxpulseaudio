@@ -471,7 +471,7 @@ static int handle_response(struct userdata *u) {
             pa_assert(u->read_length == sizeof(int32_t));
 
             /* Process latency info */
-            u->latency = (pa_usec_t) ((double) (*(int32_t*) u->read_data) * 1000000 / 44100);
+            u->latency = (pa_usec_t) ((double) (*(int32_t*) u->read_data) * 1000000 / 48000); // 48000 Hz default sample rate
             if (u->latency > 10000000) {
                 pa_log_warn("Invalid latency information received from server");
                 u->latency = 0;

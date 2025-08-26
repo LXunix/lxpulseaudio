@@ -213,7 +213,7 @@ int pa__init(pa_module*m) {
 
     ss.format = PA_SAMPLE_FLOAT32;
     ss.channels = 1;
-    ss.rate = 44100;
+    ss.rate = 48000; // 48000 Hz default sample rate
 
     if (pa_modargs_get_sample_rate(ma, &ss.rate) < 0) {
         pa_log("Invalid rate specification");

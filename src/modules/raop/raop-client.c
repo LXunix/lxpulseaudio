@@ -911,7 +911,7 @@ static void rtsp_stream_cb(pa_rtsp_client *rtsp, pa_rtsp_state_t state, pa_rtsp_
                         "t=0 0\r\n"
                         "m=audio 0 RTP/AVP 96\r\n"
                         "a=rtpmap:96 AppleLossless\r\n"
-                        "a=fmtp:96 %d 0 16 40 10 14 2 255 0 0 44100\r\n",
+                        "a=fmtp:96 %d 0 16 40 10 14 2 255 0 0 48000\r\n",
                         c->sid, ipv, ip, ipv, c->host, frames);
 
                     break;
@@ -941,7 +941,7 @@ static void rtsp_stream_cb(pa_rtsp_client *rtsp, pa_rtsp_state_t state, pa_rtsp_
                         "t=0 0\r\n"
                         "m=audio 0 RTP/AVP 96\r\n"
                         "a=rtpmap:96 AppleLossless\r\n"
-                        "a=fmtp:96 %d 0 16 40 10 14 2 255 0 0 44100\r\n"
+                        "a=fmtp:96 %d 0 16 40 10 14 2 255 0 0 48000\r\n"
                         "a=rsaaeskey:%s\r\n"
                         "a=aesiv:%s\r\n",
                         c->sid, ipv, ip, ipv, c->host, frames, key, iv);
