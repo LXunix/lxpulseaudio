@@ -122,7 +122,7 @@ static void save(struct userdata *u) {
     u->modified = false;
 }
 
-static void time_cb(pa_mainloop_api *a, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void time_cb(pa_mainloop_api *a, const pa_time_event *e, const struct timeval *t, void *userdata) {
     struct userdata *u = userdata;
 
     pa_assert(u);

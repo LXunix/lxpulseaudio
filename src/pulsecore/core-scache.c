@@ -62,7 +62,7 @@
 
 #define UNLOAD_POLL_TIME (60 * PA_USEC_PER_SEC)
 
-static void timeout_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void timeout_callback(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     pa_core *c = userdata;
 
     pa_assert(c);

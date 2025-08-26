@@ -58,7 +58,7 @@ struct device_info {
     pa_usec_t timeout;
 };
 
-static void timeout_cb(pa_mainloop_api*a, pa_time_event* e, const struct timeval *t, void *userdata) {
+static void timeout_cb(pa_mainloop_api*a, const pa_time_event* e, const struct timeval *t, void *userdata) {
     struct device_info *d = userdata;
 
     pa_assert(d);

@@ -34,7 +34,7 @@
 #include <pulsecore/macro.h>
 #include <pulsecore/mutex.h>
 
-static void tcb(pa_mainloop_api *a, pa_time_event *e, const struct timeval *tv, void *userdata) {
+static void tcb(pa_mainloop_api *a, const pa_time_event *e, const struct timeval *tv, void *userdata) {
     pa_assert_se(pa_threaded_mainloop_in_thread(userdata));
     fprintf(stderr, "TIME EVENT START\n");
     pa_threaded_mainloop_signal(userdata, 1);

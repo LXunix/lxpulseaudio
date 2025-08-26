@@ -400,7 +400,7 @@ fail:
 
 #endif
 
-static void timeout_cb(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void timeout_cb(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     pa_socket_client *c = userdata;
 
     pa_assert(m);

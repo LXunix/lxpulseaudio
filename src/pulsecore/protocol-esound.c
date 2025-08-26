@@ -1463,7 +1463,7 @@ static pa_usec_t source_output_get_latency_cb(pa_source_output *o) {
 
 /*** entry points ***/
 
-static void auth_timeout(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void auth_timeout(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     connection *c = CONNECTION(userdata);
 
     pa_assert(m);

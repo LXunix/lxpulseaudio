@@ -114,7 +114,7 @@ struct AvahiTimeout {
     void *userdata;
 };
 
-static void timeout_callback(pa_mainloop_api*a, pa_time_event* e, const struct timeval *t, void *userdata) {
+static void timeout_callback(pa_mainloop_api*a, const pa_time_event* e, const struct timeval *t, void *userdata) {
     AvahiTimeout *to = userdata;
 
     pa_assert(a);

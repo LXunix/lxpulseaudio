@@ -602,7 +602,7 @@ static void adjust_rates(struct userdata *u) {
 }
 
 /* Called from main context */
-static void time_callback(pa_mainloop_api *a, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void time_callback(pa_mainloop_api *a, const pa_time_event *e, const struct timeval *t, void *userdata) {
     struct userdata *u = userdata;
 
     pa_assert(u);

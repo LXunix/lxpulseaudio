@@ -500,7 +500,7 @@ static void check_smoother_status(pa_stream *s, bool aposteriori, bool force_sta
      * if prebuf is non-zero! */
 }
 
-static void auto_timing_update_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata);
+static void auto_timing_update_callback(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata);
 
 void pa_command_stream_moved(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
     pa_context *c = userdata;
@@ -959,7 +959,7 @@ static void invalidate_indexes(pa_stream *s, bool r, bool w) {
     request_auto_timing_update(s, true);
 }
 
-static void auto_timing_update_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void auto_timing_update_callback(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     pa_stream *s = userdata;
 
     pa_assert(s);

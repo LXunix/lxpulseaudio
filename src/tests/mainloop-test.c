@@ -74,7 +74,7 @@ static void dcb(pa_mainloop_api*a, pa_defer_event *e, void *userdata) {
     a->defer_enable(e, 0);
 }
 
-static void tcb(pa_mainloop_api*a, pa_time_event *e, const struct timeval *tv, void *userdata) {
+static void tcb(pa_mainloop_api*a, const pa_time_event *e, const struct timeval *tv, void *userdata) {
     fprintf(stderr, "TIME EVENT\n");
 
 #if defined(GLIB_MAIN_LOOP)

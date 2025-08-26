@@ -1058,7 +1058,7 @@ static void request_latency(struct userdata *u) {
 }
 
 /* Called from main context */
-static void timeout_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void timeout_callback(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     struct userdata *u = userdata;
 
     pa_assert(m);

@@ -42,7 +42,7 @@ struct pa_restart_data {
 
 static void do_reinit(pa_mainloop_api *mainloop, pa_restart_data *rd);
 
-static void call_init(pa_mainloop_api *mainloop, pa_time_event *e, const struct timeval *tv, void *userdata) {
+static void call_init(pa_mainloop_api *mainloop, const pa_time_event *e, const struct timeval *tv, void *userdata) {
     pa_restart_data *rd = userdata;
     int ret;
 

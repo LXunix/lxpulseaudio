@@ -650,7 +650,7 @@ static void sap_event_cb(pa_mainloop_api *m, pa_io_event *e, int fd, pa_io_event
     }
 }
 
-static void check_death_event_cb(pa_mainloop_api *m, pa_time_event *t, const struct timeval *tv, void *userdata) {
+static void check_death_event_cb(pa_mainloop_api *m, const pa_time_event *t, const struct timeval *tv, void *userdata) {
     struct session *s, *n;
     struct userdata *u = userdata;
     struct timeval now;

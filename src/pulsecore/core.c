@@ -674,7 +674,7 @@ pa_time_event* pa_core_rttime_new(pa_core *c, pa_usec_t usec, pa_time_event_cb_t
     return c->mainloop->time_new(c->mainloop, pa_timeval_rtstore(&tv, usec, true), cb, userdata);
 }
 
-void pa_core_rttime_restart(pa_core *c, pa_time_event *e, pa_usec_t usec) {
+void pa_core_rttime_restart(pa_core *c, const pa_time_event *e, pa_usec_t usec) {
     struct timeval tv;
 
     pa_assert(c);

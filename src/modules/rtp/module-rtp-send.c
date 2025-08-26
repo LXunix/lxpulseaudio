@@ -197,7 +197,7 @@ static void source_output_kill_cb(pa_source_output* o) {
     u->source_output = NULL;
 }
 
-static void sap_event_cb(pa_mainloop_api *m, pa_time_event *t, const struct timeval *tv, void *userdata) {
+static void sap_event_cb(pa_mainloop_api *m, const pa_time_event *t, const struct timeval *tv, void *userdata) {
     struct userdata *u = userdata;
 
     pa_assert(m);

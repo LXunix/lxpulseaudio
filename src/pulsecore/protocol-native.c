@@ -5204,7 +5204,7 @@ static void client_send_event_cb(pa_client *client, const char*event, pa_proplis
 
 /*** module entry points ***/
 
-static void auth_timeout(pa_mainloop_api*m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void auth_timeout(pa_mainloop_api*m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     pa_native_connection *c = PA_NATIVE_CONNECTION(userdata);
 
     pa_assert(m);

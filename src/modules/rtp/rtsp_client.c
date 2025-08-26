@@ -311,7 +311,7 @@ static void line_callback(pa_ioline *line, const char *s, void *userdata) {
     pa_xfree(s2);
 }
 
-static void reconnect_cb(pa_mainloop_api *a, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void reconnect_cb(pa_mainloop_api *a, const pa_time_event *e, const struct timeval *t, void *userdata) {
     if (userdata) {
         pa_rtsp_client *c = userdata;
         pa_rtsp_connect(c);

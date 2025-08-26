@@ -364,7 +364,7 @@ static void adjust_rates(struct userdata *u) {
     pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_UPDATE_LATENCY, NULL, (int64_t) avg_total_latency, NULL);
 }
 
-static void time_callback(pa_mainloop_api *a, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void time_callback(pa_mainloop_api *a, const pa_time_event *e, const struct timeval *t, void *userdata) {
     struct userdata *u = userdata;
 
     pa_assert(u);

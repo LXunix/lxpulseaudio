@@ -659,7 +659,7 @@ static void sigusr1_signal_callback(pa_mainloop_api*m, pa_signal_event *e, int s
 }
 #endif
 
-static void time_event_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void time_event_callback(pa_mainloop_api *m, const pa_time_event *e, const struct timeval *t, void *userdata) {
     if (stream && pa_stream_get_state(stream) == PA_STREAM_READY) {
         pa_operation *o;
         if (!(o = pa_stream_update_timing_info(stream, stream_update_timing_callback, NULL)))

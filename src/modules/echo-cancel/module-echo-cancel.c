@@ -335,7 +335,7 @@ static int64_t calc_diff(struct userdata *u, struct snapshot *snapshot) {
 }
 
 /* Called from main context */
-static void time_callback(pa_mainloop_api *a, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void time_callback(pa_mainloop_api *a, const pa_time_event *e, const struct timeval *t, void *userdata) {
     struct userdata *u = userdata;
     uint32_t old_rate, base_rate, new_rate;
     int64_t diff_time;

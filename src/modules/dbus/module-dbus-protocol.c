@@ -238,7 +238,7 @@ static void io_event_cb(pa_mainloop_api *mainloop, pa_io_event *e, int fd, pa_io
 }
 
 /* Called by PA mainloop when a D-Bus timer event needs handling. */
-static void time_event_cb(pa_mainloop_api *mainloop, pa_time_event* e, const struct timeval *tv, void *userdata) {
+static void time_event_cb(pa_mainloop_api *mainloop, const pa_time_event* e, const struct timeval *tv, void *userdata) {
     DBusTimeout *timeout = userdata;
 
     if (dbus_timeout_get_enabled(timeout)) {

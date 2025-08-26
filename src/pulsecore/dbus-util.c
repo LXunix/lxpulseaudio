@@ -120,7 +120,7 @@ static void handle_io_event(pa_mainloop_api *ea, pa_io_event *e, int fd, pa_io_e
 }
 
 /* pa_time_event_cb_t timer event handler */
-static void handle_time_event(pa_mainloop_api *ea, pa_time_event* e, const struct timeval *t, void *userdata) {
+static void handle_time_event(pa_mainloop_api *ea, const pa_time_event* e, const struct timeval *t, void *userdata) {
     struct timeval tv;
     struct timeout_data *d = userdata;
 
@@ -183,7 +183,7 @@ static void toggle_watch(DBusWatch *watch, void *data) {
     c->mainloop->io_enable(ev, get_watch_flags(watch));
 }
 
-static void time_event_destroy_cb(pa_mainloop_api *a, pa_time_event *e, void *userdata) {
+static void time_event_destroy_cb(pa_mainloop_api *a, const pa_time_event *e, void *userdata) {
     pa_xfree(userdata);
 }
 
