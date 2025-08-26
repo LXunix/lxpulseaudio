@@ -572,7 +572,7 @@ static int esd_proto_get_latency(connection *c, esd_proto_t request, const void 
         latency = 0;
     else {
         double usec = (double) pa_sink_get_requested_latency(sink);
-        latency = (int) ((usec*44100)/1000000);
+        latency = (int) ((usec*48000)/1000000); // 48000 Hz default sample rate
     }
 
     latency = PA_MAYBE_INT32_SWAP(c->swap_byte_order, latency);
@@ -582,7 +582,7 @@ static int esd_proto_get_latency(connection *c, esd_proto_t request, const void 
 }
 
 static int esd_proto_server_info(connection *c, esd_proto_t request, const void *data, size_t length) {
-    int32_t rate = 44100, format = ESD_STEREO|ESD_BITS16;
+    int32_t rate = 48000, format = ESD_STEREO|ESD_BITS16; // 48000 Hz default sample rate
     int32_t response;
     pa_sink *sink;
 
@@ -631,7 +631,7 @@ static int esd_proto_all_info(connection *c, esd_proto_t request, const void *da
     memset(terminator, 0, sizeof(terminator));
 
     PA_IDXSET_FOREACH(conn, c->protocol->connections, idx) {
-        int32_t id, format = ESD_BITS16 | ESD_STEREO, rate = 44100, lvolume = ESD_VOLUME_BASE, rvolume = ESD_VOLUME_BASE;
+        int32_t id, format = ESD_BITS16 | ESD_STEREO, rate = 48000, lvolume = ESD_VOLUME_BASE, rvolume = ESD_VOLUME_BASE; // 48000 Hz default sample rate
         char name[ESD_NAME_MAX];
 
         if (conn->state != ESD_STREAMING_DATA)
@@ -708,7 +708,7 @@ static int esd_proto_all_info(connection *c, esd_proto_t request, const void *da
                 ss = ce->sample_spec;
             else {
                 ss.format = PA_SAMPLE_S16NE;
-                ss.rate = 44100;
+                ss.rate = 48000; // 48000 Hz default sample rate
                 ss.channels = 2;
             }
 

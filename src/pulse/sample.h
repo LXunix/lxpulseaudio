@@ -254,7 +254,7 @@ typedef struct pa_sample_spec {
     /**< The sample format */
 
     uint32_t rate;
-    /**< The sample rate. (e.g. 44100) */
+    /**< The sample rate. (e.g. 48000 Hz) */
 
     uint8_t channels;
     /**< Audio channels. (1 for mono, 2 for stereo, ...) */

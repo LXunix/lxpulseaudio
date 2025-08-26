@@ -636,7 +636,7 @@ size_t pa_resampler_max_block_size(pa_resampler *r) {
         return block_size_max;
     else
         /* A single input frame may result in so much output that it doesn't
-         * fit in one standard memblock (e.g. converting 1 Hz to 44100 Hz). In
+         * fit in one standard memblock (e.g. converting 1 Hz to 48000 Hz). In
          * this case the max block size will be set to one frame, and some
          * memory will be probably be allocated with malloc() instead of using
          * the memory pool.

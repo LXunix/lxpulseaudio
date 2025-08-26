@@ -38,7 +38,7 @@
 #define ESD_DEFAULT_PORT (16001)
 
 /* default sample rate for the EsounD server */
-#define ESD_DEFAULT_RATE (44100)
+#define ESD_DEFAULT_RATE (48000)
 
 /* maximum length of a stream/sample name */
 #define ESD_NAME_MAX (128)
