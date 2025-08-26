@@ -416,21 +416,21 @@ START_TEST (remap_avx_test) {
     pa_init_remap_func_t init_func, orig_init_func;
 
     pa_cpu_get_x86_flags(&flags);
-    if (!(flags & PA_CPU_X86_AVX)) {
-        pa_log_info("AVX not supported. Skipping");
+    if (!(flags & PA_CPU_X86_AVX2)) {
+        pa_log_info("AVX2 not supported. Skipping");
         return;
     }
 
-    pa_log_debug("Checking AVX remap (float, mono->stereo)");
+    pa_log_debug("Checking AVX2 remap (float, mono->stereo)");
     orig_init_func = pa_get_init_remap_func();
     pa_remap_func_init_avx(flags);
     init_func = pa_get_init_remap_func();
     remap_init_test_channels(init_func, orig_init_func, PA_SAMPLE_FLOAT32NE, 1, 2, false);
 
-    pa_log_debug("Checking AVX remap (s32, mono->stereo)");
+    pa_log_debug("Checking AVX2 remap (s32, mono->stereo)");
     remap_init_test_channels(init_func, orig_init_func, PA_SAMPLE_S32NE, 1, 2, false);
 
-    pa_log_debug("Checking AVX remap (s16, mono->stereo)");
+    pa_log_debug("Checking AVX2 remap (s16, mono->stereo)");
     remap_init_test_channels(init_func, orig_init_func, PA_SAMPLE_S16NE, 1, 2, false);
 }
 END_TEST
