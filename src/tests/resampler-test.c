@@ -255,10 +255,10 @@ static void help(const char *argv0) {
     printf("%s [options]\n\n"
            "-h, --help                            Show this help\n"
            "-v, --verbose                         Print debug messages\n"
-           "      --from-rate=SAMPLERATE          From sample rate in Hz (defaults to 44100)\n"
+           "      --from-rate=SAMPLERATE          From sample rate in Hz (defaults to 48000)\n"
            "      --from-format=SAMPLEFORMAT      From sample type (defaults to s16le)\n"
            "      --from-channels=CHANNELS        From number of channels (defaults to 1)\n"
-           "      --to-rate=SAMPLERATE            To sample rate in Hz (defaults to 44100)\n"
+           "      --to-rate=SAMPLERATE            To sample rate in Hz (defaults to 48000)\n"
            "      --to-format=SAMPLEFORMAT        To sample type (defaults to s16le)\n"
            "      --to-channels=CHANNELS          To number of channels (defaults to 1)\n"
            "      --resample-method=METHOD        Resample method (defaults to auto)\n"
@@ -331,7 +331,7 @@ int main(int argc, char *argv[]) {
         pa_log_set_level(PA_LOG_INFO);
 
     a.channels = b.channels = 1;
-    a.rate = b.rate = 44100;
+    a.rate = b.rate = 48000;
     a.format = b.format = PA_SAMPLE_S16LE;
 
     method = PA_RESAMPLER_AUTO;

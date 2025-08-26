@@ -183,8 +183,8 @@ static void help(const char *argv0) {
     printf("%s [options]\n\n"
            "-h, --help                            Show this help\n"
            "-v, --verbose                         Print debug messages\n"
-           "      --from-rate=SAMPLERATE          From sample rate in Hz (defaults to 44100)\n"
-           "      --to-rate=SAMPLERATE            To sample rate in Hz (defaults to 44100)\n"
+           "      --from-rate=SAMPLERATE          From sample rate in Hz (defaults to 48000)\n"
+           "      --to-rate=SAMPLERATE            To sample rate in Hz (defaults to 48000)\n"
            "      --resample-method=METHOD        Resample method (defaults to auto)\n"
            "      --frequency=unsigned            Frequency of square wave\n"
            "      --samples=unsigned              Number of samples for square wave\n"
@@ -259,7 +259,7 @@ int main(int argc, char *argv[]) {
 
     a.channels = b.channels = 1;
     a.rate = 48000;
-    b.rate = 44100;
+    b.rate = 48000;
     a.format = b.format = PA_SAMPLE_FLOAT32NE;
 
     method = PA_RESAMPLER_AUTO;

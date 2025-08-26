@@ -132,7 +132,7 @@ START_TEST (lfe_filter_test) {
     pa_log_set_level(PA_LOG_DEBUG);
 
     a.channels = 1;
-    a.rate = 44100;
+    a.rate = 48000;
     a.format = PA_SAMPLE_S16NE;
 
     lft.ss = &a;

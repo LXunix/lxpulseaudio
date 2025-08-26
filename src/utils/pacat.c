@@ -685,7 +685,7 @@ static void help(const char *argv0) {
              "  -n, --client-name=NAME                How to call this client on the server\n"
              "      --stream-name=NAME                How to call this stream on the server\n"
              "      --volume=VOLUME                   Specify the initial (linear) volume in range 0...65536\n"
-             "      --rate=SAMPLERATE                 The sample rate in Hz (defaults to 44100)\n"
+             "      --rate=SAMPLERATE                 The sample rate in Hz (defaults to 48000)\n"
              "      --format=SAMPLEFORMAT             The sample format, see\n"
              "                                        https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/SupportedAudioFormats/\n"
              "                                        for possible values (defaults to s16ne)\n"

@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
             ss1.channels = maps[i].channels;
             ss2.channels = maps[j].channels;
 
-            ss1.rate = ss2.rate = 44100;
+            ss1.rate = ss2.rate = 48000;
             ss1.format = ss2.format = PA_SAMPLE_S16NE;
 
             for (k = 0; flag_sets[k].str; k++) {

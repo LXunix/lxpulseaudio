@@ -35,7 +35,7 @@
 
 #include "lo-test-util.h"
 
-#define SAMPLE_HZ 44100
+#define SAMPLE_HZ 48000
 #define CHANNELS 2
 #define N_OUT (SAMPLE_HZ * 1)
 

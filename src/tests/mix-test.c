@@ -289,7 +289,7 @@ START_TEST (mix_test) {
     fail_unless((pool = pa_mempool_new(PA_MEM_TYPE_PRIVATE, 0, true)) != NULL);
 
     a.channels = 1;
-    a.rate = 44100;
+    a.rate = 48000;
 
     v.channels = a.channels;
     v.values[0] = pa_sw_volume_from_linear(0.9);

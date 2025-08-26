@@ -43,7 +43,7 @@ START_TEST (format_test) {
     f1->encoding = PA_ENCODING_AC3_IEC61937;
     pa_format_info_set_prop_int(f1, PA_PROP_FORMAT_RATE, 32000);
     f2->encoding = PA_ENCODING_AC3_IEC61937;
-    pa_format_info_set_prop_int(f2, PA_PROP_FORMAT_RATE, 44100);
+    pa_format_info_set_prop_int(f2, PA_PROP_FORMAT_RATE, 48000);
     fail_unless(!pa_format_info_is_compatible(f1, f2));
 
     /* 2. Check int array membership - positive */
@@ -51,7 +51,7 @@ START_TEST (format_test) {
     f1->encoding = PA_ENCODING_AC3_IEC61937;
     pa_format_info_set_prop_int_array(f1, PA_PROP_FORMAT_RATE, rates1, PA_ELEMENTSOF(rates1));
     f2->encoding = PA_ENCODING_AC3_IEC61937;
-    pa_format_info_set_prop_int(f2, PA_PROP_FORMAT_RATE, 44100);
+    pa_format_info_set_prop_int(f2, PA_PROP_FORMAT_RATE, 48000);
     fail_unless(pa_format_info_is_compatible(f1, f2));
     fail_unless(pa_format_info_is_compatible(f2, f1));
 
@@ -67,7 +67,7 @@ START_TEST (format_test) {
     f1->encoding = PA_ENCODING_AC3_IEC61937;
     pa_format_info_set_prop_int_range(f1, PA_PROP_FORMAT_RATE, 32000, 48000);
     f2->encoding = PA_ENCODING_AC3_IEC61937;
-    pa_format_info_set_prop_int(f2, PA_PROP_FORMAT_RATE, 44100);
+    pa_format_info_set_prop_int(f2, PA_PROP_FORMAT_RATE, 48000);
     fail_unless(pa_format_info_is_compatible(f1, f2));
     fail_unless(pa_format_info_is_compatible(f2, f1));
 

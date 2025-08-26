@@ -10,7 +10,7 @@
 
 #include <alsa/asoundlib.h>
 
-#define SAMPLE_RATE 44100
+#define SAMPLE_RATE 48000
 #define CHANNELS 2
 
 static uint64_t timespec_us(const struct timespec *ts) {

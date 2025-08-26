@@ -48,7 +48,7 @@
  */
 #define NSTREAMS 20
 #define NTESTS 1000
-#define SAMPLE_HZ 44100
+#define SAMPLE_HZ 48000
 
 static pa_context *context = NULL;
 static pa_stream *streams[NSTREAMS];
