@@ -58,12 +58,28 @@ struct pa_idxset {
 
 PA_STATIC_FLIST_DECLARE(entries, 0, pa_xfree);
 
+#ifdef HAVE_BUILTIN_IA32_CRC32_PCLMULQDQ
+#include <nmmintrin.h>
+#endif
+
 unsigned pa_idxset_string_hash_func(const void *p) {
     unsigned hash = 0;
-    const char *c;
 
+#ifdef HAVE_BUILTIN_IA32_CRC32_PCLMULQDQ
+    // Use SSE4.2 CRC32 instruction
+    uint32_t crc = 0;
+    const uint8_t *data = (const uint8_t *)p;
+    while (*data) {
+        crc = _mm_crc32_u8(crc, *data);
+        data++;
+    }
+    hash = crc;
+#else
+    // djb2 hash
+    const char *c;
     for (c = p; *c; c++)
         hash = 31 * hash + (unsigned) *c;
+#endif
 
     return hash;
 }

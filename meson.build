@@ -426,6 +426,12 @@ pa_c_args = ['-DHAVE_CONFIG_H', '-D_GNU_SOURCE']
 server_c_args = ['-D__INCLUDED_FROM_PULSE_AUDIO']
 cdata.set('MESON_BUILD', 1)
 
+# Check if the C compiler supports the '-msse4.2' argument.
+# This flag enables the use of SSE4.2 instructions and intrinsics.
+if cc.has_argument('-msse4.2')
+  pa_c_args += ['-DHAVE_BUILTIN_IA32_CRC32_PCLMULQDQ', '-msse4.2']
+endif
+
 # On ELF systems we don't want the libraries to be unloaded since we don't clean them up properly,
 # so we request the nodelete flag to be enabled.
 # On other systems, we don't really know how to do that, but it's welcome if somebody can tell.
