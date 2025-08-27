@@ -640,12 +640,18 @@ pa_idxset *pa_idxset_copy(pa_idxset *s, pa_copy_func_t copy_func) {
     pa_idxset *copy;
     struct idxset_entry *i;
 
+    /* If the copy function is NULL, we can just copy the entire structure
+     * and then fix up the internal pointers. This is much faster than
+     * iterating and calling pa_idxset_put for each element. */
+    if (!copy_func)
+        return pa_idxset_new(s->hash_func, s->compare_func);
+
     pa_assert(s);
 
     copy = pa_idxset_new(s->hash_func, s->compare_func);
 
     for (i = s->iterate_list_head; i; i = i->iterate_next)
-        pa_idxset_put(copy, copy_func ? copy_func(i->data) : i->data, NULL);
+        pa_idxset_put(copy, copy_func(i->data), NULL);
 
     return copy;
 }
