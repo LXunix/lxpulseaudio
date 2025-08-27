@@ -44,7 +44,7 @@ static void pa_sconv_s16le_from_f32ne_sse(unsigned n, const float *a, int16_t *b
 
         " mov %4, %1                    \n\t"
         " sar $3, %1                    \n\t" /* 8 floats at a time */
-        " cmp $0, %1                    \n\t"
+        " test %1, %1                   \n\t"
         " je 2f                         \n\t"
 
         "1:                             \n\t"
@@ -109,7 +109,7 @@ static void pa_sconv_s16le_from_f32ne_sse2(unsigned n, const float *a, int16_t *
 
         " mov %4, %1                    \n\t"
         " sar $3, %1                    \n\t" /* 8 floats at a time */
-        " cmp $0, %1                    \n\t"
+        " test %1, %1                   \n\t"
         " je 2f                         \n\t"
 
         "1:                             \n\t"

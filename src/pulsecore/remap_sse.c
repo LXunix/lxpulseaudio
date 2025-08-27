@@ -80,7 +80,7 @@
 #define MONO_TO_STEREO(s,shift,mask)                   \
                 " mov %4, %2                    \n\t"  \
                 " sar $"#shift", %2             \n\t"  \
-                " cmp $0, %2                    \n\t"  \
+                " test %2, %2                   \n\t"  \
                 " je 2f                         \n\t"  \
                 "1:                             \n\t"  \
                 LOAD_SAMPLES                           \
