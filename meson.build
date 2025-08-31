@@ -454,7 +454,7 @@ endif
 
 libm_dep = cc.find_library('m', required : true)
 
-openmp_dep = dependency('openmp', required : false)
+openmp_dep = dependency('openmp', required : true)
 if openmp_dep.found()
   cdata.set('HAVE_OPENMP', 1)
 endif
