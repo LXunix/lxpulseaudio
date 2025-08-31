@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <signal.h>
 #include <stdio.h>
 
@@ -1216,6 +1220,9 @@ static int unsuspend(struct userdata *u, bool recovering) {
      * the unsuspend() to try to recover the PCM, this will make the snd_pcm_open() fail, here
      * we add msleep and retry to make sure those nodes are accessible.
      */
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0; i < 4; i++) {
 	if ((err = snd_pcm_open(&u->pcm_handle, device_name ? device_name : u->device_name, SND_PCM_STREAM_PLAYBACK,
 				SND_PCM_NONBLOCK|

@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -225,6 +229,9 @@ void pa_cmsg_ancil_data_close_fds(struct pa_cmsg_ancil_data *ancil) {
 
         pa_assert(ancil->nfd <= MAX_ANCIL_DATA_FDS);
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
         for (i = 0; i < ancil->nfd; i++)
             if (ancil->fds[i] != -1) {
                 pa_assert_se(pa_close(ancil->fds[i]) == 0);

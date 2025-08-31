@@ -24,6 +24,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <ctype.h>
 #include <sys/types.h>
 #include <limits.h>
@@ -204,6 +208,9 @@ static void ucm_add_devices_to_idxset(
 
         name = pa_proplist_gets(d->proplist, PA_ALSA_PROP_UCM_NAME);
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
         for (i = 0; i < n; i++)
             if (pa_streq(dev_names[i], name))
                 pa_idxset_put(idxset, d, NULL);
@@ -365,6 +372,9 @@ static int ucm_get_device_property(
     while (s && *s && isalpha(*s)) s++;
     if (s)
         *s = '\0';
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; types[i].prefix; i++)
         if (pa_streq(id, types[i].prefix)) {
             device->type = types[i].type;
@@ -373,6 +383,9 @@ static int ucm_get_device_property(
     pa_xfree(id);
 
     /* set properties */
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; item[i].id; i++) {
         id = pa_sprintf_malloc("%s/%s", item[i].id, device_name);
         err = snd_use_case_get(uc_mgr, id, &value);
@@ -489,6 +502,9 @@ static int ucm_get_device_property(
 
     if (PA_UCM_PLAYBACK_PRIORITY_UNSET(device) || PA_UCM_CAPTURE_PRIORITY_UNSET(device)) {
         /* get priority from static table */
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
         for (i = 0; dev_info[i].id; i++) {
             if (strcasecmp(dev_info[i].id, device_name) == 0) {
                 PA_UCM_DEVICE_PRIORITY_SET(device, dev_info[i].priority);
@@ -546,6 +562,9 @@ static int ucm_get_modifier_property(
     const char **devices;
     int n_confdev, n_suppdev;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; item[i].id; i++) {
         int err;
 
@@ -596,6 +615,9 @@ static int ucm_get_devices(pa_alsa_ucm_verb *verb, snd_use_case_mgr_t *uc_mgr) {
     if (num_dev < 0)
         return num_dev;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; i < num_dev; i += 2) {
         pa_alsa_ucm_device *d = pa_xnew0(pa_alsa_ucm_device, 1);
 
@@ -695,6 +717,9 @@ static int ucm_get_modifiers(pa_alsa_ucm_verb *verb, snd_use_case_mgr_t *uc_mgr)
     if (num_mod < 0)
         return num_mod;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; i < num_mod; i += 2) {
         pa_alsa_ucm_modifier *m;
 
@@ -937,6 +962,9 @@ int pa_alsa_ucm_query_profiles(pa_alsa_ucm_config *ucm, int card_index) {
     }
 
     /* get the properties of each UCM verb */
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; i < num_verbs; i += 2) {
         pa_alsa_ucm_verb *verb;
 
@@ -1121,6 +1149,9 @@ static char *devset_name(pa_idxset *devices, const char *sep) {
     /* Sort by alphabetical order so as to have a deterministic naming scheme */
     qsort(&sorted[0], num, sizeof(pa_alsa_ucm_device *), pa_alsa_ucm_device_cmp);
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; i < num; i++) {
         dev = sorted[i];
         const char *dev_name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
@@ -1153,6 +1184,9 @@ PA_UNUSED static char *devset_description(pa_idxset *devices, const char *sep) {
     /* Sort by alphabetical order to match devset_name() */
     qsort(&sorted[0], num, sizeof(pa_alsa_ucm_device *), pa_alsa_ucm_device_cmp);
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = 0; i < num; i++) {
         dev = sorted[i];
         const char *dev_desc = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_DESCRIPTION);
@@ -1961,6 +1995,9 @@ static int ucm_create_verb_profiles(
             if (*c == '_') *c = ' ';
             c++;
         }
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
         for (i = 0; verb_info[i].id; i++) {
             if (strcasecmp(verb_info[i].id, verb_cmp) == 0) {
                 verb_priority = verb_info[i].priority;

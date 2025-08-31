@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <sys/types.h>
 #include <alsa/asoundlib.h>
 
@@ -811,6 +815,9 @@ snd_pcm_t *pa_alsa_open_by_template(
     snd_pcm_t *pcm_handle;
     char **i;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (i = template; *i; i++) {
         char *d;
 

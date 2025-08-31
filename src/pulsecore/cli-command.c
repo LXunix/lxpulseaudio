@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -237,6 +241,9 @@ static int pa_cli_command_help(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, bool
 
     pa_strbuf_puts(buf, "Available commands:\n");
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (command = commands; command->name; command++)
         if (command->help)
             pa_strbuf_printf(buf, "    %-25s %s\n", command->name, command->help);
@@ -394,6 +401,9 @@ static int pa_cli_command_stat(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, bool
                      c->default_sink ? c->default_sink->name : "none",
                      c->default_source ? c->default_source->name : "none");
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (k = 0; k < PA_MEMBLOCK_TYPE_MAX; k++)
         pa_strbuf_printf(buf,
                          "Memory blocks of type %s: %u allocated/%u accumulated.\n",
@@ -2138,10 +2148,16 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
                             closedir(d);
                             if ((count = pa_dynarray_size(files))) {
                                 sorted_files = pa_xmalloc(PA_ALIGN(sizeof(char*) * count));
+#ifdef HAVE_OPENMP
+                                #pragma omp parallel for
+#endif
                                 for (i = 0; i < count; ++i)
                                     sorted_files[i] = pa_dynarray_get(files, i);
                                 pa_dynarray_free(files);
 
+#ifdef HAVE_OPENMP
+                                #pragma omp parallel for
+#endif
                                 for (i = 0; i < count; ++i) {
                                     for (unsigned j = 0; j < count; ++j) {
                                         if (strcmp(sorted_files[i], sorted_files[j]) < 0) {
@@ -2152,6 +2168,9 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
                                     }
                                 }
 
+#ifdef HAVE_OPENMP
+                                #pragma omp parallel for
+#endif
                                 for (i = 0; i < count; ++i) {
                                     if (!failed) {
                                         if (pa_cli_command_execute_file(c, sorted_files[i], buf, fail) < 0 && *fail)
@@ -2199,6 +2218,9 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
 
         l = strcspn(cs, whitespace);
 
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (command = commands; command->name; command++)
             if (strlen(command->name) == l && !strncmp(cs, command->name, l)) {
                 int ret;

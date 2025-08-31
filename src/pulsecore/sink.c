@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1160,6 +1164,9 @@ static void inputs_drop(pa_sink *s, pa_mix_info *info, unsigned n, pa_memchunk *
         pa_sink_input_assert_ref(i);
 
         /* Let's try to find the matching entry info the pa_mix_info array */
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (j = 0; j < n; j ++) {
 
             if (info[p].userdata == i) {
@@ -1224,6 +1231,9 @@ static void inputs_drop(pa_sink *s, pa_mix_info *info, unsigned n, pa_memchunk *
      * pa_mix_info array but don't exist anymore */
 
     if (n_unreffed < n) {
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (; n > 0; info++, n--) {
             if (info->userdata)
                 pa_sink_input_unref(info->userdata);
@@ -1788,6 +1798,9 @@ static void compute_reference_ratio(pa_sink_input *i) {
 
     ratio = i->reference_ratio;
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (c = 0; c < i->sample_spec.channels; c++) {
 
         /* We don't update when the sink volume is 0 anyway */
@@ -1869,6 +1882,9 @@ static void compute_real_ratios(pa_sink *s) {
         i->real_ratio.channels = i->sample_spec.channels;
         i->soft_volume.channels = i->sample_spec.channels;
 
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (c = 0; c < i->sample_spec.channels; c++) {
 
             if (remapped.values[c] <= PA_VOLUME_MUTED) {
@@ -3757,6 +3773,9 @@ void pa_sink_volume_change_push(pa_sink *s) {
     nc->at += pa_rtclock_now() + s->thread_info.volume_change_extra_delay;
 
     if (s->thread_info.volume_changes_tail) {
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (c = s->thread_info.volume_changes_tail; c; c = c->prev) {
             /* If volume is going up let's do it a bit late. If it is going
              * down let's do it a bit early. */

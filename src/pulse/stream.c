@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <string.h>
 #include <stdio.h>
 
@@ -123,6 +127,9 @@ static pa_stream *pa_stream_new_with_proplist_internal(
     s->n_formats = 0;
     if (formats) {
         s->n_formats = n_formats;
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; i < n_formats; i++)
             s->req_formats[i] = pa_format_info_copy_by_val(formats[i]);
     }
@@ -185,6 +192,9 @@ static pa_stream *pa_stream_new_with_proplist_internal(
 
     s->read_index_not_before = 0;
     s->write_index_not_before = 0;
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0; i < PA_MAX_WRITE_INDEX_CORRECTIONS; i++)
         s->write_index_corrections[i].valid = 0;
     s->current_write_index_correction = 0;
@@ -247,6 +257,9 @@ static void stream_unlink(pa_stream *s) {
     /* Detach from context */
 
     /* Unref all operation objects that point to us */
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (o = s->context.operations; o; o = n) {
         n = o->next;
 
@@ -309,6 +322,9 @@ static void stream_free(pa_stream *s) {
         pa_smoother_free(s->smoother);
 #endif
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0; i < s->n_formats; i++)
         pa_format_info_free(&s->req_formats[i]);
 
@@ -1385,6 +1401,9 @@ static int create_stream(
         || s->context.version >= 22) {
 
         pa_tagstruct_putu8(t, s->n_formats);
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; i < s->n_formats; i++)
             pa_tagstruct_put_format_info(t, &s->req_formats[i]);
     }
@@ -1910,6 +1929,9 @@ static void stream_get_timing_info_callback(pa_pdispatch *pd, uint32_t command, 
 
             /* Go through the saved correction values and add up the
              * total correction.*/
+#ifdef HAVE_OPENMP
+            #pragma omp parallel for
+#endif
             for (n = 0, j = o->stream->current_write_index_correction+1;
                  n < PA_MAX_WRITE_INDEX_CORRECTIONS;
                  n++, j = (j + 1) % PA_MAX_WRITE_INDEX_CORRECTIONS) {
@@ -1937,6 +1959,9 @@ static void stream_get_timing_info_callback(pa_pdispatch *pd, uint32_t command, 
             }
 
             /* Clear old correction entries */
+#ifdef HAVE_OPENMP
+            #pragma omp parallel for
+#endif
             for (n = 0; n < PA_MAX_WRITE_INDEX_CORRECTIONS; n++) {
                 if (!o->stream->write_index_corrections[n].valid)
                     continue;
@@ -2931,6 +2956,9 @@ pa_operation *pa_stream_proplist_remove(pa_stream *s, const char *const keys[], 
             &tag);
     pa_tagstruct_putu32(t, s->channel);
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (k = keys; *k; k++)
         pa_tagstruct_puts(t, *k);
 

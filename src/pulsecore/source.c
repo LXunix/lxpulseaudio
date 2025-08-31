@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -1302,6 +1306,9 @@ static void compute_reference_ratio(pa_source_output *o) {
 
     ratio = o->reference_ratio;
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (c = 0; c < o->sample_spec.channels; c++) {
 
         /* We don't update when the source volume is 0 anyway */
@@ -1383,6 +1390,9 @@ static void compute_real_ratios(pa_source *s) {
         o->real_ratio.channels = o->sample_spec.channels;
         o->soft_volume.channels = o->sample_spec.channels;
 
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (c = 0; c < o->sample_spec.channels; c++) {
 
             if (remapped.values[c] <= PA_VOLUME_MUTED) {

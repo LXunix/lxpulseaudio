@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <sys/types.h>
 #include <alsa/asoundlib.h>
 #include <math.h>
@@ -131,6 +135,9 @@ static int alsa_id_decode(const char *src, char *name, int *index) {
     /* Strip quotes in entries such as 'Speaker',1 or "Speaker",1 */
     if (c == '\'' || c == '"') {
         strcpy(name, src + 1);
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; name[i] != '\0' && name[i] != c; i++);
         idx = NULL;
         if (name[i]) {
@@ -288,6 +295,9 @@ static const char *lookup_description(const char *key, const struct description_
     if (!key)
         return NULL;
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0; i < n; i++)
         if (pa_streq(dm[i].key, key))
             return _(dm[i].description);
@@ -301,6 +311,9 @@ static const struct description2_map *lookup_description2(const char *key, const
     if (!key)
         return NULL;
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0; i < n; i++)
         if (pa_streq(dm[i].key, key))
             return &dm[i];
@@ -347,6 +360,9 @@ static void io_cb(pa_mainloop_api *a, pa_io_event *e, int fd, pa_io_event_flags_
 
     memcpy(fdl->work_fds, fdl->fds, sizeof(struct pollfd) * fdl->num_fds);
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0; i < fdl->num_fds; i++) {
         if (e == fdl->ios[i]) {
             if (events & PA_IO_EVENT_INPUT)
@@ -435,6 +451,9 @@ static void defer_cb(pa_mainloop_api *a, pa_defer_event *e, void *userdata) {
         return;
 
     if (fdl->ios) {
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; i < fdl->num_fds; i++)
             a->io_free(fdl->ios[i]);
 
@@ -454,6 +473,9 @@ static void defer_cb(pa_mainloop_api *a, pa_defer_event *e, void *userdata) {
 
     fdl->num_fds = num_fds;
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (i = 0;i < num_fds;i++)
         fdl->ios[i] = a->io_new(a, fdl->fds[i].fd,
             ((fdl->fds[i].events & POLLIN) ? PA_IO_EVENT_INPUT : 0) |
@@ -480,6 +502,9 @@ void pa_alsa_fdlist_free(struct pa_alsa_fdlist *fdl) {
     if (fdl->ios) {
         unsigned i;
         pa_assert(fdl->m);
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; i < fdl->num_fds; i++)
             fdl->m->io_free(fdl->ios[i]);
         pa_xfree(fdl->ios);
@@ -841,6 +866,9 @@ static int element_get_volume(pa_alsa_element *e, snd_mixer_t *m, const pa_chann
 
     /* We take the highest volume of all channels that match */
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (c = 0; c <= SND_MIXER_SCHN_LAST; c++) {
         int r;
         pa_volume_t f;
@@ -940,6 +968,9 @@ static int element_get_volume(pa_alsa_element *e, snd_mixer_t *m, const pa_chann
             f = from_alsa_volume(value, e->min_volume, e->max_volume);
         }
 
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (k = 0; k < cm->channels; k++)
             if (e->masks[c][e->n_channels-1] & PA_CHANNEL_POSITION_MASK(cm->map[k]))
                 if (v->values[k] < f)
@@ -948,6 +979,9 @@ static int element_get_volume(pa_alsa_element *e, snd_mixer_t *m, const pa_chann
         mask |= e->masks[c][e->n_channels-1];
     }
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (k = 0; k < cm->channels; k++)
         if (!(mask & PA_CHANNEL_POSITION_MASK(cm->map[k])))
             v->values[k] = PA_VOLUME_NORM;
@@ -1010,6 +1044,9 @@ static int element_get_switch(pa_alsa_element *e, snd_mixer_t *m, bool *b) {
 
     /* We return muted if at least one channel is muted */
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (c = 0; c <= SND_MIXER_SCHN_LAST; c++) {
         int r;
         int value = 0;
@@ -1083,11 +1120,17 @@ static long decibel_fix_get_step(pa_alsa_decibel_fix *db_fix, long *db_value, in
     max_i = db_fix->max_step - db_fix->min_step;
 
     if (rounding > 0) {
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; i < max_i; i++) {
             if (db_fix->db_values[i] >= *db_value)
                 break;
         }
     } else {
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (i = 0; i < max_i; i++) {
             if (db_fix->db_values[i + 1] > *db_value)
                 break;
@@ -1176,6 +1219,9 @@ static int element_set_volume(pa_alsa_element *e, snd_mixer_t *m, const pa_chann
 
     pa_cvolume_mute(&rv, cm->channels);
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (c = 0; c <= SND_MIXER_SCHN_LAST; c++) {
         int r;
         pa_volume_t f = PA_VOLUME_MUTED;
@@ -1301,6 +1347,9 @@ static int element_set_volume(pa_alsa_element *e, snd_mixer_t *m, const pa_chann
         mask |= e->masks[c][e->n_channels-1];
     }
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (k = 0; k < cm->channels; k++)
         if (!(mask & PA_CHANNEL_POSITION_MASK(cm->map[k])))
             rv.values[k] = PA_VOLUME_NORM;
@@ -1791,6 +1840,9 @@ static bool element_probe_volume(pa_alsa_element *e, snd_mixer_elem_t *me) {
             e->override_map &= ~(1 << (e->n_channels-1));
         }
         if (!(e->override_map & (1 << (e->n_channels-1)))) {
+#ifdef HAVE_OPENMP
+            #pragma omp parallel for
+#endif
             for (p = PA_CHANNEL_POSITION_FRONT_LEFT; p < PA_CHANNEL_POSITION_MAX; p++) {
                 if (alsa_channel_ids[p] == SND_MIXER_SCHN_UNKNOWN)
                     continue;
@@ -1803,6 +1855,9 @@ static bool element_probe_volume(pa_alsa_element *e, snd_mixer_elem_t *me) {
     }
 
     e->n_channels = 0;
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (p = PA_CHANNEL_POSITION_FRONT_LEFT; p < PA_CHANNEL_POSITION_MAX; p++) {
         if (alsa_channel_ids[p] == SND_MIXER_SCHN_UNKNOWN)
             continue;
@@ -1836,6 +1891,9 @@ static bool element_probe_volume(pa_alsa_element *e, snd_mixer_elem_t *me) {
 
 retry:
     if (!(e->override_map & (1 << (e->n_channels-1)))) {
+#ifdef HAVE_OPENMP
+        #pragma omp parallel for
+#endif
         for (p = PA_CHANNEL_POSITION_FRONT_LEFT; p < PA_CHANNEL_POSITION_MAX; p++) {
             bool has_channel;
 
@@ -1852,6 +1910,9 @@ retry:
     }
 
     e->merged_mask = 0;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (p = PA_CHANNEL_POSITION_FRONT_LEFT; p < PA_CHANNEL_POSITION_MAX; p++) {
         if (alsa_channel_ids[p] == SND_MIXER_SCHN_UNKNOWN)
             continue;
@@ -1937,7 +1998,9 @@ static int element_probe(pa_alsa_element *e, snd_mixer_t *m) {
 
         PA_LLIST_FOREACH(o, e->options) {
             int i;
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
             for (i = 0; i < n; i++) {
                 char buf[128];
 
@@ -2254,7 +2317,9 @@ static int parse_type(pa_config_parser_state *state) {
     unsigned int idx;
 
     path = state->userdata;
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (idx = 0; idx < PA_ELEMENTSOF(device_port_types); idx++)
         if (pa_streq(state->rvalue, device_port_types[idx].name)) {
             path->device_port_type = device_port_types[idx].type;
@@ -3037,7 +3102,9 @@ static bool element_drop_unsupported(pa_alsa_element *e) {
     pa_alsa_option *o, *n;
 
     pa_assert(e);
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (o = e->options; o; o = n) {
         n = o->next;
 
@@ -3057,7 +3124,9 @@ static void path_drop_unsupported(pa_alsa_path *p) {
     pa_alsa_element *e, *n;
 
     pa_assert(p);
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (e = p->elements; e; e = n) {
         n = e->next;
 
@@ -3076,7 +3145,9 @@ static void path_make_options_unique(pa_alsa_path *p) {
         PA_LLIST_FOREACH(o, e->options) {
             unsigned i;
             char *m;
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
             for (u = o->next; u; u = u->next)
                 if (pa_streq(u->name, o->name))
                     break;
@@ -3085,7 +3156,9 @@ static void path_make_options_unique(pa_alsa_path *p) {
                 continue;
 
             m = pa_xstrdup(o->name);
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
             /* OK, this name is not unique, hence let's rename */
             for (i = 1, u = o; u; u = u->next) {
                 char *nn, *nd;
@@ -3111,7 +3184,9 @@ static void path_make_options_unique(pa_alsa_path *p) {
 
 static bool element_create_settings(pa_alsa_element *e, pa_alsa_setting *template) {
     pa_alsa_option *o;
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (; e; e = e->next)
         if (e->switch_use == PA_ALSA_SWITCH_SELECT ||
             e->enumeration_use == PA_ALSA_ENUMERATION_SELECT)
@@ -3119,7 +3194,9 @@ static bool element_create_settings(pa_alsa_element *e, pa_alsa_setting *templat
 
     if (!e)
         return false;
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (o = e->options; o; o = o->next) {
         pa_alsa_setting *s;
 
@@ -3217,6 +3294,9 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
 
             if (e->has_dB) {
                 if (!p->has_volume) {
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
                     for (t = 0; t < PA_CHANNEL_POSITION_MAX; t++)
                         if (PA_CHANNEL_POSITION_MASK(t) & e->merged_mask) {
                             min_dB[t] = e->min_dB;
@@ -3228,6 +3308,9 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
                 } else {
 
                     if (p->has_dB) {
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
                         for (t = 0; t < PA_CHANNEL_POSITION_MAX; t++)
                             if (PA_CHANNEL_POSITION_MASK(t) & e->merged_mask) {
                                 min_dB[t] += e->min_dB;
@@ -3271,6 +3354,9 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
     p->max_dB = -INFINITY;
     max_dB_set = false;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (t = 0; t < PA_CHANNEL_POSITION_MAX; t++) {
         if (path_volume_channels & PA_CHANNEL_POSITION_MASK(t)) {
             if (p->min_dB > min_dB[t]) {
@@ -3475,7 +3561,9 @@ pa_alsa_path_set *pa_alsa_path_set_new(pa_alsa_mapping *m, pa_alsa_direction_t d
 
     if (pn) {
         char **in;
-
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
         for (in = pn; *in; in++) {
             pa_alsa_path *p = NULL;
             bool duplicate = false;
@@ -3521,6 +3609,9 @@ pa_alsa_path_set *pa_alsa_path_set_new(pa_alsa_mapping *m, pa_alsa_direction_t d
     if (!en)
         goto fail;
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
     for (ie = en; *ie; ie++) {
         char **je;
         pa_alsa_path *p;
@@ -3711,6 +3802,9 @@ static bool element_is_subset(pa_alsa_element *a, pa_alsa_element *b, snd_mixer_
             /* If override-maps are different, they're not subsets */
             if (a->n_channels != b->n_channels)
                 return false;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
             for (s = 0; s <= SND_MIXER_SCHN_LAST; s++)
                 if (a->masks[s][a->n_channels-1] != b->masks[s][b->n_channels-1]) {
                     pa_alsa_mixer_id_to_string(buf, sizeof(buf), &a->alsa_id);
@@ -5171,6 +5265,9 @@ void pa_alsa_profile_set_probe(
     pp += add_profiles_to_probe(pp, ps->profiles, true, false);
     pp += add_profiles_to_probe(pp, ps->profiles, true, true);
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (pp = probe_order; *pp; pp++) {
         uint32_t idx;
         p = *pp;
