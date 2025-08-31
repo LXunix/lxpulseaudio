@@ -454,6 +454,11 @@ endif
 
 libm_dep = cc.find_library('m', required : true)
 
+openmp_dep = dependency('openmp', required : false)
+if openmp_dep.found()
+  cdata.set('HAVE_OPENMP', 1)
+endif
+
 thread_dep = dependency('threads')
 foreach f : [
   'pthread_getname_np',
@@ -969,6 +974,7 @@ summary = [
   'Enable D-Bus:                  @0@'.format(dbus_dep.found()),
   'Enable GLib 2:                 @0@'.format(glib_dep.found()),
   'Enable systemd integration:    @0@'.format(libsystemd_dep.found()),
+  'Enable OpenMP:                 @0@'.format(openmp_dep.found()),
   'Enable FFTW:                   @0@'.format(fftw_dep.found()),
   'Enable IPv6:                   @0@'.format(get_option('ipv6')),
   'Enable Gcov coverage:          @0@'.format(get_option('gcov')),
