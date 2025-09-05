@@ -3246,7 +3246,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
     pa_alsa_element *e;
     pa_alsa_jack *j;
     double min_dB[PA_CHANNEL_POSITION_MAX], max_dB[PA_CHANNEL_POSITION_MAX];
-    pa_channel_position_t t;
+    int t; // enum pa_channel_position_t
     pa_channel_position_mask_t path_volume_channels = 0;
     bool min_dB_set, max_dB_set;
     char buf[64];
@@ -3295,7 +3295,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
             if (e->has_dB) {
                 if (!p->has_volume) {
 #ifdef HAVE_OPENMP
-//#pragma omp parallel for
+#pragma omp parallel for
 #endif
                     for (t = 0; t < PA_CHANNEL_POSITION_MAX; t++)
                         if (PA_CHANNEL_POSITION_MASK(t) & e->merged_mask) {
@@ -3309,7 +3309,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
 
                     if (p->has_dB) {
 #ifdef HAVE_OPENMP
-//#pragma omp parallel for
+#pragma omp parallel for
 #endif
                         for (t = 0; t < PA_CHANNEL_POSITION_MAX; t++)
                             if (PA_CHANNEL_POSITION_MASK(t) & e->merged_mask) {
@@ -3355,7 +3355,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, pa_alsa_mapping *mapping, snd_mixer_t *m
     max_dB_set = false;
 
 #ifdef HAVE_OPENMP
-//#pragma omp parallel for
+#pragma omp parallel for
 #endif
     for (t = 0; t < PA_CHANNEL_POSITION_MAX; t++) {
         if (path_volume_channels & PA_CHANNEL_POSITION_MASK(t)) {
