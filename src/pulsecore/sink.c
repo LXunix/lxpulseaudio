@@ -1235,11 +1235,13 @@ static void inputs_drop(pa_sink *s, pa_mix_info *info, unsigned n, pa_memchunk *
 #ifdef HAVE_OPENMP
         #pragma omp parallel for
 #endif
-        for (; n > 0; info++, n--) {
+        for (unsigned i = n; i > 0; i--) {
             if (info->userdata)
                 pa_sink_input_unref(info->userdata);
             if (info->chunk.memblock)
                 pa_memblock_unref(info->chunk.memblock);
+            info++;
+            n--;
         }
     }
 
