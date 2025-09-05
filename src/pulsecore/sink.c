@@ -3777,10 +3777,11 @@ void pa_sink_volume_change_push(pa_sink *s) {
 
     if (s->thread_info.volume_changes_tail) {
         volatile bool flag_break_thread = false;
+        c = s->thread_info.volume_changes_tail;
 #ifdef HAVE_OPENMP
-        //#pragma omp parallel for shared(flag_break_thread)
+        #pragma omp parallel shared(flag_break_thread)
 #endif
-        for (c = s->thread_info.volume_changes_tail; c; c = c->prev) {
+        while (c) {
             if (flag_break_thread) continue;
             /* If volume is going up let's do it a bit late. If it is going
              * down let's do it a bit early. */
@@ -3796,6 +3797,7 @@ void pa_sink_volume_change_push(pa_sink *s) {
                     direction = "down";
                     flag_break_thread = true;
             }
+            c = c->prev;
         }
     }
 
