@@ -1164,14 +1164,15 @@ static void inputs_drop(pa_sink *s, pa_mix_info *info, unsigned n, pa_memchunk *
         pa_sink_input_assert_ref(i);
 
         /* Let's try to find the matching entry info the pa_mix_info array */
+        volatile bool flag_break_thread = false;
 #ifdef HAVE_OPENMP
-        #pragma omp parallel for
+        #pragma omp parallel for shared(flag_break_thread)
 #endif
         for (j = 0; j < n; j ++) {
-
+            if(flag_break_thread) continue;
             if (info[p].userdata == i) {
                 m = info + p;
-                break;
+                flag_break_thread = true;
             }
 
             p++;
