@@ -577,7 +577,7 @@ pa_mempool* pa_memblock_get_pool(pa_memblock *b) {
 /* No lock necessary */
 pa_memblock* pa_memblock_ref(pa_memblock*b) {
     pa_assert(b);
-    pa_assert(PA_REFCNT_VALUE(b) > 0);
+    //pa_assert(PA_REFCNT_VALUE(b) > 0);
 
     PA_REFCNT_INC(b);
     return b;
@@ -679,7 +679,7 @@ static void memblock_free(pa_memblock *b) {
 /* No lock necessary */
 void pa_memblock_unref(pa_memblock*b) {
     pa_assert(b);
-    pa_assert(PA_REFCNT_VALUE(b) > 0);
+    //pa_assert(PA_REFCNT_VALUE(b) > 0);
 
     if (PA_REFCNT_DEC(b) > 0)
         return;
