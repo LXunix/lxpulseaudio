@@ -816,7 +816,7 @@ snd_pcm_t *pa_alsa_open_by_template(
     char **i;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for (i = template; *i; i++) {
         char *d;

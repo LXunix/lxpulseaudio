@@ -258,7 +258,7 @@ static void stream_unlink(pa_stream *s) {
 
     /* Unref all operation objects that point to us */
 #ifdef HAVE_OPENMP
-    #pragma omp parallel for
+    //#pragma omp parallel for
 #endif
     for (o = s->context.operations; o; o = n) {
         n = o->next;
@@ -1930,7 +1930,7 @@ static void stream_get_timing_info_callback(pa_pdispatch *pd, uint32_t command, 
             /* Go through the saved correction values and add up the
              * total correction.*/
 #ifdef HAVE_OPENMP
-            #pragma omp parallel for
+            //#pragma omp parallel for
 #endif
             for (n = 0, j = o->stream->current_write_index_correction+1;
                  n < PA_MAX_WRITE_INDEX_CORRECTIONS;
@@ -2957,7 +2957,7 @@ pa_operation *pa_stream_proplist_remove(pa_stream *s, const char *const keys[], 
     pa_tagstruct_putu32(t, s->channel);
 
 #ifdef HAVE_OPENMP
-    #pragma omp parallel for
+    //#pragma omp parallel for
 #endif
     for (k = keys; *k; k++)
         pa_tagstruct_puts(t, *k);

@@ -3776,23 +3776,25 @@ void pa_sink_volume_change_push(pa_sink *s) {
     nc->at += pa_rtclock_now() + s->thread_info.volume_change_extra_delay;
 
     if (s->thread_info.volume_changes_tail) {
+        volatile bool flag_break_thread = false;
 #ifdef HAVE_OPENMP
-        #pragma omp parallel for
+        //#pragma omp parallel for shared(flag_break_thread)
 #endif
         for (c = s->thread_info.volume_changes_tail; c; c = c->prev) {
+            if (flag_break_thread) continue;
             /* If volume is going up let's do it a bit late. If it is going
              * down let's do it a bit early. */
             if (pa_cvolume_avg(&nc->hw_volume) > pa_cvolume_avg(&c->hw_volume)) {
                 if (nc->at + safety_margin > c->at) {
                     nc->at += safety_margin;
                     direction = "up";
-                    break;
+                    flag_break_thread = true;
                 }
             }
             else if (nc->at - safety_margin > c->at) {
                     nc->at -= safety_margin;
                     direction = "down";
-                    break;
+                    flag_break_thread = true;
             }
         }
     }

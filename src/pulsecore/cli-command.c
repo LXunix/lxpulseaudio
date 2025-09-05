@@ -242,7 +242,7 @@ static int pa_cli_command_help(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, bool
     pa_strbuf_puts(buf, "Available commands:\n");
 
 #ifdef HAVE_OPENMP
-    #pragma omp parallel for
+    //#pragma omp parallel for
 #endif
     for (command = commands; command->name; command++)
         if (command->help)
@@ -2219,7 +2219,7 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
         l = strcspn(cs, whitespace);
 
 #ifdef HAVE_OPENMP
-        #pragma omp parallel for
+        //#pragma omp parallel for
 #endif
         for (command = commands; command->name; command++)
             if (strlen(command->name) == l && !strncmp(cs, command->name, l)) {

@@ -458,6 +458,7 @@ openmp_dep = dependency('openmp', required : true)
 if openmp_dep.found()
   cdata.set('HAVE_OPENMP', 1)
   pa_c_args += ['-fopenmp']
+  nodelete_link_args += ['-fopenmp']
   #if get_option('buildtype') == 'debug'
     pa_c_args += ['-Db_sanitize=thread']
   #endif

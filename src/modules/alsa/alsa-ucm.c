@@ -373,7 +373,7 @@ static int ucm_get_device_property(
     if (s)
         *s = '\0';
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for (i = 0; types[i].prefix; i++)
         if (pa_streq(id, types[i].prefix)) {
@@ -384,7 +384,7 @@ static int ucm_get_device_property(
 
     /* set properties */
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for (i = 0; item[i].id; i++) {
         id = pa_sprintf_malloc("%s/%s", item[i].id, device_name);
@@ -503,7 +503,7 @@ static int ucm_get_device_property(
     if (PA_UCM_PLAYBACK_PRIORITY_UNSET(device) || PA_UCM_CAPTURE_PRIORITY_UNSET(device)) {
         /* get priority from static table */
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
         for (i = 0; dev_info[i].id; i++) {
             if (strcasecmp(dev_info[i].id, device_name) == 0) {
@@ -563,7 +563,7 @@ static int ucm_get_modifier_property(
     int n_confdev, n_suppdev;
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for (i = 0; item[i].id; i++) {
         int err;
@@ -1996,7 +1996,7 @@ static int ucm_create_verb_profiles(
             c++;
         }
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
         for (i = 0; verb_info[i].id; i++) {
             if (strcasecmp(verb_info[i].id, verb_cmp) == 0) {

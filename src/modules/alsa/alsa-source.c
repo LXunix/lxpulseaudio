@@ -1096,7 +1096,7 @@ static int unsuspend(struct userdata *u, bool recovering) {
      * we add msleep and retry to make sure those nodes are accessible.
      */
 #ifdef HAVE_OPENMP
-    #pragma omp parallel for
+    //#pragma omp parallel for
 #endif
     for (i = 0; i < 4; i++) {
 	if ((err = snd_pcm_open(&u->pcm_handle, u->device_name, SND_PCM_STREAM_CAPTURE,
