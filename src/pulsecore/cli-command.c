@@ -2209,7 +2209,7 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
             }
         }
     } else {
-
+        const struct command*command;
         int unknown = 1;
         size_t l;
 
@@ -2218,15 +2218,7 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
 
         l = strcspn(cs, whitespace);
 
-        volatile bool flag_break_thread = false;
-        volatile bool flag_ret_thread = false;
-        const struct command* command = commands;
-#ifdef HAVE_OPENMP
-        #pragma omp parallel shared(flag_break_thread, flag_ret_thread)
-#endif
-        while (command->name)
-        {
-            if (flag_break_thread || flag_ret_thread) continue;
+        for (command = commands; command->name; command++)
             if (strlen(command->name) == l && !strncmp(cs, command->name, l)) {
                 int ret;
                 pa_tokenizer *t = pa_tokenizer_new(cs, command->args);
@@ -2236,16 +2228,10 @@ int pa_cli_command_execute_line_stateful(pa_core *c, const char *s, pa_strbuf *b
                 unknown = 0;
 
                 if (ret < 0 && *fail)
-                    flag_ret_thread = true;
+                    return -1;
 
-                flag_break_thread = true;
+                break;
             }
-            command++;
-        }
-
-        if (flag_ret_thread) // ret < 0 && *fail
-            return -1;
-
 
         if (unknown) {
             pa_strbuf_printf(buf, "Unknown command: %s\n", cs);
