@@ -22,6 +22,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_OPENMP
+#include "omp.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
@@ -201,6 +205,9 @@ pa_core* pa_core_new(pa_mainloop_api *m, bool shared, bool enable_memfd, size_t 
     c->deferred_volume = true;
     c->resample_method = PA_RESAMPLER_SPEEX_FLOAT_BASE + 1;
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (j = 0; j < PA_CORE_HOOK_MAX; j++)
         pa_hook_init(&c->hooks[j], c);
 
@@ -276,6 +283,9 @@ static void core_free(pa_object *o) {
     pa_silence_cache_done(&c->silence_cache);
     pa_mempool_unref(c->mempool);
 
+#ifdef HAVE_OPENMP
+    #pragma omp parallel for
+#endif
     for (j = 0; j < PA_CORE_HOOK_MAX; j++)
         pa_hook_done(&c->hooks[j]);
 
