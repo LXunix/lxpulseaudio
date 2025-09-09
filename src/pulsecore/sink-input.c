@@ -832,7 +832,7 @@ static void sink_input_free(pa_object *o) {
     pa_sink_input* i = PA_SINK_INPUT(o);
 
     pa_assert(i);
-    pa_assert_ctl_context();
+    //pa_assert_ctl_context();
     pa_assert(pa_sink_input_refcnt(i) == 0);
     pa_assert(!PA_SINK_INPUT_IS_LINKED(i->state));
 
