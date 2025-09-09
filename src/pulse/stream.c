@@ -257,14 +257,17 @@ static void stream_unlink(pa_stream *s) {
     /* Detach from context */
 
     /* Unref all operation objects that point to us */
+    o = s->context.operations;
 #ifdef HAVE_OPENMP
-    //#pragma omp parallel for
+    #pragma omp parallel
 #endif
-    for (o = s->context.operations; o; o = n) {
+    while (o) {
         n = o->next;
 
         if (o->stream == s)
             pa_operation_cancel(o);
+
+        o = n;
     }
 
     /* Drop all outstanding replies for this stream */
@@ -2956,11 +2959,15 @@ pa_operation *pa_stream_proplist_remove(pa_stream *s, const char *const keys[], 
             &tag);
     pa_tagstruct_putu32(t, s->channel);
 
+    k = keys;
 #ifdef HAVE_OPENMP
-    //#pragma omp parallel for
+    #pragma omp parallel
 #endif
-    for (k = keys; *k; k++)
+    while (*k)
+    {
         pa_tagstruct_puts(t, *k);
+        k++;
+    }
 
     pa_tagstruct_puts(t, NULL);
 
